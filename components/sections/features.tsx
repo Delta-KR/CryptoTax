@@ -1,0 +1,199 @@
+import { HoverCard } from '@/components/ui/HoverCard';
+import { SectionEyebrow } from '@/components/ui/section-heading';
+
+type IconName = 'compare' | 'shield' | 'globe' | 'doc';
+
+interface BigData {
+  title: string;
+  desc: string;
+  color: string;
+}
+
+interface SmallData {
+  title: string;
+  desc: string;
+  color: string;
+  icon: IconName;
+}
+
+const big: BigData = {
+  title: '다중 거래소 데이터 통합',
+  desc: '국내외 어떤 거래소든 파일만 올리면 자동으로 형식을 통일하고 시간순 병합. 같은 코인 다른 거래소 입출금도 추적합니다.',
+  color: '#2563EB',
+};
+
+const items: readonly SmallData[] = [
+  {
+    title: '계산 방식 선택',
+    desc: '선입선출법(FIFO) 또는 이동평균법(MA). 동일 거래에서 어느 쪽이 유리한지 즉시 비교해드립니다.',
+    color: '#7C3AED',
+    icon: 'compare',
+  },
+  {
+    title: '의제취득가액 자동 적용',
+    desc: '2026년 12월 31일 이전 보유분은 시가 자동 조회 → 실제 매수가와 큰 금액으로 적용해 세금을 줄여드립니다.',
+    color: '#0891B2',
+    icon: 'shield',
+  },
+  {
+    title: '해외 거래 환율 변환',
+    desc: '바이낸스 등 USDT 거래는 거래 시점 KRW 환율로 자동 변환. 한국은행 고시 환율 기준으로 정확하게.',
+    color: '#16A34A',
+    icon: 'globe',
+  },
+  {
+    title: '세무사 전달용 PDF',
+    desc: '종합소득세 신고서 양식에 맞춘 항목별 정리 PDF. 거래 원본 + 계산 근거 + 산출 내역까지 포함.',
+    color: '#D97706',
+    icon: 'doc',
+  },
+];
+
+function FeatureIcon({ name, color }: { name: IconName; color: string }) {
+  const common = {
+    stroke: color,
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    fill: 'none',
+  };
+  switch (name) {
+    case 'compare':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M5 7h12M5 7l3-3M5 7l3 3M19 17H7M19 17l-3 3M19 17l-3-3"
+            {...common}
+          />
+        </svg>
+      );
+    case 'shield':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3l8 3v6c0 4-3.5 7.5-8 9-4.5-1.5-8-5-8-9V6l8-3z" {...common} />
+          <path d="M9 12l2 2 4-4" {...common} />
+        </svg>
+      );
+    case 'globe':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9" {...common} />
+          <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" {...common} />
+        </svg>
+      );
+    case 'doc':
+      return (
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z" {...common} />
+          <path d="M14 3v5h5M9 13h6M9 17h4" {...common} />
+        </svg>
+      );
+  }
+}
+
+const exchangeCounts: ReadonlyArray<readonly [string, string, number]> = [
+  ['업비트', '#0E48F0', 124],
+  ['빗썸', '#F37321', 78],
+  ['바이낸스', '#F0B90B', 45],
+];
+
+function FeatureBig({ data }: { data: BigData }) {
+  return (
+    <HoverCard
+      className="flex min-h-[380px] flex-col justify-between overflow-hidden rounded-lg p-8 lg:row-span-2"
+      style={{
+        background: `linear-gradient(160deg, color-mix(in srgb, ${data.color} 8%, rgb(var(--card))) 0%, rgb(var(--card)) 60%)`,
+        border: `1px solid ${data.color}25`,
+      }}
+    >
+      <div>
+        <div
+          className="mb-6 flex h-12 w-12 items-center justify-center rounded-md bg-card shadow-sm"
+          style={{ border: `1px solid ${data.color}30`, color: data.color }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M3 17l4-4 4 4 7-7M21 7v4M21 7h-4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <h3 className="mb-2.5 text-[22px] font-bold tracking-tightish text-ink">
+          {data.title}
+        </h3>
+        <p className="max-w-[360px] text-sm leading-[1.7] text-muted">{data.desc}</p>
+      </div>
+
+      {/* 247건 visual */}
+      <div className="mt-6 rounded-md border border-line bg-card px-4 py-3.5 shadow-sm">
+        <div className="mb-2.5 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
+          통합된 거래 — 247건
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {exchangeCounts.map(([n, c, v]) => (
+            <div
+              key={n}
+              className="min-w-0 flex-1 rounded-sm bg-bg-soft px-3 py-2.5"
+              style={{ borderLeft: `3px solid ${c}` }}
+            >
+              <div className="text-[11px] font-medium text-muted">{n}</div>
+              <div className="num text-base font-bold text-ink">
+                {v}
+                <span className="ml-0.5 text-[10px] font-medium text-muted-2">건</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </HoverCard>
+  );
+}
+
+function FeatureCard({ data }: { data: SmallData }) {
+  return (
+    <HoverCard className="rounded-lg border border-line bg-card p-6">
+      <div
+        className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px]"
+        style={{
+          background: `color-mix(in srgb, ${data.color} 12%, rgb(var(--card)))`,
+          color: data.color,
+        }}
+      >
+        <FeatureIcon name={data.icon} color={data.color} />
+      </div>
+      <h3 className="mb-2 text-base font-bold tracking-[-0.015em] text-ink">
+        {data.title}
+      </h3>
+      <p className="text-[13px] leading-[1.6] text-muted">{data.desc}</p>
+    </HoverCard>
+  );
+}
+
+export function Features() {
+  return (
+    <section id="features" className="section-pad">
+      <div className="mx-auto max-w-content">
+        <div className="mb-14 text-center">
+          <SectionEyebrow>FEATURES</SectionEyebrow>
+          <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
+            한국 세법, 빠짐없이 반영
+          </h2>
+          <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
+            세무사가 검수하고, 개발자가 만든 계산 엔진. 누락 없이 정확하게.
+          </p>
+        </div>
+
+        {/* Bento grid: big spans 2 rows on left, 4 small cards fill 2×2 right */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
+          <FeatureBig data={big} />
+          {items.map((item) => (
+            <FeatureCard key={item.title} data={item} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
