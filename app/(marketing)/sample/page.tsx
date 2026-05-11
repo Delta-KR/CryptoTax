@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import { BarChart } from '@/components/ui/Chart/BarChart';
 import {
   Table,
@@ -28,13 +29,6 @@ const sampleData = {
     { coin: 'SOL', gain: 3_000_000 },
     { coin: 'XRP', gain: 1_200_000 },
   ],
-};
-
-const coinColors: Record<string, string> = {
-  BTC: '#F7931A',
-  ETH: '#627EEA',
-  SOL: '#9945FF',
-  XRP: '#23292F',
 };
 
 function formatKrw(n: number): string {
@@ -124,15 +118,7 @@ export default function SamplePage() {
                   <TableRow key={c.coin}>
                     <TableCell>
                       <span className="inline-flex items-center gap-2">
-                        <span
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold"
-                          style={{
-                            background: `${coinColors[c.coin] ?? '#888'}18`,
-                            color: coinColors[c.coin] ?? 'rgb(var(--ink))',
-                          }}
-                        >
-                          {c.coin.slice(0, 1)}
-                        </span>
+                        <CoinIcon coin={c.coin} size={22} />
                         <span className="font-semibold">{c.coin}</span>
                       </span>
                     </TableCell>

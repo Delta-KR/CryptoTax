@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 
 type Method = 'fifo' | 'avg';
 
@@ -141,12 +142,7 @@ function TradesCard({
               }
             >
               <div className="flex items-center gap-3">
-                <div
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-bold tracking-tightish"
-                  style={{ background: `${it.color}18`, color: it.color }}
-                >
-                  {it.coin}
-                </div>
+                <CoinIcon coin={it.coin} size={36} />
                 <div>
                   <div className="text-sm font-semibold text-ink">{it.name}</div>
                   <div className="num font-mono text-[11.5px] text-muted">

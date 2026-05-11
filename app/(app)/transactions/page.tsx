@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Pill } from '@/components/ui/Pill';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   Table,
@@ -23,13 +24,6 @@ import {
 } from '@/lib/mock/transactions';
 
 const PAGE_SIZE = 10;
-const coinColors: Record<string, string> = {
-  BTC: '#F7931A',
-  ETH: '#627EEA',
-  SOL: '#9945FF',
-  XRP: '#23292F',
-  DOGE: '#C2A633',
-};
 
 export default function TransactionsPage() {
   const [all, setAll] = useState<Transaction[]>([]);
@@ -175,15 +169,7 @@ export default function TransactionsPage() {
                   <TableCell>{exchangeLabel[tx.exchange]}</TableCell>
                   <TableCell>
                     <span className="inline-flex items-center gap-2">
-                      <span
-                        className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold"
-                        style={{
-                          background: `${coinColors[tx.coin] ?? '#888'}18`,
-                          color: coinColors[tx.coin] ?? 'rgb(var(--ink))',
-                        }}
-                      >
-                        {tx.coin.slice(0, 1)}
-                      </span>
+                      <CoinIcon coin={tx.coin} size={22} />
                       <span className="font-semibold">{tx.coin}</span>
                     </span>
                   </TableCell>

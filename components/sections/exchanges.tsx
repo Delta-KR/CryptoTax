@@ -11,13 +11,13 @@ interface Exchange {
 }
 
 const exchanges: readonly Exchange[] = [
-  { name: '업비트',   sub: 'Upbit',   logo: '/logos/upbit.svg',   bg: '#EEF3FF', status: 'live' },
-  { name: '빗썸',     sub: 'Bithumb', logo: '/logos/bithumb.svg', bg: '#FFF0ED', status: 'live' },
-  { name: '바이낸스', sub: 'Binance', logo: '/logos/binance.svg', bg: '#FFFBEC', status: 'live' },
-  { name: '바이빗',   sub: 'Bybit',   logo: '/logos/bybit.svg',   bg: '#FFF7ED', status: 'soon' },
-  { name: 'OKX',      sub: 'OKX',     logo: '/logos/okx.svg',     bg: '#F5F5F5', status: 'soon' },
-  { name: 'Bitget',   sub: 'Bitget',  logo: '/logos/bitget.svg',  bg: '#E6FAF8', status: 'soon' },
-  { name: '코인원',   sub: 'Coinone', logo: '/logos/coinone.svg', bg: '#FFF0F8', status: 'soon' },
+  { name: '업비트',   sub: 'Upbit',   logo: '/logos/upbit.png',   bg: '#EEF3FF', status: 'live' },
+  { name: '빗썸',     sub: 'Bithumb', logo: '/logos/bithumb.png', bg: '#FFF0ED', status: 'live' },
+  { name: '바이낸스', sub: 'Binance', logo: '/logos/binance.png', bg: '#FFFBEC', status: 'live' },
+  { name: '바이빗',   sub: 'Bybit',   logo: '/logos/bybit.png',   bg: '#FFF7ED', status: 'soon' },
+  { name: 'OKX',      sub: 'OKX',     logo: '/logos/okx.png',     bg: '#F5F5F5', status: 'soon' },
+  { name: 'Bitget',   sub: 'Bitget',  logo: '/logos/bitget.png',  bg: '#E6FAF8', status: 'soon' },
+  { name: '코인원',   sub: 'Coinone', logo: '/logos/coinone.png', bg: '#FFF0F8', status: 'soon' },
 ];
 
 function StatusPillLive() {

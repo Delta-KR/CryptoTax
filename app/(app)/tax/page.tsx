@@ -7,6 +7,7 @@ import { Select } from '@/components/ui/Select';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import {
   Table,
   TableHead,
@@ -18,14 +19,6 @@ import {
 import { useToast } from '@/components/ui/Toast';
 import { getTransactions, type Transaction } from '@/lib/mock/transactions';
 import { calculateTax, formatKrw, getTaxMethod, type TaxMethod } from '@/lib/mock/tax';
-
-const coinColors: Record<string, string> = {
-  BTC: '#F7931A',
-  ETH: '#627EEA',
-  SOL: '#9945FF',
-  XRP: '#23292F',
-  DOGE: '#C2A633',
-};
 
 function CalcRow({
   label,
@@ -204,15 +197,7 @@ export default function TaxPage() {
                   <TableRow key={c.coin}>
                     <TableCell>
                       <span className="inline-flex items-center gap-2">
-                        <span
-                          className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold"
-                          style={{
-                            background: `${coinColors[c.coin] ?? '#888'}18`,
-                            color: coinColors[c.coin] ?? 'rgb(var(--ink))',
-                          }}
-                        >
-                          {c.coin.slice(0, 1)}
-                        </span>
+                        <CoinIcon coin={c.coin} size={22} />
                         <span className="font-semibold">{c.coin}</span>
                       </span>
                     </TableCell>

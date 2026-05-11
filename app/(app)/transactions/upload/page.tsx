@@ -25,7 +25,7 @@ const exchanges: ExchangeInfo[] = [
   {
     id: 'upbit',
     name: '업비트',
-    logo: '/logos/upbit.svg',
+    logo: '/logos/upbit.png',
     format: 'PDF',
     guide: '거래내역 > 양도소득 > PDF 다운로드',
     bg: '#EEF3FF',
@@ -33,7 +33,7 @@ const exchanges: ExchangeInfo[] = [
   {
     id: 'bithumb',
     name: '빗썸',
-    logo: '/logos/bithumb.svg',
+    logo: '/logos/bithumb.png',
     format: 'XLS',
     guide: 'MyPage > 거래내역 > 엑셀 다운로드',
     bg: '#FFF0ED',
@@ -41,7 +41,7 @@ const exchanges: ExchangeInfo[] = [
   {
     id: 'binance',
     name: '바이낸스',
-    logo: '/logos/binance.svg',
+    logo: '/logos/binance.png',
     format: 'CSV',
     guide: 'Wallet > Transaction History > Export CSV',
     bg: '#FFFBEC',
@@ -49,7 +49,7 @@ const exchanges: ExchangeInfo[] = [
   {
     id: 'bybit',
     name: '바이빗',
-    logo: '/logos/bybit.svg',
+    logo: '/logos/bybit.png',
     format: 'CSV',
     guide: 'Assets > Transaction Log > Download',
     bg: '#FFF7ED',

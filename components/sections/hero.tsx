@@ -137,7 +137,7 @@ function FloatingCardUpbit() {
         style={{ background: '#EEF3FF' }}
       >
         <Image
-          src="/logos/upbit.svg"
+          src="/logos/upbit.png"
           alt="업비트"
           width={20}
           height={20}

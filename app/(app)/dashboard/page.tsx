@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/Table';
 import { HoverCard } from '@/components/ui/HoverCard';
 import { Pill } from '@/components/ui/Pill';
+import { CoinIcon } from '@/components/ui/CoinIcon';
 import {
   getTransactions,
   exchangeLabel,
@@ -87,14 +88,6 @@ const quickActions = [
     soft: '#ECFDF5',
   },
 ];
-
-const coinColors: Record<string, string> = {
-  BTC: '#F7931A',
-  ETH: '#627EEA',
-  SOL: '#9945FF',
-  XRP: '#23292F',
-  DOGE: '#C2A633',
-};
 
 export default function DashboardPage() {
   const [year, setYear] = useState(2027);
@@ -233,16 +226,10 @@ export default function DashboardPage() {
                   </TableCell>
                   <TableCell>{exchangeLabel[tx.exchange]}</TableCell>
                   <TableCell>
-                    <span
-                      className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold"
-                      style={{
-                        background: `${coinColors[tx.coin] ?? '#888'}18`,
-                        color: coinColors[tx.coin] ?? 'rgb(var(--ink))',
-                      }}
-                    >
-                      {tx.coin.slice(0, 1)}
-                    </span>{' '}
-                    {tx.coin}
+                    <span className="inline-flex items-center gap-2">
+                      <CoinIcon coin={tx.coin} size={22} />
+                      <span className="font-semibold">{tx.coin}</span>
+                    </span>
                   </TableCell>
                   <TableCell>
                     <Pill tone={tx.type === 'buy' ? 'good' : 'bad'} size="sm">

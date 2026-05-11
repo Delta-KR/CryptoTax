@@ -166,7 +166,7 @@ const cards: Array<Omit<CSVCardProps, 'highlight' | 'onHover'>> = [
   {
     exchange: '업비트',
     id: 'upbit',
-    logo: '/logos/upbit.svg',
+    logo: '/logos/upbit.png',
     color: '#0E48F0',
     format: 'PDF',
     rows: [
@@ -185,7 +185,7 @@ const cards: Array<Omit<CSVCardProps, 'highlight' | 'onHover'>> = [
   {
     exchange: '빗썸',
     id: 'bithumb',
-    logo: '/logos/bithumb.svg',
+    logo: '/logos/bithumb.png',
     color: '#F37321',
     format: 'XLS',
     rows: [
@@ -204,7 +204,7 @@ const cards: Array<Omit<CSVCardProps, 'highlight' | 'onHover'>> = [
   {
     exchange: '바이낸스',
     id: 'binance',
-    logo: '/logos/binance.svg',
+    logo: '/logos/binance.png',
     color: '#F0B90B',
     ink: '#1E2329',
     format: 'CSV',
