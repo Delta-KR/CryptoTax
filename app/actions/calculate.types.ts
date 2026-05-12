@@ -81,6 +81,8 @@ export interface TaxResultWire {
   holdingsAfter: Record<string, LotWire[]>;
   summary: CoinSummaryWire[];
   warnings: string[];
+  plan: 'free' | 'premium';
+  masked: boolean;
 }
 
 export interface CalculatePayload {

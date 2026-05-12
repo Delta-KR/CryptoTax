@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { Sidebar } from '@/components/app-chrome/Sidebar';
-import type { User } from '@/lib/mock/auth';
+import type { User } from '@/lib/auth';
 
 interface MobileDrawerProps {
   open: boolean;

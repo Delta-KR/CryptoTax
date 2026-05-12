@@ -1,29 +1,16 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser, type User } from '@/lib/mock/auth';
+import { useState } from 'react';
+import { useCurrentUser } from '@/lib/auth';
 import { Sidebar } from '@/components/app-chrome/Sidebar';
 import { Topbar } from '@/components/app-chrome/Topbar';
 import { MobileDrawer } from '@/components/app-chrome/MobileDrawer';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [checked, setChecked] = useState(false);
+  const { user, loading } = useCurrentUser();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  useEffect(() => {
-    const u = getCurrentUser();
-    if (!u) {
-      router.replace('/login');
-      return;
-    }
-    setUser(u);
-    setChecked(true);
-  }, [router]);
-
-  if (!checked || !user) return null;
+  if (loading || !user) return null;
 
   return (
     <ToastProvider>

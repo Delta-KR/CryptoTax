@@ -8,6 +8,9 @@ import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { plans, subscribe, type PlanId } from '@/lib/mock/billing';
+import { upgradePlan } from '@/app/actions/upgrade-plan';
+import { calculateTaxFromFiles } from '@/app/actions/calculate';
+import { loadSession, saveSession } from '@/lib/storage/session';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -24,7 +27,7 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (!cardNumber || !expiry || !cvc || !name) {
@@ -32,12 +35,35 @@ export default function CheckoutPage() {
       return;
     }
     setSubmitting(true);
-    // mock — 1초 후 success
-    window.setTimeout(() => {
-      subscribe(plan.id);
-      setSuccess(true);
+
+    // 1. Local mock subscription state
+    subscribe(plan.id);
+
+    // 2. Real plan upgrade in Supabase
+    const upgrade = await upgradePlan();
+    if (!upgrade.ok) {
+      setError(upgrade.error ?? '플랜 업그레이드 실패');
       setSubmitting(false);
-    }, 1000);
+      return;
+    }
+
+    // 3. Re-calculate existing session with new plan (unmasks result)
+    const session = loadSession();
+    if (session?.allParsed?.length) {
+      const fd = new FormData();
+      fd.append('previousParsed', JSON.stringify(session.allParsed));
+      const recalc = await calculateTaxFromFiles(fd);
+      if (recalc.ok) {
+        saveSession({
+          ...session,
+          result: recalc.payload.result,
+          allUnified: recalc.payload.allUnified,
+        });
+      }
+    }
+
+    setSuccess(true);
+    setSubmitting(false);
   }
 
   return (
@@ -150,11 +176,11 @@ export default function CheckoutPage() {
             <Button
               onClick={() => {
                 setSuccess(false);
-                router.push('/dashboard');
-                toast.show('환영합니다! 프리미엄 기능을 사용해보세요.', 'success');
+                router.push('/tax');
+                toast.show('프리미엄이 활성화되었습니다. 전체 결과를 확인하세요.', 'success');
               }}
             >
-              대시보드로
+              세금 결과 보기
             </Button>
           </>
         }

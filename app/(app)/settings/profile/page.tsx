@@ -8,7 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
-import { getCurrentUser, signOut } from '@/lib/mock/auth';
+import { useCurrentUser, signOut } from '@/lib/auth';
 import { getProfile, updateProfile, type Profile } from '@/lib/mock/profile';
 
 export default function ProfilePage() {
@@ -21,10 +21,10 @@ export default function ProfilePage() {
   const [pwError, setPwError] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
+  const { user } = useCurrentUser();
   useEffect(() => {
-    const u = getCurrentUser();
-    setProfile(getProfile(u ?? undefined));
-  }, []);
+    setProfile(getProfile(user ?? undefined));
+  }, [user]);
 
   function handleProfileSave(e: FormEvent) {
     e.preventDefault();
@@ -54,8 +54,8 @@ export default function ProfilePage() {
     toast.show('비밀번호가 변경되었습니다.', 'success');
   }
 
-  function handleDelete() {
-    signOut();
+  async function handleDelete() {
+    await signOut();
     setDeleteOpen(false);
     router.replace('/');
   }

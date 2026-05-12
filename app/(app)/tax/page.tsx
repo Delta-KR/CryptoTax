@@ -26,12 +26,14 @@ function CalcRow({
   sub,
   tone,
   bold,
+  blurred,
 }: {
   label: string;
   value: string;
   sub?: string;
   tone?: 'good';
   bold?: boolean;
+  blurred?: boolean;
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-2">
@@ -51,8 +53,10 @@ function CalcRow({
           'num nowrap tracking-[-0.01em] ' +
           (bold ? 'text-[18px] font-bold' : 'text-[16px] font-semibold') +
           ' ' +
-          (tone === 'good' ? 'text-good' : 'text-ink')
+          (tone === 'good' ? 'text-good' : 'text-ink') +
+          (blurred ? ' select-none blur-[6px]' : '')
         }
+        aria-hidden={blurred}
       >
         {value}
       </div>
@@ -65,6 +69,42 @@ function Divider({ thick }: { thick?: boolean }) {
     <div
       className={'my-2 ' + (thick ? 'h-0.5 bg-ink/10' : 'h-px bg-line-2')}
     />
+  );
+}
+
+function PremiumBanner() {
+  return (
+    <div className="mb-6 flex flex-col items-start justify-between gap-4 rounded-lg border border-brand/40 bg-brand-faint px-6 py-5 sm:flex-row sm:items-center">
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-[15px] font-bold tracking-[-0.01em] text-ink">
+            🔒 정확한 납부세액과 코인별 상세 손익은 프리미엄 전용입니다
+          </span>
+        </div>
+        <p className="mt-1.5 text-[12.5px] leading-[1.55] text-muted">
+          업그레이드하면 정확한 세액 + 코인별 손익표 + PDF 리포트 다운로드까지 모두 이용 가능합니다.
+        </p>
+      </div>
+      <Link href="/billing/checkout?plan=premium" className="flex-shrink-0">
+        <Button className="whitespace-nowrap">전체 결과 보기 — ₩19,900</Button>
+      </Link>
+    </div>
+  );
+}
+
+function BlurOverlay({ children, masked }: { children: React.ReactNode; masked: boolean }) {
+  if (!masked) return <>{children}</>;
+  return (
+    <div className="relative">
+      <div className="pointer-events-none select-none blur-[8px]" aria-hidden>
+        {children}
+      </div>
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div className="rounded-full bg-card/90 px-4 py-2 text-[12px] font-semibold text-brand shadow-md ring-1 ring-brand/30">
+          🔒 프리미엄 전용
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -83,6 +123,8 @@ export default function TaxPage() {
     () => calculateTax(txs, method, year),
     [txs, method, year]
   );
+
+  const masked = result.masked;
 
   return (
     <>
@@ -109,6 +151,8 @@ export default function TaxPage() {
         }
       />
 
+      {masked && <PremiumBanner />}
+
       {/* 4 StatCards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
@@ -122,17 +166,21 @@ export default function TaxPage() {
           value={`−${formatKrw(result.deduction).replace('+', '').replace('−', '')}`}
           sub="연 1회 자동 적용"
         />
-        <StatCard
-          label="과세표준"
-          value={formatKrw(result.taxable)}
-          sub="총 양도차익 − 공제"
-        />
-        <StatCard
-          label="납부세액"
-          value={formatKrw(result.tax)}
-          tone="brand"
-          sub="과세표준 × 22%"
-        />
+        <BlurOverlay masked={masked}>
+          <StatCard
+            label="과세표준"
+            value={formatKrw(result.taxable)}
+            sub="총 양도차익 − 공제"
+          />
+        </BlurOverlay>
+        <BlurOverlay masked={masked}>
+          <StatCard
+            label="납부세액"
+            value={formatKrw(result.tax)}
+            tone="brand"
+            sub="과세표준 × 22%"
+          />
+        </BlurOverlay>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
@@ -158,6 +206,7 @@ export default function TaxPage() {
             label="과세표준"
             value={formatKrw(result.taxable)}
             bold
+            blurred={masked}
           />
           <CalcRow
             label="× 세율"
@@ -165,13 +214,31 @@ export default function TaxPage() {
             sub="소득세 20% + 지방세 2%"
           />
           <Divider thick />
-          <div className="mt-2 rounded-md bg-brand px-5 py-4 text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)]">
-            <div className="text-[12px] font-medium opacity-90">
-              {year}년 5월 납부 세액
+          <div className="relative mt-2">
+            <div
+              className={
+                'rounded-md bg-brand px-5 py-4 text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] ' +
+                (masked ? 'pointer-events-none select-none blur-[8px]' : '')
+              }
+              aria-hidden={masked}
+            >
+              <div className="text-[12px] font-medium opacity-90">
+                {year}년 5월 납부 세액
+              </div>
+              <div className="num mt-1 text-[28px] font-extrabold tracking-tighter3">
+                {formatKrw(result.tax).replace('+', '')}
+              </div>
             </div>
-            <div className="num mt-1 text-[28px] font-extrabold tracking-tighter3">
-              {formatKrw(result.tax).replace('+', '')}
-            </div>
+            {masked && (
+              <Link
+                href="/billing/checkout?plan=premium"
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <span className="rounded-full bg-white px-4 py-2 text-[12px] font-bold text-brand shadow-lg">
+                  🔒 전체 결과 보기 — ₩19,900
+                </span>
+              </Link>
+            )}
           </div>
         </Card>
 
@@ -184,38 +251,59 @@ export default function TaxPage() {
             </p>
           </div>
           {result.perCoin.length > 0 ? (
-            <Table className="border-t border-line-2">
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>코인</TableHeaderCell>
-                  <TableHeaderCell className="text-right">손익</TableHeaderCell>
-                  <TableHeaderCell className="text-right">매도금액</TableHeaderCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {result.perCoin.map((c) => (
-                  <TableRow key={c.coin}>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-2">
-                        <CoinIcon coin={c.coin} size={22} />
-                        <span className="font-semibold">{c.coin}</span>
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={
-                        'num text-right text-[13px] font-bold ' +
-                        (c.gain >= 0 ? 'text-good' : 'text-bad')
-                      }
-                    >
-                      {formatKrw(c.gain)}
-                    </TableCell>
-                    <TableCell className="num text-right text-[12px] text-muted">
-                      ₩{c.volume.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="relative">
+              <div
+                className={
+                  masked
+                    ? 'pointer-events-none select-none blur-[8px]'
+                    : ''
+                }
+                aria-hidden={masked}
+              >
+                <Table className="border-t border-line-2">
+                  <TableHead>
+                    <TableRow>
+                      <TableHeaderCell>코인</TableHeaderCell>
+                      <TableHeaderCell className="text-right">손익</TableHeaderCell>
+                      <TableHeaderCell className="text-right">매도금액</TableHeaderCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {result.perCoin.map((c) => (
+                      <TableRow key={c.coin}>
+                        <TableCell>
+                          <span className="inline-flex items-center gap-2">
+                            <CoinIcon coin={c.coin} size={22} />
+                            <span className="font-semibold">{c.coin}</span>
+                          </span>
+                        </TableCell>
+                        <TableCell
+                          className={
+                            'num text-right text-[13px] font-bold ' +
+                            (c.gain >= 0 ? 'text-good' : 'text-bad')
+                          }
+                        >
+                          {formatKrw(c.gain)}
+                        </TableCell>
+                        <TableCell className="num text-right text-[12px] text-muted">
+                          ₩{c.volume.toLocaleString()}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {masked && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center">
+                  <div className="rounded-full bg-card/95 px-5 py-3 text-[13px] font-bold text-brand shadow-lg ring-1 ring-brand/30">
+                    🔒 코인별 손익은 프리미엄 전용
+                  </div>
+                  <Link href="/billing/checkout?plan=premium">
+                    <Button size="sm">전체 결과 보기 — ₩19,900</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
           ) : (
             <p className="border-t border-line-2 px-6 py-12 text-center text-[13px] text-muted">
               {year}년 매도 거래가 없습니다.

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { HoverCard } from '@/components/ui/HoverCard';
-import { signOut } from '@/lib/mock/auth';
+import { signOut } from '@/lib/auth';
 
 const items = [
   {
@@ -34,8 +34,8 @@ const items = [
 export default function SettingsPage() {
   const router = useRouter();
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     router.replace('/login');
   }
 

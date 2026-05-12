@@ -152,12 +152,33 @@ export default function DashboardPage() {
           value={`−${formatKrw(result.deduction).replace('+', '').replace('−', '')}`}
           sub="연 1회 자동 적용"
         />
-        <StatCard
-          label="예상 납부세액"
-          value={formatKrw(result.tax)}
-          tone="brand"
-          sub={`과세표준 × 22%`}
-        />
+        {result.masked ? (
+          <Link
+            href="/billing/checkout?plan=premium"
+            className="relative block"
+          >
+            <div className="pointer-events-none select-none blur-[6px]" aria-hidden>
+              <StatCard
+                label="예상 납부세액"
+                value={formatKrw(result.tax)}
+                tone="brand"
+                sub={`과세표준 × 22%`}
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="rounded-full bg-brand px-3 py-1.5 text-[11px] font-bold text-white shadow-md">
+                🔒 프리미엄
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <StatCard
+            label="예상 납부세액"
+            value={formatKrw(result.tax)}
+            tone="brand"
+            sub={`과세표준 × 22%`}
+          />
+        )}
         <StatCard
           label="통합 거래수"
           value={`${result.transactionCount}건`}
@@ -179,10 +200,32 @@ export default function DashboardPage() {
           </Pill>
         </div>
         {chartItems.length > 0 ? (
-          <BarChart
-            items={chartItems}
-            formatter={(n) => formatKrw(n).replace('₩', '₩ ')}
-          />
+          result.masked ? (
+            <div className="relative">
+              <div className="pointer-events-none select-none blur-[8px]" aria-hidden>
+                <BarChart
+                  items={chartItems}
+                  formatter={(n) => formatKrw(n).replace('₩', '₩ ')}
+                />
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <div className="rounded-full bg-card/95 px-4 py-2 text-[12px] font-bold text-brand shadow-md ring-1 ring-brand/30">
+                  🔒 코인별 손익은 프리미엄 전용
+                </div>
+                <Link
+                  href="/billing/checkout?plan=premium"
+                  className="text-[11px] font-semibold text-brand underline"
+                >
+                  전체 결과 보기 — ₩19,900 →
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <BarChart
+              items={chartItems}
+              formatter={(n) => formatKrw(n).replace('₩', '₩ ')}
+            />
+          )
         ) : (
           <p className="py-6 text-center text-[13px] text-muted">
             {year}년 매도 거래가 없습니다.

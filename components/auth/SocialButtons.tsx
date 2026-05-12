@@ -1,6 +1,4 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { signIn } from '@/lib/mock/auth';
 
 const providers = [
   {
@@ -45,11 +43,8 @@ const providers = [
 ];
 
 export function SocialButtons() {
-  const router = useRouter();
-
-  function handleSocialAuth(provider: string) {
-    signIn(`${provider}-user@cryptotax.example`, '');
-    router.replace('/dashboard');
+  function handleSocialAuth() {
+    alert('소셜 로그인은 준비 중입니다. 이메일로 가입해주세요.');
   }
 
   return (
@@ -58,9 +53,10 @@ export function SocialButtons() {
         <button
           key={p.id}
           type="button"
-          onClick={() => handleSocialAuth(p.id)}
-          aria-label={`${p.name} 계정으로 계속`}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-[13px] font-semibold transition-opacity hover:opacity-90"
+          onClick={handleSocialAuth}
+          aria-label={`${p.name} 계정으로 계속 (준비 중)`}
+          disabled
+          className="inline-flex w-full items-center justify-center gap-2 rounded-sm px-4 py-2.5 text-[13px] font-semibold opacity-50 cursor-not-allowed"
           style={{
             background: p.bg,
             color: p.text,
@@ -68,7 +64,7 @@ export function SocialButtons() {
           }}
         >
           {p.icon}
-          {p.name}로 계속
+          {p.name}로 계속 (준비 중)
         </button>
       ))}
     </div>

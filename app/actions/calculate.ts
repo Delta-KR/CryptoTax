@@ -14,6 +14,7 @@ import type {
   TaxResult,
   UnifiedTransaction,
 } from '@/lib/engine/types';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type {
   CalculatePayload,
   CalculateResult,
@@ -21,6 +22,38 @@ import type {
   TaxResultWire,
   UnifiedTransactionWire,
 } from './calculate.types';
+
+async function getUserPlan(): Promise<'free' | 'premium'> {
+  try {
+    const supabase = createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return 'free';
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .maybeSingle<{ plan: 'free' | 'premium' }>();
+    return profile?.plan ?? 'free';
+  } catch (e) {
+    console.error('[getUserPlan] error:', e);
+    return 'free';
+  }
+}
+
+function maskForFree(wire: TaxResultWire): TaxResultWire {
+  return {
+    ...wire,
+    taxableIncomeKRW: 0,
+    taxAmountKRW: 0,
+    incomeTaxKRW: 0,
+    localTaxKRW: 0,
+    realizedGains: [],
+    summary: wire.summary.map((s) => ({ ...s, realizedPnLKRW: 0 })),
+    masked: true,
+  };
+}
 
 const DEFAULT_RATES: readonly StaticRateEntry[] = [
   ['2024-01-01', 'USDT', 'KRW', 1330],
@@ -70,7 +103,10 @@ function unifiedToWire(tx: UnifiedTransaction): UnifiedTransactionWire {
   return { ...tx, date: tx.date.toISOString() };
 }
 
-function resultToWire(r: TaxResult): TaxResultWire {
+function resultToWire(
+  r: TaxResult,
+  plan: 'free' | 'premium',
+): TaxResultWire {
   return {
     ...r,
     realizedGains: r.realizedGains.map((g) => ({
@@ -83,6 +119,8 @@ function resultToWire(r: TaxResult): TaxResultWire {
         lots.map((l) => ({ ...l, date: l.date.toISOString() })),
       ]),
     ),
+    plan,
+    masked: false,
   };
 }
 
@@ -99,13 +137,6 @@ export async function calculateTaxFromFiles(
   try {
     const files = formData.getAll('files') as File[];
     console.log('[calculate] files received:', files.length);
-    if (files.length === 0) {
-      return {
-        ok: false,
-        error: '파일이 첨부되지 않았습니다.',
-        errorType: 'unknown',
-      };
-    }
 
     const previousJson = formData.get('previousParsed');
     const previous: ParsedTransaction[] =
@@ -123,6 +154,14 @@ export async function calculateTaxFromFiles(
       newParsed.push(...txs);
     }
 
+    if (newParsed.length === 0 && previous.length === 0) {
+      return {
+        ok: false,
+        error: '처리할 거래 데이터가 없습니다.',
+        errorType: 'unknown',
+      };
+    }
+
     const allParsed = [...previous, ...newParsed];
     const rates = new StaticExchangeRateProvider(DEFAULT_RATES, 35);
     const unified = await normalize(allParsed, rates);
@@ -134,11 +173,16 @@ export async function calculateTaxFromFiles(
       deemedCostPrices: DEEMED_COST_SNAPSHOTS,
     });
 
+    const plan = await getUserPlan();
+    console.log('[calculate] user plan:', plan);
+    const wire = resultToWire(result, plan);
+    const finalResult = plan === 'free' ? maskForFree(wire) : wire;
+
     const payload: CalculatePayload = {
       newParsed: newParsed.map(parsedToWire),
       allParsed: allParsed.map(parsedToWire),
       allUnified: unified.map(unifiedToWire),
-      result: resultToWire(result),
+      result: finalResult,
       year,
     };
     return { ok: true, payload };

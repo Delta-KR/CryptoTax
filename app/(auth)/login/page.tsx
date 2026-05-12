@@ -1,21 +1,26 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard, AuthDivider } from '@/components/auth/AuthCard';
 import { SocialButtons } from '@/components/auth/SocialButtons';
-import { signIn } from '@/lib/mock/auth';
+import { signInWithPassword } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const [nextUrl, setNextUrl] = useState('/dashboard');
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setNextUrl(params.get('next') || '/dashboard');
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (!email.trim() || !password) {
@@ -23,9 +28,13 @@ export default function LoginPage() {
       return;
     }
     setSubmitting(true);
-    // mock — 모든 자격증명 success
-    signIn(email.trim(), password);
-    router.replace('/dashboard');
+    try {
+      await signInWithPassword(email.trim(), password);
+      router.replace(nextUrl);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '로그인 실패');
+      setSubmitting(false);
+    }
   }
 
   return (

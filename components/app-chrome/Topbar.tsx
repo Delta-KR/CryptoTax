@@ -1,7 +1,7 @@
 'use client';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { UserMenu } from '@/components/app-chrome/UserMenu';
-import type { User } from '@/lib/mock/auth';
+import type { User } from '@/lib/auth';
 
 interface TopbarProps {
   user: User;

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { signOut, type User } from '@/lib/mock/auth';
+import { signOut, type User } from '@/lib/auth';
 
 export function UserMenu({ user }: { user: User }) {
   const [open, setOpen] = useState(false);
@@ -24,8 +24,8 @@ export function UserMenu({ user }: { user: User }) {
     };
   }, []);
 
-  function handleSignOut() {
-    signOut();
+  async function handleSignOut() {
+    await signOut();
     router.replace('/login');
   }
 

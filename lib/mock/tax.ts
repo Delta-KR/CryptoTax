@@ -12,6 +12,8 @@ export interface TaxResult {
   tax: number;
   perCoin: Array<{ coin: string; gain: number; volume: number }>;
   transactionCount: number;
+  plan: 'free' | 'premium';
+  masked: boolean;
 }
 
 const DEDUCTION_KRW = 2_500_000;
@@ -23,6 +25,8 @@ const EMPTY_RESULT: TaxResult = {
   tax: 0,
   perCoin: [],
   transactionCount: 0,
+  plan: 'free',
+  masked: false,
 };
 
 export function calculateTax(
@@ -51,6 +55,8 @@ export function calculateTax(
       (s, c) => s + c.transactionCount,
       0,
     ),
+    plan: r.plan ?? 'free',
+    masked: r.masked ?? false,
   };
 }
 

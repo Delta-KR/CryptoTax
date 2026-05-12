@@ -4,21 +4,30 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard } from '@/components/auth/AuthCard';
+import { resetPasswordForEmail } from '@/lib/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (!email.trim()) {
       setError('이메일을 입력해주세요.');
       return;
     }
-    // mock
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await resetPasswordForEmail(email.trim());
+      setSubmitted(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '이메일 발송 실패');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (submitted) {
@@ -74,8 +83,8 @@ export default function ForgotPasswordPage() {
           onChange={(e) => setEmail(e.target.value)}
           error={error ?? undefined}
         />
-        <Button type="submit" fullWidth>
-          재설정 링크 보내기
+        <Button type="submit" fullWidth disabled={submitting}>
+          {submitting ? '발송 중…' : '재설정 링크 보내기'}
         </Button>
       </form>
     </AuthCard>

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthCard, AuthDivider } from '@/components/auth/AuthCard';
 import { SocialButtons } from '@/components/auth/SocialButtons';
-import { signUp } from '@/lib/mock/auth';
+import { signUpWithPassword } from '@/lib/auth';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,7 +18,9 @@ export default function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: FormEvent) {
+  const [success, setSuccess] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     if (!name.trim() || !email.trim() || !password) {
@@ -34,8 +36,22 @@ export default function SignupPage() {
       return;
     }
     setSubmitting(true);
-    signUp(name.trim(), email.trim(), password);
-    router.replace('/dashboard');
+    try {
+      const { needsEmailConfirmation } = await signUpWithPassword(
+        email.trim(),
+        password,
+        name.trim(),
+      );
+      if (needsEmailConfirmation) {
+        setSuccess(true);
+        setSubmitting(false);
+      } else {
+        router.replace('/dashboard');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '가입 실패');
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -51,6 +67,16 @@ export default function SignupPage() {
         </>
       }
     >
+      {success ? (
+        <div className="rounded-md border border-good/40 bg-good-soft px-4 py-5 text-[13px] leading-[1.6] text-good">
+          <div className="mb-1 font-bold">인증 이메일 발송 완료</div>
+          <div>
+            <strong>{email}</strong>로 인증 메일을 보냈습니다.
+            받은 메일의 링크를 클릭하면 가입이 완료되고 자동 로그인됩니다.
+          </div>
+        </div>
+      ) : (
+        <>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="이름"
@@ -104,6 +130,8 @@ export default function SignupPage() {
 
       <AuthDivider label="또는" />
       <SocialButtons />
+        </>
+      )}
     </AuthCard>
   );
 }
