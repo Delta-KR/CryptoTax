@@ -7,6 +7,10 @@ import { Features } from '@/components/sections/features';
 import { Pricing } from '@/components/sections/pricing';
 import { CTA } from '@/components/sections/cta';
 
+// Hero·CTA의 D-day가 Date.now()를 호출하므로 페이지가 dynamic이 됨.
+// ISR로 1시간마다 재생성하여 D-day가 자연스럽게 갱신되게 함.
+export const revalidate = 3600;
+
 export default function Home() {
   return (
     <>

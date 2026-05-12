@@ -7,7 +7,7 @@ import './globals.css';
 
 const title = '크립토택스 — 2027년 가상자산 양도소득세 완벽 대비';
 const description =
-  '업비트, 빗썸, 바이낸스 등 모든 거래소의 거래내역을 자동으로 통합해 한국 세법 기준으로 양도소득세를 계산합니다. 첫 신고까지 D-237.';
+  '업비트, 빗썸, 바이낸스 등 모든 거래소의 거래내역을 자동으로 통합해 한국 세법 기준으로 양도소득세를 계산합니다. 2027년 1월 1일 시행.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

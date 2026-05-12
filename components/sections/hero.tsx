@@ -1,17 +1,19 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { getDaysUntilTaxStart } from '@/lib/dday';
 
 // Hero — pixel-matched to design/parts/hero.jsx.
 // Sub-components are file-private (Badge / Check / Stat / Bar / Chip /
 // FloatingCard*). Promoted to components/ui/ when reused by other sections.
 
 function Badge() {
+  const dday = getDaysUntilTaxStart();
   return (
     <div className="nowrap inline-flex items-center gap-2 rounded-full border border-brand/[0.18] bg-brand/[0.08] py-1.5 pl-2 pr-3 text-xs font-semibold tracking-[-0.005em] text-brand-2">
       <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
         !
       </span>
-      2027년 1월 1일 과세 시행 확정 · D-237
+      2027년 1월 1일 과세 시행 확정 · D-{dday}
     </div>
   );
 }

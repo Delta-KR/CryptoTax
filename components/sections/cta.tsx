@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { getDaysUntilTaxStart } from '@/lib/dday';
 
 // Final CTA — glass card on vivid 3-blob glow with a notebook grid overlay.
 // Static RSC, no hover interactions.
@@ -71,13 +72,14 @@ function NotebookGrid() {
 }
 
 function DBadge() {
+  const dday = getDaysUntilTaxStart();
   return (
     <div className="nowrap mb-6 inline-flex items-center gap-2 rounded-full border border-brand/[0.28] bg-brand/[0.14] px-3.5 py-1.5 text-xs font-semibold tracking-[0.02em] text-brand">
       <span
         className="h-1.5 w-1.5 rounded-full bg-brand"
         style={{ boxShadow: '0 0 0 4px rgba(37,99,235,0.25)' }}
       />
-      첫 신고까지 D-237
+      첫 신고까지 D-{dday}
     </div>
   );
 }

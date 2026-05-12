@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { getDaysUntilTaxStart } from '@/lib/dday';
 
 // Auto-generated OpenGraph image for the whole site. Next.js convention:
 // 파일명이 opengraph-image.tsx 면 자동으로 og:image / twitter:image에 등록.
@@ -8,6 +9,7 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 export default async function Image() {
+  const dday = getDaysUntilTaxStart();
   // Pretendard Bold for Korean text rendering (satori는 woff/ttf/otf 지원, woff2 미지원)
   const fontData = await fetch(
     'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff/Pretendard-Bold.woff'
@@ -51,7 +53,7 @@ export default async function Image() {
               boxShadow: '0 0 0 4px rgba(167,243,208,0.4)',
             }}
           />
-          2027년 1월 1일 과세 시행 · D-237
+          2027년 1월 1일 과세 시행 · D-{dday}
         </div>
 
         {/* Middle: brand + headline */}
