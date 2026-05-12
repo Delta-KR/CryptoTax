@@ -83,22 +83,22 @@ function PremiumBanner() {
     >
       <div className="min-w-0 text-white">
         <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] backdrop-blur-sm">
-          🔒 Premium Only
+          Premium Only
         </div>
         <div className="text-[18px] font-extrabold leading-[1.3] tracking-[-0.01em]">
           정확한 납부세액 + 코인별 손익 + PDF 리포트
         </div>
         <p className="mt-1 text-[13px] leading-[1.5] text-white/85">
-          지금 업그레이드하면 모든 결과를 풀어드립니다.
+          프리미엄으로 업그레이드하면 모든 결과를 풀어드립니다.
         </p>
       </div>
-      <Link href="/billing/checkout?plan=premium" className="flex-shrink-0">
+      <Link href="/billing" className="flex-shrink-0">
         <button
           type="button"
           className="group relative whitespace-nowrap rounded-md bg-white px-5 py-3 text-[14px] font-extrabold text-brand shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-transform hover:scale-105"
         >
           <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/60 blur-md" />
-          전체 결과 보기 · ₩19,900 →
+          프리미엄으로 업그레이드 →
         </button>
       </Link>
     </div>
@@ -108,7 +108,7 @@ function PremiumBanner() {
 function BlurOverlay({
   children,
   masked,
-  href = '/billing/checkout?plan=premium',
+  href = '/billing',
 }: {
   children: React.ReactNode;
   masked: boolean;
@@ -122,10 +122,10 @@ function BlurOverlay({
       </div>
       <div className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-gradient-to-br from-brand/15 via-transparent to-brand/15 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
         <div
-          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
+          className="rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
           style={{ background: 'rgb(var(--brand))' }}
         >
-          🔒 잠금 해제 · ₩19,900
+          프리미엄 전용
         </div>
       </div>
     </Link>
@@ -255,18 +255,15 @@ export default function TaxPage() {
             </div>
             {masked && (
               <Link
-                href="/billing/checkout?plan=premium"
-                className="group absolute inset-0 flex flex-col items-center justify-center gap-2"
+                href="/billing"
+                className="group absolute inset-0 flex items-center justify-center"
               >
-                <div className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-brand shadow-md">
-                  🔒 Locked
-                </div>
                 <button
                   type="button"
                   className="relative whitespace-nowrap rounded-md bg-white px-5 py-2.5 text-[13px] font-extrabold text-brand shadow-[0_8px_24px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-110"
                 >
                   <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/70 blur-lg" />
-                  정확한 세액 보기 · ₩19,900 →
+                  프리미엄으로 업그레이드 →
                 </button>
               </Link>
             )}
@@ -326,11 +323,11 @@ export default function TaxPage() {
               </div>
               {masked && (
                 <Link
-                  href="/billing/checkout?plan=premium"
+                  href="/billing"
                   className="group absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center"
                 >
                   <div className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-brand shadow-md ring-1 ring-brand/30">
-                    🔒 Premium Only
+                    Premium Only
                   </div>
                   <div className="text-[14px] font-bold text-ink">
                     코인별 정확한 손익을 확인하세요
@@ -347,7 +344,7 @@ export default function TaxPage() {
                       className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
                       style={{ background: 'rgb(37,99,235)' }}
                     />
-                    잠금 해제 · ₩19,900 →
+                    프리미엄으로 업그레이드 →
                   </button>
                 </Link>
               )}

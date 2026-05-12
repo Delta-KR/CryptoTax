@@ -154,7 +154,7 @@ export default function DashboardPage() {
         />
         {result.masked ? (
           <Link
-            href="/billing/checkout?plan=premium"
+            href="/billing"
             className="group relative block"
           >
             <div className="pointer-events-none select-none blur-[10px]" aria-hidden>
@@ -167,10 +167,10 @@ export default function DashboardPage() {
             </div>
             <div className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-gradient-to-br from-brand/15 via-transparent to-brand/15 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
               <div
-                className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
+                className="rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
                 style={{ background: 'rgb(var(--brand))' }}
               >
-                🔒 잠금 해제 · ₩19,900
+                프리미엄 전용
               </div>
             </div>
           </Link>
@@ -205,7 +205,7 @@ export default function DashboardPage() {
         {chartItems.length > 0 ? (
           result.masked ? (
             <Link
-              href="/billing/checkout?plan=premium"
+              href="/billing"
               className="group relative block"
             >
               <div className="pointer-events-none select-none blur-[10px]" aria-hidden>
@@ -216,7 +216,7 @@ export default function DashboardPage() {
               </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
                 <div className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-brand shadow-md ring-1 ring-brand/30">
-                  🔒 Premium Only
+                  Premium Only
                 </div>
                 <div className="text-[13px] font-bold text-ink">
                   코인별 정확한 손익을 확인하세요
@@ -233,7 +233,7 @@ export default function DashboardPage() {
                     className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
                     style={{ background: 'rgb(37,99,235)' }}
                   />
-                  잠금 해제 · ₩19,900 →
+                  프리미엄으로 업그레이드 →
                 </button>
               </div>
             </Link>
