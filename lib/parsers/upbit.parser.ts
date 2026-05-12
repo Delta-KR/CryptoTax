@@ -2,14 +2,17 @@ import { v4 as uuid } from 'uuid';
 import type { ParsedTransaction } from '@/lib/engine/types';
 import { type ExchangeParser, ParseError } from './parser.interface';
 
-type PDFParseClass = new (options: { data: Uint8Array }) => {
-  getText(): Promise<{ text: string }>;
-  destroy(): Promise<void>;
-};
+type PdfParseFn = (
+  buffer: Buffer,
+) => Promise<{ text: string; numpages: number }>;
 
 const DATE_LINE = /^(\d{4})\.(\d{2})\.(\d{2})$/;
 const TIME_LINE = /^(\d{2}):(\d{2})$/;
-const NUMBER_UNIT = /^([\d,.]+)\s+([A-Z]+)/;
+// Data row: {coin}{market: '-' or letters}{kind}{rest}
+// Upbit row: {coin: any letters/digits}{market: '-' or 'KRW' or 'BTC' or 'USDT' or 'USDC'}{kind}{rest}
+const ROW_REGEX =
+  /^([A-Z][A-Z0-9]*?)(-|KRW|BTC|USDT|USDC)(매수|매도|입금|출금)(.+)$/;
+const NUMBER_UNIT_GLOBAL = /(\d[\d,.]*)([A-Z]+)/g;
 
 function parseDateTime(dateStr: string, timeStr: string): Date {
   const dm = dateStr.match(DATE_LINE);
@@ -22,16 +25,28 @@ function parseDateTime(dateStr: string, timeStr: string): Date {
   );
 }
 
-function parseNumberUnit(s: string): { value: number; unit: string } {
-  const m = s.trim().match(NUMBER_UNIT);
-  if (!m) throw new ParseError(`수치·단위 형식 오류: "${s}"`);
-  const value = parseFloat(m[1].replace(/,/g, ''));
-  if (Number.isNaN(value)) throw new ParseError(`수치 파싱 실패: "${s}"`);
-  return { value, unit: m[2] };
+interface NumUnit {
+  value: number;
+  unit: string;
+}
+
+function extractPairs(s: string): NumUnit[] {
+  const pairs: NumUnit[] = [];
+  NUMBER_UNIT_GLOBAL.lastIndex = 0;
+  let m: RegExpExecArray | null;
+  while ((m = NUMBER_UNIT_GLOBAL.exec(s)) !== null) {
+    const v = parseFloat(m[1].replace(/,/g, ''));
+    if (Number.isNaN(v)) continue;
+    pairs.push({ value: v, unit: m[2] });
+  }
+  return pairs;
 }
 
 export function parseText(text: string): ParsedTransaction[] {
-  const lines = text.split('\n').map((l) => l.trim());
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
   const txs: ParsedTransaction[] = [];
 
   let i = 0;
@@ -41,36 +56,46 @@ export function parseText(text: string): ParsedTransaction[] {
       continue;
     }
 
-    const dateStr = lines[i];
-    if (i + 1 >= lines.length) break;
-
-    const cells = lines[i + 1].split('\t').map((c) => c.trim());
-    if (cells.length < 8) {
-      i += 1;
+    if (i + 2 >= lines.length) break;
+    if (!TIME_LINE.test(lines[i + 1])) {
+      i++;
       continue;
     }
 
-    const timeStr = cells[0];
-    const coin = cells[1];
-    const kind = cells[3];
+    const dateStr = lines[i];
+    const timeStr = lines[i + 1];
+    const dataLine = lines[i + 2];
+
+    const match = dataLine.match(ROW_REGEX);
+    if (!match) {
+      i++;
+      continue;
+    }
+
+    const coin = match[1];
+    const kind = match[3];
+    const rest = match[4];
 
     if (kind === '입금' || kind === '출금') {
-      i += 2;
+      i += 3;
       continue;
     }
 
     if (kind !== '매수' && kind !== '매도') {
-      throw new ParseError(`알 수 없는 종류: "${kind}" (행 ${i + 2})`);
+      throw new ParseError(`알 수 없는 종류: "${kind}"`);
     }
 
-    const amount = parseNumberUnit(cells[4]);
-    const price = parseNumberUnit(cells[5]);
-    const total = parseNumberUnit(cells[6]);
-    const fee = parseNumberUnit(cells[7]);
+    const pairs = extractPairs(rest);
+    if (pairs.length < 4) {
+      throw new ParseError(
+        `행 형식 오류 (수치 4개 미만): "${dataLine}"`,
+      );
+    }
 
+    const [amount, price, total, fee] = pairs;
     if (amount.unit !== coin) {
       throw new ParseError(
-        `거래수량 단위 ${amount.unit} ≠ 코인 ${coin} (행 ${i + 2})`,
+        `거래수량 단위 ${amount.unit} ≠ 코인 ${coin}`,
       );
     }
 
@@ -88,9 +113,19 @@ export function parseText(text: string): ParsedTransaction[] {
       feeCurrency: fee.unit,
     });
 
-    i += 2;
-    if (i < lines.length && TIME_LINE.test(lines[i])) {
-      i += 1;
+    // 매수/매도는 주문시간 date+time이 뒤따름 → 추가 2줄 스킵
+    i += 3;
+    if (i + 1 < lines.length && DATE_LINE.test(lines[i]) && TIME_LINE.test(lines[i + 1])) {
+      // 다음 행 시작인지 주문시간인지 구분: 그 다음 줄이 data row인지 확인
+      // 주문시간이면 그 뒤에 또 date가 나오거나 끝남
+      // 다음 체결시간이면 그 뒤에 data row가 나옴
+      // 간단히: 주문시간 가능성 우선해서 스킵 (Upbit 매수/매도는 항상 주문시간 있음)
+      const after = i + 2 < lines.length ? lines[i + 2] : '';
+      const isNextChegyeol =
+        ROW_REGEX.test(after);
+      if (!isNextChegyeol) {
+        i += 2;
+      }
     }
   }
 
@@ -105,9 +140,9 @@ export const upbitParser: ExchangeParser = {
     return filename.toLowerCase().endsWith('.pdf');
   },
   async parse(file: File): Promise<ParsedTransaction[]> {
-    let buf: Uint8Array;
+    let buf: Buffer;
     try {
-      buf = new Uint8Array(await file.arrayBuffer());
+      buf = Buffer.from(await file.arrayBuffer());
     } catch (e) {
       throw new ParseError(
         `PDF 파일 읽기 실패: ${e instanceof Error ? e.message : String(e)}`,
@@ -115,41 +150,27 @@ export const upbitParser: ExchangeParser = {
       );
     }
 
-    let PDFParse: PDFParseClass;
+    let pdf: PdfParseFn;
     try {
-      const mod = (await import('pdf-parse')) as { PDFParse: PDFParseClass };
-      PDFParse = mod.PDFParse;
+      const mod = (await import('pdf-parse')) as
+        | { default: PdfParseFn }
+        | PdfParseFn;
+      pdf = (typeof mod === 'function' ? mod : mod.default) as PdfParseFn;
     } catch (e) {
       throw new ParseError(
-        `pdf-parse 모듈 로드 실패 (Vercel 런타임 호환성): ${e instanceof Error ? e.message : String(e)}`,
-        e,
-      );
-    }
-
-    let parser: InstanceType<PDFParseClass>;
-    try {
-      parser = new PDFParse({ data: buf });
-    } catch (e) {
-      throw new ParseError(
-        `PDF 파서 초기화 실패: ${e instanceof Error ? e.message : String(e)}`,
+        `pdf-parse 모듈 로드 실패: ${e instanceof Error ? e.message : String(e)}`,
         e,
       );
     }
 
     try {
-      const result = await parser.getText();
-      return parseText(result.text);
+      const data = await pdf(buf);
+      return parseText(data.text);
     } catch (e) {
       throw new ParseError(
         `PDF 텍스트 추출 실패: ${e instanceof Error ? e.message : String(e)}`,
         e,
       );
-    } finally {
-      try {
-        await parser.destroy();
-      } catch {
-        // ignore destroy errors
-      }
     }
   },
 };
