@@ -245,6 +245,12 @@ export default function UploadPage() {
                   업로드된 파일은 서버 메모리에서 처리 후 즉시 폐기됩니다.
                   결과는 브라우저에만 저장됩니다.
                 </p>
+                <Link
+                  href="/guide#exchanges"
+                  className="mt-3 block text-center text-[12px] font-semibold text-brand hover:underline"
+                >
+                  자세한 다운로드 가이드 보기 →
+                </Link>
               </Card>
             </TabsContent>
           );
