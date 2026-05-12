@@ -59,16 +59,18 @@ describe('applyDeemedCost', () => {
     expect(r.isDeemedCost).toBe(true);
   });
 
-  it('throws when pre-2027 BUY has no snapshot for coin', () => {
-    expect(() =>
-      applyDeemedCost(
-        tx({
-          coin: 'ETH',
-          date: new Date('2026-06-01T00:00:00+09:00'),
-        }),
-        snapshots,
-      ),
-    ).toThrow(/시가가 누락/);
+  it('falls back to actual cost + warning when snapshot missing', () => {
+    const r = applyDeemedCost(
+      tx({
+        coin: 'ETH',
+        date: new Date('2026-06-01T00:00:00+09:00'),
+        pricePerUnitKRW: 4_000_000,
+      }),
+      snapshots,
+    );
+    expect(r.pricePerUnitKRW).toBe(4_000_000);
+    expect(r.isDeemedCost).toBe(false);
+    expect(r.warning).toMatch(/시가 누락/);
   });
 
   it('returns unchanged for post-2027 BUY', () => {

@@ -99,6 +99,7 @@ export interface TaxResult {
   realizedGains: RealizedGain[];
   holdingsAfter: Record<string, Lot[]>;
   summary: CoinSummary[];
+  warnings: string[];
 }
 
 export interface ExchangeRate {

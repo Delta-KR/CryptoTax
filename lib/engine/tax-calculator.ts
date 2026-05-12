@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import type {
   CoinSummary,
+  ConsumedLot,
   Lot,
   RealizedGain,
   TaxResult,
@@ -22,23 +23,49 @@ export interface TaxCalculatorInput {
   deemedCostPrices?: Map<string, number>;
 }
 
+interface ConsumeOutcome {
+  costBasisKRW: number;
+  consumedLots: ConsumedLot[];
+  buyFeeKRW: number;
+  orphan: boolean;
+}
+
 function makeLot(
   tx: UnifiedTransaction,
   snapshots: Map<string, number> | undefined,
+  warnings: string[],
 ): Lot {
-  const { pricePerUnitKRW, isDeemedCost } = applyDeemedCost(tx, snapshots);
+  const r = applyDeemedCost(tx, snapshots);
+  if (r.warning) warnings.push(r.warning);
   return {
     id: uuid(),
     coin: tx.coin,
     amount: tx.amount,
     originalAmount: tx.amount,
-    pricePerUnitKRW,
-    totalCostKRW: roundKRW(pricePerUnitKRW * tx.amount),
+    pricePerUnitKRW: r.pricePerUnitKRW,
+    totalCostKRW: roundKRW(r.pricePerUnitKRW * tx.amount),
     feeKRW: tx.feeKRW,
     date: tx.date,
     exchange: tx.exchange,
-    isDeemedCost,
+    isDeemedCost: r.isDeemedCost,
   };
+}
+
+function consumeWithFallback(
+  fifo: FIFOEngine,
+  tx: UnifiedTransaction,
+): ConsumeOutcome {
+  try {
+    const r = fifo.consumeLots(tx.coin, tx.amount);
+    return { ...r, orphan: false };
+  } catch {
+    return {
+      costBasisKRW: tx.totalKRW,
+      consumedLots: [],
+      buyFeeKRW: 0,
+      orphan: true,
+    };
+  }
 }
 
 function buildSummary(
@@ -75,18 +102,24 @@ function buildSummary(
 export function calculateTax(input: TaxCalculatorInput): TaxResult {
   const fifo = new FIFOEngine();
   const realizedGains: RealizedGain[] = [];
+  const warnings: string[] = [];
+  const orphanCounts = new Map<string, number>();
 
   for (const tx of input.transactions) {
     if (tx.type === 'BUY') {
-      fifo.addLot(tx.coin, makeLot(tx, input.deemedCostPrices));
+      fifo.addLot(tx.coin, makeLot(tx, input.deemedCostPrices, warnings));
     } else if (tx.type === 'SELL') {
-      const { costBasisKRW, consumedLots, buyFeeKRW } = fifo.consumeLots(
-        tx.coin,
-        tx.amount,
-      );
+      const outcome = consumeWithFallback(fifo, tx);
       const pnl = roundKRW(
-        tx.totalKRW - costBasisKRW - tx.feeKRW - buyFeeKRW,
+        tx.totalKRW - outcome.costBasisKRW - tx.feeKRW - outcome.buyFeeKRW,
       );
+
+      if (outcome.orphan) {
+        orphanCounts.set(
+          tx.coin,
+          (orphanCounts.get(tx.coin) ?? 0) + 1,
+        );
+      }
 
       if (kstYear(tx.date) === input.year) {
         realizedGains.push({
@@ -95,15 +128,21 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
           sellDate: tx.date,
           sellAmount: tx.amount,
           proceedsKRW: tx.totalKRW,
-          costBasisKRW,
+          costBasisKRW: outcome.costBasisKRW,
           sellFeeKRW: tx.feeKRW,
-          buyFeeKRW,
+          buyFeeKRW: outcome.buyFeeKRW,
           pnlKRW: pnl,
           exchange: tx.exchange,
-          consumedLots,
+          consumedLots: outcome.consumedLots,
         });
       }
     }
+  }
+
+  for (const [coin, count] of orphanCounts) {
+    warnings.push(
+      `${coin} 매도 ${count}건의 매수 기록이 없습니다 — 손익 0원으로 처리. 매수 거래소의 거래내역도 함께 업로드하면 정확한 세금이 계산됩니다.`,
+    );
   }
 
   let totalGain = 0;
@@ -130,5 +169,6 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
     realizedGains,
     holdingsAfter: Object.fromEntries(fifo.getHoldings()),
     summary: buildSummary(realizedGains, input.transactions, input.year),
+    warnings,
   };
 }

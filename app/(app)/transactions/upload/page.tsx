@@ -100,6 +100,11 @@ export default function UploadPage() {
         `${file.name} 파싱 완료 · 거래 ${payload.newParsed.length}건 추가`,
         'success',
       );
+
+      const warnings = payload.result.warnings;
+      if (warnings.length > 0) {
+        toast.show(warnings[0], 'info');
+      }
     } catch (err) {
       window.clearInterval(tick);
       timersRef.current.delete(exchangeId);

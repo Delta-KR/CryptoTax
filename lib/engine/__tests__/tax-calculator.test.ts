@@ -254,25 +254,22 @@ describe('calculateTax', () => {
     expect(btc.realizedPnLKRW).toBe(29_999_700);
   });
 
-  it('throws when SELL exceeds holdings', () => {
-    expect(() =>
-      calculateTax({
-        transactions: [
-          tx({
-            type: 'BUY',
-            date: new Date('2027-01-01T00:00:00+09:00'),
-            amount: 0.5,
-            totalKRW: 40_000_000,
-          }),
-          tx({
-            type: 'SELL',
-            date: new Date('2027-06-01T00:00:00+09:00'),
-            amount: 1,
-            totalKRW: 80_000_000,
-          }),
-        ],
-        year: 2027,
-      }),
-    ).toThrow(/Insufficient lots/);
+  it('treats orphan SELL (no preceding BUY) as zero-PnL with warning', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'SELL',
+          date: new Date('2027-06-01T00:00:00+09:00'),
+          coin: 'DUSK',
+          amount: 190,
+          totalKRW: 1_000_000,
+        }),
+      ],
+      year: 2027,
+    });
+    expect(result.realizedGains).toHaveLength(1);
+    expect(result.realizedGains[0].costBasisKRW).toBe(1_000_000);
+    expect(result.realizedGains[0].pnlKRW).toBe(0);
+    expect(result.warnings.some((w) => w.includes('DUSK'))).toBe(true);
   });
 });

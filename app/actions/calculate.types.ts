@@ -80,6 +80,7 @@ export interface TaxResultWire {
   realizedGains: RealizedGainWire[];
   holdingsAfter: Record<string, LotWire[]>;
   summary: CoinSummaryWire[];
+  warnings: string[];
 }
 
 export interface CalculatePayload {
