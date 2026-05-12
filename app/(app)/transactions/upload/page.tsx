@@ -31,14 +31,6 @@ const exchanges: ExchangeInfo[] = [
     bg: '#EEF3FF',
   },
   {
-    id: 'bithumb',
-    name: '빗썸',
-    logo: '/logos/bithumb.png',
-    format: 'XLS',
-    guide: 'MyPage > 거래내역 > 엑셀 다운로드',
-    bg: '#FFF0ED',
-  },
-  {
     id: 'binance',
     name: '바이낸스',
     logo: '/logos/binance.png',

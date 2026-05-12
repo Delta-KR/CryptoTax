@@ -12,7 +12,7 @@ interface Exchange {
 
 const exchanges: readonly Exchange[] = [
   { name: '업비트',   sub: 'Upbit',   logo: '/logos/upbit.png',   bg: '#EEF3FF', status: 'live' },
-  { name: '빗썸',     sub: 'Bithumb', logo: '/logos/bithumb.png', bg: '#FFF0ED', status: 'live' },
+  { name: '빗썸',     sub: 'Bithumb', logo: '/logos/bithumb.png', bg: '#FFF0ED', status: 'soon' },
   { name: '바이낸스', sub: 'Binance', logo: '/logos/binance.png', bg: '#FFFBEC', status: 'live' },
   { name: '바이빗',   sub: 'Bybit',   logo: '/logos/bybit.png',   bg: '#FFF7ED', status: 'soon' },
   { name: 'OKX',      sub: 'OKX',     logo: '/logos/okx.png',     bg: '#F5F5F5', status: 'soon' },
@@ -111,7 +111,7 @@ export function Exchanges() {
             국내외 주요 거래소 지원
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            MVP 출시 시 3개 거래소. 매월 새 거래소가 추가됩니다.
+            MVP 출시 시 2개 거래소. 매월 새 거래소가 추가됩니다.
           </p>
         </div>
 
@@ -121,7 +121,7 @@ export function Exchanges() {
             <StatusPillLive />
             <span className="nowrap text-[13px] text-muted">지금 바로 사용 가능</span>
           </div>
-          <div className="mx-auto grid max-w-[800px] grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-[600px] grid-cols-1 gap-4 lg:grid-cols-2">
             {live.map((e) => (
               <LiveCard key={e.name} exchange={e} />
             ))}

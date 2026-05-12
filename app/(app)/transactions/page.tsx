@@ -93,9 +93,7 @@ export default function TransactionsPage() {
         >
           <option value="all">거래소 전체</option>
           <option value="upbit">업비트</option>
-          <option value="bithumb">빗썸</option>
           <option value="binance">바이낸스</option>
-          <option value="bybit">바이빗</option>
         </Select>
         <Select
           value={coin}

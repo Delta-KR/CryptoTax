@@ -1,7 +1,7 @@
 // Mock 거래 데이터 — 결정적 PRNG로 생성하므로 SSR/클라이언트 일관.
 // 업로드 시 추가되는 거래는 localStorage에 별도 저장.
 
-export type ExchangeId = 'upbit' | 'bithumb' | 'binance' | 'bybit';
+export type ExchangeId = 'upbit' | 'binance' | 'bybit';
 
 export interface Transaction {
   id: string;
@@ -17,7 +17,7 @@ export interface Transaction {
 
 const EXTRA_KEY = 'crypto-tax-tx-extra';
 
-const exchanges: ExchangeId[] = ['upbit', 'bithumb', 'binance'];
+const exchanges: ExchangeId[] = ['upbit', 'binance'];
 const coinPrices: Record<string, number> = {
   BTC: 85_000_000,
   ETH: 4_800_000,
@@ -141,7 +141,6 @@ export function clearExtra() {
 // 거래소 표시명
 export const exchangeLabel: Record<ExchangeId, string> = {
   upbit: '업비트',
-  bithumb: '빗썸',
   binance: '바이낸스',
   bybit: '바이빗',
 };
