@@ -112,11 +112,21 @@ export default function SignupPage() {
           disabled={submitting}
           label={
             <span className="text-[13px]">
-              <Link href="#" className="text-brand underline">
+              <Link
+                href="/legal/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline"
+              >
                 이용약관
               </Link>{' '}
               및{' '}
-              <Link href="#" className="text-brand underline">
+              <Link
+                href="/legal/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-brand underline"
+              >
                 개인정보처리방침
               </Link>
               에 동의합니다

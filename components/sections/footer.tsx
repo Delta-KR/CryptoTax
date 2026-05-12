@@ -1,19 +1,33 @@
+import Link from 'next/link';
+
+type FooterItem = string | { label: string; href: string };
+
 function FooterCol({
   title,
   items,
 }: {
   title: string;
-  items: readonly string[];
+  items: readonly FooterItem[];
 }) {
   return (
     <div>
       <div className="mb-3.5 text-[13px] font-semibold text-ink">{title}</div>
       <ul className="flex list-none flex-col gap-2.5">
-        {items.map((it) => (
-          <li key={it} className="text-[13px] text-muted">
-            {it}
-          </li>
-        ))}
+        {items.map((it) => {
+          const label = typeof it === 'string' ? it : it.label;
+          const href = typeof it === 'string' ? undefined : it.href;
+          return (
+            <li key={label} className="text-[13px] text-muted">
+              {href ? (
+                <Link href={href} className="transition-colors hover:text-ink">
+                  {label}
+                </Link>
+              ) : (
+                label
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -37,7 +51,14 @@ export function Footer() {
             items={['거래 데이터 통합 엔진', '한국 세법 기준 자동 계산', '신고용 리포트 생성']}
           />
           <FooterCol title="회사" items={['소개', '팀', '채용']} />
-          <FooterCol title="고객지원" items={['문의하기', '개인정보처리방침', '이용약관']} />
+          <FooterCol
+            title="고객지원"
+            items={[
+              '문의하기',
+              { label: '개인정보처리방침', href: '/legal/privacy' },
+              { label: '이용약관', href: '/legal/terms' },
+            ]}
+          />
         </div>
         <div className="flex flex-col gap-3 pt-6 text-xs text-muted-2 md:flex-row md:justify-between md:gap-0">
           <div>© 2026 크립토택스. All rights reserved.</div>
