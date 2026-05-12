@@ -1,5 +1,7 @@
 'use server';
 
+console.log('[calculate] action module loaded at', new Date().toISOString());
+
 import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
 import { calculateTax } from '@/lib/engine/tax-calculator';
@@ -93,8 +95,10 @@ function currentTargetYear(): number {
 export async function calculateTaxFromFiles(
   formData: FormData,
 ): Promise<CalculateResult> {
+  console.log('[calculate] invoked');
   try {
     const files = formData.getAll('files') as File[];
+    console.log('[calculate] files received:', files.length);
     if (files.length === 0) {
       return {
         ok: false,
@@ -113,7 +117,9 @@ export async function calculateTaxFromFiles(
 
     const newParsed: ParsedTransaction[] = [];
     for (const file of files) {
+      console.log('[calculate] parsing file:', file.name, file.size, 'bytes');
       const txs = await parseFile(file);
+      console.log('[calculate] parsed', txs.length, 'transactions from', file.name);
       newParsed.push(...txs);
     }
 

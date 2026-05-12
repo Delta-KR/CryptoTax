@@ -1,7 +1,11 @@
 import { v4 as uuid } from 'uuid';
-import { PDFParse } from 'pdf-parse';
 import type { ParsedTransaction } from '@/lib/engine/types';
 import { type ExchangeParser, ParseError } from './parser.interface';
+
+type PDFParseClass = new (options: { data: Uint8Array }) => {
+  getText(): Promise<{ text: string }>;
+  destroy(): Promise<void>;
+};
 
 const DATE_LINE = /^(\d{4})\.(\d{2})\.(\d{2})$/;
 const TIME_LINE = /^(\d{2}):(\d{2})$/;
@@ -111,12 +115,23 @@ export const upbitParser: ExchangeParser = {
       );
     }
 
-    let parser: PDFParse;
+    let PDFParse: PDFParseClass;
+    try {
+      const mod = (await import('pdf-parse')) as { PDFParse: PDFParseClass };
+      PDFParse = mod.PDFParse;
+    } catch (e) {
+      throw new ParseError(
+        `pdf-parse 모듈 로드 실패 (Vercel 런타임 호환성): ${e instanceof Error ? e.message : String(e)}`,
+        e,
+      );
+    }
+
+    let parser: InstanceType<PDFParseClass>;
     try {
       parser = new PDFParse({ data: buf });
     } catch (e) {
       throw new ParseError(
-        `PDF 파서 초기화 실패 (서버 환경 호환성 이슈): ${e instanceof Error ? e.message : String(e)}`,
+        `PDF 파서 초기화 실패: ${e instanceof Error ? e.message : String(e)}`,
         e,
       );
     }
