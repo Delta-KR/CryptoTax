@@ -1,5 +1,32 @@
 export type TxType = 'BUY' | 'SELL' | 'SWAP';
-export type Currency = 'KRW' | 'USDT' | 'USD';
+
+export type Currency = string;
+
+export const FIAT_LIKE_QUOTES: readonly string[] = [
+  'KRW',
+  'USDT',
+  'USDC',
+  'BUSD',
+  'FDUSD',
+  'USD',
+  'EUR',
+  'TRY',
+];
+
+export interface ParsedTransaction {
+  id: string;
+  date: Date;
+  type: 'BUY' | 'SELL';
+  coin: string;
+  amount: number;
+  pricePerUnit: number;
+  total: number;
+  fee: number;
+  exchange: string;
+  quoteCurrency: Currency;
+  feeCurrency: Currency;
+  isSwap?: boolean;
+}
 
 export interface UnifiedTransaction {
   id: string;
