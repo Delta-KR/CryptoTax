@@ -33,23 +33,6 @@ const TIERS: readonly Tier[] = [
     emphasis: false,
   },
   {
-    name: '단일 과세연도',
-    tag: '한 해만 신고',
-    price: '₩29,900',
-    sub: '1개 연도 · 영구 접근',
-    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게.',
-    features: [
-      '선택한 1개 과세연도 결과 열람',
-      '해당 연도 PDF 리포트 무제한',
-      '모든 거래소 무제한',
-      '의제취득가액 자동 적용',
-      '코인별 손익 상세',
-    ],
-    cta: '단일 연도 구매',
-    href: '/signup',
-    emphasis: false,
-  },
-  {
     name: '구독',
     tag: '여러 해 신고',
     price: '₩19,900',
@@ -67,6 +50,23 @@ const TIERS: readonly Tier[] = [
     href: '/signup',
     emphasis: true,
     badge: 'BEST VALUE',
+  },
+  {
+    name: '단일 과세연도',
+    tag: '한 해만 신고',
+    price: '₩29,900',
+    sub: '1개 연도 · 영구 접근',
+    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게.',
+    features: [
+      '선택한 1개 과세연도 결과 열람',
+      '해당 연도 PDF 리포트 무제한',
+      '모든 거래소 무제한',
+      '의제취득가액 자동 적용',
+      '코인별 손익 상세',
+    ],
+    cta: '단일 연도 구매',
+    href: '/signup',
+    emphasis: false,
   },
 ];
 
@@ -102,9 +102,8 @@ function PricingCard({ tier }: { tier: Tier }) {
   return (
     <HoverCard
       className={
-        'relative rounded-[18px] border p-8 ' +
-        (e ? '' : 'border-line bg-card shadow-sm') +
-        (e ? ' lg:-translate-y-3' : '')
+        'relative flex h-full flex-col rounded-[18px] border p-8 ' +
+        (e ? '' : 'border-line bg-card shadow-sm')
       }
       style={
         e
@@ -161,7 +160,7 @@ function PricingCard({ tier }: { tier: Tier }) {
         </p>
       </div>
 
-      <ul className="mb-7 flex list-none flex-col gap-3">
+      <ul className="mb-7 flex flex-1 list-none flex-col gap-3">
         {tier.features.map((f) => (
           <li key={f} className="flex items-center gap-2.5 text-sm">
             <FeatureCheck emphasis={e} />
