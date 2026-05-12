@@ -11,9 +11,12 @@ import { signInWithPassword } from '@/lib/auth';
 export default function LoginPage() {
   const router = useRouter();
   const [nextUrl, setNextUrl] = useState('/dashboard');
+  const [oauthError, setOauthError] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setNextUrl(params.get('next') || '/dashboard');
+    const err = params.get('error');
+    if (err) setOauthError(decodeURIComponent(err));
   }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,6 +53,14 @@ export default function LoginPage() {
         </>
       }
     >
+      {oauthError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-md border border-bad/40 bg-bad-soft px-4 py-3 text-[13px] text-bad"
+        >
+          소셜 로그인 실패: {oauthError}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="이메일"

@@ -123,6 +123,24 @@ export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
 }
 
+export type OAuthProvider = 'google' | 'kakao';
+
+export async function signInWithOAuth(
+  provider: OAuthProvider,
+  options?: { nextUrl?: string },
+): Promise<void> {
+  const supabase = createSupabaseBrowserClient();
+  const redirectTo =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/auth/callback${options?.nextUrl ? `?next=${encodeURIComponent(options.nextUrl)}` : ''}`
+      : undefined;
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo },
+  });
+  if (error) throw new Error(translateSupabaseError(error.message));
+}
+
 function translateSupabaseError(msg: string): string {
   const map: Record<string, string> = {
     'Invalid login credentials': '이메일 또는 비밀번호가 일치하지 않습니다.',
