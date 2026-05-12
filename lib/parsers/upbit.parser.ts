@@ -101,13 +101,40 @@ export const upbitParser: ExchangeParser = {
     return filename.toLowerCase().endsWith('.pdf');
   },
   async parse(file: File): Promise<ParsedTransaction[]> {
-    const buf = new Uint8Array(await file.arrayBuffer());
-    const parser = new PDFParse({ data: buf });
+    let buf: Uint8Array;
+    try {
+      buf = new Uint8Array(await file.arrayBuffer());
+    } catch (e) {
+      throw new ParseError(
+        `PDF 파일 읽기 실패: ${e instanceof Error ? e.message : String(e)}`,
+        e,
+      );
+    }
+
+    let parser: PDFParse;
+    try {
+      parser = new PDFParse({ data: buf });
+    } catch (e) {
+      throw new ParseError(
+        `PDF 파서 초기화 실패 (서버 환경 호환성 이슈): ${e instanceof Error ? e.message : String(e)}`,
+        e,
+      );
+    }
+
     try {
       const result = await parser.getText();
       return parseText(result.text);
+    } catch (e) {
+      throw new ParseError(
+        `PDF 텍스트 추출 실패: ${e instanceof Error ? e.message : String(e)}`,
+        e,
+      );
     } finally {
-      await parser.destroy();
+      try {
+        await parser.destroy();
+      } catch {
+        // ignore destroy errors
+      }
     }
   },
 };
