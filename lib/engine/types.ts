@@ -97,7 +97,7 @@ export interface TaxResult {
   incomeTaxKRW: number;
   localTaxKRW: number;
   realizedGains: RealizedGain[];
-  holdingsAfter: Map<string, Lot[]>;
+  holdingsAfter: Record<string, Lot[]>;
   summary: CoinSummary[];
 }
 

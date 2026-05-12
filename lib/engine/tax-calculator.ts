@@ -128,7 +128,7 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
     incomeTaxKRW: incomeTax,
     localTaxKRW: localTax,
     realizedGains,
-    holdingsAfter: fifo.getHoldings(),
+    holdingsAfter: Object.fromEntries(fifo.getHoldings()),
     summary: buildSummary(realizedGains, input.transactions, input.year),
   };
 }

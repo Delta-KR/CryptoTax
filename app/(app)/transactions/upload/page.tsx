@@ -10,7 +10,9 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
-import { addBatch, type ExchangeId } from '@/lib/mock/transactions';
+import { type ExchangeId } from '@/lib/mock/transactions';
+import { calculateTaxFromFiles } from '@/app/actions/calculate';
+import { appendUpload, loadSession, clearSession } from '@/lib/storage/session';
 
 interface ExchangeInfo {
   id: ExchangeId;
@@ -35,7 +37,7 @@ const exchanges: ExchangeInfo[] = [
     name: '바이낸스',
     logo: '/logos/binance.png',
     format: 'CSV',
-    guide: 'Wallet > Transaction History > Export CSV',
+    guide: 'Wallet > Transaction History > Export CSV (Spot 전용)',
     bg: '#FFFBEC',
   },
   {
@@ -55,40 +57,79 @@ export default function UploadPage() {
   const [uploaded, setUploaded] = useState<Record<string, number>>({});
   const timersRef = useRef<Map<string, number>>(new Map());
 
-  function startUpload(exchangeId: ExchangeId, fileName: string) {
-    // 기존 타이머 정리
+  async function startUpload(exchangeId: ExchangeId, file: File) {
     const existing = timersRef.current.get(exchangeId);
     if (existing) window.clearInterval(existing);
 
     setProgress((p) => ({ ...p, [exchangeId]: 0 }));
     const tick = window.setInterval(() => {
       setProgress((prev) => {
-        const current = prev[exchangeId] ?? 0;
-        const next = Math.min(100, current + 10 + Math.random() * 15);
-        if (next >= 100) {
-          window.clearInterval(tick);
-          timersRef.current.delete(exchangeId);
-          const count = 5 + Math.floor(Math.random() * 8);
-          addBatch(exchangeId, count);
-          setUploaded((u) => ({ ...u, [exchangeId]: (u[exchangeId] ?? 0) + count }));
-          toast.show(`${fileName} 업로드 완료 · 거래 ${count}건 추가`, 'success');
-          return { ...prev, [exchangeId]: 100 };
-        }
-        return { ...prev, [exchangeId]: next };
+        const cur = prev[exchangeId] ?? 0;
+        if (cur >= 90) return prev;
+        return {
+          ...prev,
+          [exchangeId]: Math.min(90, cur + 8 + Math.random() * 10),
+        };
       });
     }, 200);
     timersRef.current.set(exchangeId, tick);
+
+    try {
+      const session = loadSession();
+      const formData = new FormData();
+      formData.append('files', file);
+      formData.append(
+        'previousParsed',
+        JSON.stringify(session?.allParsed ?? []),
+      );
+
+      const payload = await calculateTaxFromFiles(formData);
+
+      window.clearInterval(tick);
+      timersRef.current.delete(exchangeId);
+
+      appendUpload(payload, file.name);
+      setProgress((p) => ({ ...p, [exchangeId]: 100 }));
+      setUploaded((u) => ({
+        ...u,
+        [exchangeId]:
+          (u[exchangeId] ?? 0) + payload.newParsed.length,
+      }));
+
+      toast.show(
+        `${file.name} 파싱 완료 · 거래 ${payload.newParsed.length}건 추가`,
+        'success',
+      );
+    } catch (err) {
+      window.clearInterval(tick);
+      timersRef.current.delete(exchangeId);
+      setProgress((p) => ({ ...p, [exchangeId]: 0 }));
+      const msg = err instanceof Error ? err.message : '파일 처리 중 오류';
+      toast.show(msg, 'error');
+    }
+  }
+
+  function handleReset() {
+    clearSession();
+    setProgress({});
+    setUploaded({});
+    toast.show('업로드 데이터가 초기화되었습니다.', 'success');
   }
 
   return (
     <>
       <PageHeader
         title="거래 데이터 통합"
-        description="거래소별 거래내역 파일을 업로드하면 자동으로 형식을 통일합니다."
+        description="거래소별 거래내역 파일을 업로드하면 자동으로 통합·정규화되어 세금이 계산됩니다."
         right={
-          <Link href="/transactions">
-            <Button variant="secondary">통합 거래 내역 보기 →</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={handleReset}>
+              초기화
+            </Button>
+            <Link href="/tax">
+              <Button>세금 결과 →</Button>
+            </Link>
+          </div>
         }
       />
 
@@ -111,18 +152,32 @@ export default function UploadPage() {
           const uploading = p != null && p < 100;
           const done = p === 100;
           return (
-            <TabsContent key={ex.id} value={ex.id} className="grid gap-5 lg:grid-cols-[1fr_320px]">
+            <TabsContent
+              key={ex.id}
+              value={ex.id}
+              className="grid gap-5 lg:grid-cols-[1fr_320px]"
+            >
               <Card padding="lg" className="flex flex-col gap-5">
                 <div className="flex items-center gap-3">
                   <div
                     className="exchange-logo-bg flex h-10 w-10 items-center justify-center rounded-md"
                     style={{ '--logo-bg': ex.bg } as React.CSSProperties}
                   >
-                    <Image src={ex.logo} alt={ex.name} width={22} height={22} className="object-contain" />
+                    <Image
+                      src={ex.logo}
+                      alt={ex.name}
+                      width={22}
+                      height={22}
+                      className="object-contain"
+                    />
                   </div>
                   <div>
-                    <div className="text-[16px] font-bold text-ink">{ex.name} 거래내역</div>
-                    <div className="mt-0.5 text-[12px] text-muted">{ex.guide}</div>
+                    <div className="text-[16px] font-bold text-ink">
+                      {ex.name} 거래내역
+                    </div>
+                    <div className="mt-0.5 text-[12px] text-muted">
+                      {ex.guide}
+                    </div>
                   </div>
                   <Pill tone="neutral" className="ml-auto font-mono">
                     .{ex.format.toLowerCase()}
@@ -130,16 +185,18 @@ export default function UploadPage() {
                 </div>
 
                 <FileDrop
-                  onFile={(file) => startUpload(ex.id, file.name)}
+                  onFile={(file) => startUpload(ex.id, file)}
                   disabled={uploading}
-                  title={uploading ? '업로드 중…' : '파일을 끌어다 놓거나 클릭'}
+                  title={
+                    uploading ? '처리 중…' : '파일을 끌어다 놓거나 클릭'
+                  }
                   description={`${ex.format} 형식 권장 · 최대 10MB`}
                 />
 
                 {p != null && (
                   <ProgressBar
                     value={p}
-                    label={done ? '완료' : '업로드 중'}
+                    label={done ? '완료' : '파싱 중'}
                   />
                 )}
 
@@ -149,17 +206,19 @@ export default function UploadPage() {
                       ✓ {ex.name} 거래 {uploaded[ex.id]}건 통합 완료
                     </span>
                     <Link
-                      href="/transactions"
+                      href="/tax"
                       className="font-semibold text-good underline"
                     >
-                      확인하기
+                      세금 결과 보기
                     </Link>
                   </div>
                 )}
               </Card>
 
               <Card padding="md" surface="card-2">
-                <h3 className="text-[14px] font-bold text-ink">파일 다운로드 가이드</h3>
+                <h3 className="text-[14px] font-bold text-ink">
+                  파일 다운로드 가이드
+                </h3>
                 <ol className="mt-3 flex flex-col gap-2.5 text-[13px] text-muted">
                   <li className="flex gap-2">
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-faint text-[10px] font-bold text-brand">
@@ -177,11 +236,14 @@ export default function UploadPage() {
                     <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-brand-faint text-[10px] font-bold text-brand">
                       3
                     </span>
-                    <span>다운로드한 {ex.format} 파일을 좌측 영역에 끌어놓기</span>
+                    <span>
+                      다운로드한 {ex.format} 파일을 좌측 영역에 끌어놓기
+                    </span>
                   </li>
                 </ol>
                 <p className="mt-4 rounded-sm bg-bg-soft px-3 py-2 text-[12px] text-muted-2">
-                  업로드된 파일은 서버에 저장되지 않으며, 처리 후 즉시 삭제됩니다.
+                  업로드된 파일은 서버 메모리에서 처리 후 즉시 폐기됩니다.
+                  결과는 브라우저에만 저장됩니다.
                 </p>
               </Card>
             </TabsContent>
