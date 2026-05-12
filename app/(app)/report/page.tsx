@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +9,14 @@ import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
 import { getTransactions, type Transaction } from '@/lib/mock/transactions';
-import { calculateTax, formatKrw, getTaxMethod, type TaxMethod } from '@/lib/mock/tax';
+import {
+  calculateTax,
+  formatKrw,
+  getTaxMethod,
+  type TaxMethod,
+} from '@/lib/mock/tax';
+import { useCurrentUser } from '@/lib/auth';
+import { loadSession } from '@/lib/storage/session';
 
 interface IncludeOpts {
   trades: boolean;
@@ -19,6 +27,7 @@ interface IncludeOpts {
 
 export default function ReportPage() {
   const toast = useToast();
+  const { user, loading: userLoading } = useCurrentUser();
   const [year, setYear] = useState(2027);
   const [method, setMethod] = useState<TaxMethod>('fifo');
   const [include, setInclude] = useState<IncludeOpts>({
@@ -28,13 +37,69 @@ export default function ReportPage() {
     notes: false,
   });
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     setMethod(getTaxMethod());
     setTxs(getTransactions());
   }, []);
 
-  const result = useMemo(() => calculateTax(txs, method, year), [txs, method, year]);
+  const result = useMemo(
+    () => calculateTax(txs, method, year),
+    [txs, method, year],
+  );
+
+  const isFree = !userLoading && user?.plan !== 'premium';
+
+  async function handleDownload() {
+    setDownloading(true);
+    try {
+      const session = loadSession();
+      if (!session?.result) {
+        toast.show(
+          '먼저 거래 데이터를 업로드해주세요.',
+          'error',
+        );
+        setDownloading(false);
+        return;
+      }
+      const response = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          result: session.result,
+          transactions: session.allUnified,
+          year: session.year,
+        }),
+      });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => null);
+        toast.show(
+          errBody?.error ?? `다운로드 실패 (${response.status})`,
+          'error',
+        );
+        setDownloading(false);
+        return;
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `크립토택스_${session.year}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.show('PDF 다운로드 완료', 'success');
+    } catch (e) {
+      toast.show(
+        e instanceof Error ? e.message : '다운로드 실패',
+        'error',
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <>
@@ -101,16 +166,38 @@ export default function ReportPage() {
             </div>
           </div>
           <div className="mt-auto flex flex-col gap-2">
-            <Button
-              fullWidth
-              onClick={() => toast.show('PDF 다운로드를 시작합니다.', 'success')}
-            >
-              PDF 다운로드
-            </Button>
+            {isFree ? (
+              <Link href="/billing" className="group relative block">
+                <div
+                  className="pointer-events-none select-none blur-[6px]"
+                  aria-hidden
+                >
+                  <Button fullWidth>PDF 다운로드</Button>
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center rounded-md bg-gradient-to-br from-brand/10 via-transparent to-brand/10 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
+                  <div
+                    className="rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
+                    style={{ background: 'rgb(var(--brand))' }}
+                  >
+                    프리미엄 전용
+                  </div>
+                </div>
+              </Link>
+            ) : (
+              <Button
+                fullWidth
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? 'PDF 생성 중…' : 'PDF 다운로드'}
+              </Button>
+            )}
             <Button
               variant="secondary"
               fullWidth
-              onClick={() => toast.show('세무사 전달용 링크가 복사되었습니다.', 'info')}
+              onClick={() =>
+                toast.show('세무사 전달용 링크가 복사되었습니다.', 'info')
+              }
             >
               세무사 전달용 링크
             </Button>
