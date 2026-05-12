@@ -90,3 +90,16 @@ export interface CalculatePayload {
   result: TaxResultWire;
   year: number;
 }
+
+export interface CalculateSuccess {
+  ok: true;
+  payload: CalculatePayload;
+}
+
+export interface CalculateFailure {
+  ok: false;
+  error: string;
+  errorType: 'parse' | 'unsupported' | 'unknown';
+}
+
+export type CalculateResult = CalculateSuccess | CalculateFailure;

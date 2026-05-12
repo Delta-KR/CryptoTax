@@ -83,11 +83,18 @@ export default function UploadPage() {
         JSON.stringify(session?.allParsed ?? []),
       );
 
-      const payload = await calculateTaxFromFiles(formData);
+      const result = await calculateTaxFromFiles(formData);
 
       window.clearInterval(tick);
       timersRef.current.delete(exchangeId);
 
+      if (!result.ok) {
+        setProgress((p) => ({ ...p, [exchangeId]: 0 }));
+        toast.show(result.error, 'error');
+        return;
+      }
+
+      const payload = result.payload;
       appendUpload(payload, file.name);
       setProgress((p) => ({ ...p, [exchangeId]: 100 }));
       setUploaded((u) => ({
@@ -109,7 +116,10 @@ export default function UploadPage() {
       window.clearInterval(tick);
       timersRef.current.delete(exchangeId);
       setProgress((p) => ({ ...p, [exchangeId]: 0 }));
-      const msg = err instanceof Error ? err.message : '파일 처리 중 오류';
+      const msg =
+        err instanceof Error
+          ? err.message
+          : '예기치 못한 오류 — 새로고침 후 다시 시도해주세요';
       toast.show(msg, 'error');
     }
   }

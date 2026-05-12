@@ -14,6 +14,7 @@ import type {
 } from '@/lib/engine/types';
 import type {
   CalculatePayload,
+  CalculateResult,
   ParsedTransactionWire,
   TaxResultWire,
   UnifiedTransactionWire,
@@ -91,42 +92,59 @@ function currentTargetYear(): number {
 
 export async function calculateTaxFromFiles(
   formData: FormData,
-): Promise<CalculatePayload> {
-  const files = formData.getAll('files') as File[];
-  if (files.length === 0) {
-    throw new Error('파일이 첨부되지 않았습니다.');
+): Promise<CalculateResult> {
+  try {
+    const files = formData.getAll('files') as File[];
+    if (files.length === 0) {
+      return {
+        ok: false,
+        error: '파일이 첨부되지 않았습니다.',
+        errorType: 'unknown',
+      };
+    }
+
+    const previousJson = formData.get('previousParsed');
+    const previous: ParsedTransaction[] =
+      typeof previousJson === 'string' && previousJson
+        ? (JSON.parse(previousJson) as ParsedTransactionWire[]).map(
+            parsedFromWire,
+          )
+        : [];
+
+    const newParsed: ParsedTransaction[] = [];
+    for (const file of files) {
+      const txs = await parseFile(file);
+      newParsed.push(...txs);
+    }
+
+    const allParsed = [...previous, ...newParsed];
+    const rates = new StaticExchangeRateProvider(DEFAULT_RATES, 35);
+    const unified = await normalize(allParsed, rates);
+
+    const year = currentTargetYear();
+    const result = calculateTax({
+      transactions: unified,
+      year,
+      deemedCostPrices: DEEMED_COST_SNAPSHOTS,
+    });
+
+    const payload: CalculatePayload = {
+      newParsed: newParsed.map(parsedToWire),
+      allParsed: allParsed.map(parsedToWire),
+      allUnified: unified.map(unifiedToWire),
+      result: resultToWire(result),
+      year,
+    };
+    return { ok: true, payload };
+  } catch (err) {
+    console.error('[calculateTaxFromFiles] error:', err);
+    const message =
+      err instanceof Error ? err.message : '파일 처리 중 알 수 없는 오류';
+    let errorType: 'parse' | 'unsupported' | 'unknown' = 'unknown';
+    if (err instanceof Error) {
+      if (err.name === 'UnsupportedFileError') errorType = 'unsupported';
+      else if (err.name === 'ParseError') errorType = 'parse';
+    }
+    return { ok: false, error: message, errorType };
   }
-
-  const previousJson = formData.get('previousParsed');
-  const previous: ParsedTransaction[] =
-    typeof previousJson === 'string' && previousJson
-      ? (JSON.parse(previousJson) as ParsedTransactionWire[]).map(
-          parsedFromWire,
-        )
-      : [];
-
-  const newParsed: ParsedTransaction[] = [];
-  for (const file of files) {
-    const txs = await parseFile(file);
-    newParsed.push(...txs);
-  }
-
-  const allParsed = [...previous, ...newParsed];
-  const rates = new StaticExchangeRateProvider(DEFAULT_RATES, 35);
-  const unified = await normalize(allParsed, rates);
-
-  const year = currentTargetYear();
-  const result = calculateTax({
-    transactions: unified,
-    year,
-    deemedCostPrices: DEEMED_COST_SNAPSHOTS,
-  });
-
-  return {
-    newParsed: newParsed.map(parsedToWire),
-    allParsed: allParsed.map(parsedToWire),
-    allUnified: unified.map(unifiedToWire),
-    result: resultToWire(result),
-    year,
-  };
 }
