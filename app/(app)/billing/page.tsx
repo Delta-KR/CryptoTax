@@ -19,10 +19,10 @@ export default function BillingPage() {
     <>
       <PageHeader
         title="구독 및 결제"
-        description="요금제를 선택하거나 결제 내역을 확인할 수 있습니다."
+        description="한 해만 신고하면 단일 과세연도, 여러 해를 정리하면 구독을 선택하세요."
         right={
           <Pill tone="brand" size="md">
-            현재 {plans.find((p) => p.id === current)?.name} 플랜
+            현재 {plans.find((p) => p.id === current)?.name}
           </Pill>
         }
       />
@@ -137,7 +137,11 @@ export default function BillingPage() {
                           : ''
                       }
                     >
-                      {plan.id === 'free' ? '다운그레이드' : '업그레이드'}
+                      {plan.id === 'free'
+                        ? '다운그레이드'
+                        : plan.id === 'premium'
+                          ? '구독 시작'
+                          : '구매'}
                     </Button>
                   </Link>
                 )}

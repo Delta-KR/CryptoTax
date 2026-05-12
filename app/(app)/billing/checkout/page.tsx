@@ -70,7 +70,13 @@ export default function CheckoutPage() {
     <>
       <PageHeader
         title="결제"
-        description={`${plan.name} 플랜으로 업그레이드`}
+        description={
+          plan.id === 'premium'
+            ? `${plan.name} 시작 — 모든 과세연도 무제한`
+            : plan.id === 'onetime'
+              ? `${plan.name} 구매 — 1개 연도 영구 접근`
+              : `${plan.name} 플랜으로 변경`
+        }
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_1fr]">
@@ -96,8 +102,12 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <div className="mt-5 rounded-md bg-bg-soft px-3 py-2.5 text-[11px] text-muted-2">
-            언제든 해지 가능 · 환불 보장
+          <div className="mt-5 rounded-md bg-bg-soft px-3 py-2.5 text-[11px] leading-[1.55] text-muted-2">
+            {plan.id === 'premium'
+              ? '결제 후 즉시 모든 과세연도 무제한 사용. 해지하더라도 기존에 생성한 PDF 리포트는 영구 다운로드 가능합니다.'
+              : plan.id === 'onetime'
+                ? '결제 후 해당 과세연도에 대해 영구적으로 결과·PDF 접근이 가능합니다.'
+                : '결제 전 환불 정책 안내 · 시스템 오류·중복결제 시 100% 환불'}
           </div>
         </Card>
 
@@ -161,7 +171,13 @@ export default function CheckoutPage() {
           router.push('/billing');
         }}
         title="결제가 완료되었습니다"
-        description={`${plan.name} 플랜이 활성화되었습니다. 영수증이 이메일로 발송됩니다.`}
+        description={
+          plan.id === 'premium'
+            ? `${plan.name}이 활성화되었습니다. 모든 과세연도에 대한 계산·PDF 다운로드가 가능합니다. 영수증이 이메일로 발송됩니다.`
+            : plan.id === 'onetime'
+              ? `${plan.name}이 활성화되었습니다. 해당 과세연도에 대한 결과·PDF를 영구적으로 이용할 수 있습니다. 영수증이 이메일로 발송됩니다.`
+              : `${plan.name} 플랜이 활성화되었습니다. 영수증이 이메일로 발송됩니다.`
+        }
         footer={
           <>
             <Button
@@ -177,7 +193,7 @@ export default function CheckoutPage() {
               onClick={() => {
                 setSuccess(false);
                 router.push('/tax');
-                toast.show('프리미엄이 활성화되었습니다. 전체 결과를 확인하세요.', 'success');
+                toast.show('전체 결과가 잠금 해제되었습니다.', 'success');
               }}
             >
               세금 결과 보기

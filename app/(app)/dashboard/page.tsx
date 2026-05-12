@@ -233,7 +233,7 @@ export default function DashboardPage() {
                     className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
                     style={{ background: 'rgb(37,99,235)' }}
                   />
-                  프리미엄으로 업그레이드 →
+                  유료 플랜 보기 →
                 </button>
               </div>
             </Link>

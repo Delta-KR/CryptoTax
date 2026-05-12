@@ -89,7 +89,7 @@ function PremiumBanner() {
           정확한 납부세액 + 코인별 손익 + PDF 리포트
         </div>
         <p className="mt-1 text-[13px] leading-[1.5] text-white/85">
-          프리미엄으로 업그레이드하면 모든 결과를 풀어드립니다.
+          단일 과세연도 ₩29,900 또는 구독 ₩19,900/년 — 결제 후 즉시 전체 결과를 확인할 수 있어요.
         </p>
       </div>
       <Link href="/billing" className="flex-shrink-0">
@@ -98,7 +98,7 @@ function PremiumBanner() {
           className="group relative whitespace-nowrap rounded-md bg-white px-5 py-3 text-[14px] font-extrabold text-brand shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-transform hover:scale-105"
         >
           <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/60 blur-md" />
-          프리미엄으로 업그레이드 →
+          유료 플랜 보기 →
         </button>
       </Link>
     </div>
@@ -263,7 +263,7 @@ export default function TaxPage() {
                   className="relative whitespace-nowrap rounded-md bg-white px-5 py-2.5 text-[13px] font-extrabold text-brand shadow-[0_8px_24px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-110"
                 >
                   <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/70 blur-lg" />
-                  프리미엄으로 업그레이드 →
+                  유료 플랜 보기 →
                 </button>
               </Link>
             )}
@@ -344,7 +344,7 @@ export default function TaxPage() {
                       className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
                       style={{ background: 'rgb(37,99,235)' }}
                     />
-                    프리미엄으로 업그레이드 →
+                    유료 플랜 보기 →
                   </button>
                 </Link>
               )}

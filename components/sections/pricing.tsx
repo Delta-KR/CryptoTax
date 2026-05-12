@@ -1,5 +1,3 @@
-'use client';
-import { useState } from 'react';
 import Link from 'next/link';
 import { HoverCard } from '@/components/ui/HoverCard';
 import { SectionEyebrow } from '@/components/ui/section-heading';
@@ -9,113 +7,68 @@ interface Tier {
   tag: string;
   price: string;
   sub: string;
-  saving?: string;
+  description: string;
   features: readonly string[];
   cta: string;
   href: string;
   emphasis: boolean;
+  badge?: string;
 }
 
-function makeTiers(annual: boolean): readonly Tier[] {
-  return [
-    {
-      name: '무료',
-      tag: '체험용',
-      price: '₩0',
-      sub: '영구 무료',
-      features: [
-        '1개 거래소 연동',
-        '연 100건 거래까지',
-        '기본 세금 계산',
-        'PDF 리포트 1회',
-      ],
-      cta: '무료로 시작',
-      href: '/signup',
-      emphasis: false,
-    },
-    {
-      name: '프리미엄',
-      tag: '대부분의 투자자',
-      price: annual ? '₩19,900' : '₩4,900',
-      sub: annual ? '/ 년 (월 ₩1,650)' : '/ 월',
-      saving: annual ? '연간 결제 시 66% 할인' : undefined,
-      features: [
-        '모든 거래소 무제한',
-        '거래 무제한',
-        '선입선출 / 이동평균법',
-        '의제취득가액 자동',
-        '세무사 전달용 PDF',
-        '이메일 우선 지원',
-      ],
-      cta: '프리미엄 시작',
-      href: annual ? '/signup?tier=premium&billing=annual' : '/signup?tier=premium&billing=monthly',
-      emphasis: true,
-    },
-    {
-      name: '원타임',
-      tag: '5월 신고 시즌',
-      price: '₩29,900',
-      sub: '신고 시즌 1회',
-      features: [
-        '프리미엄 기능 전체',
-        '5월 ~ 6월 30일간',
-        '단 한 번의 정산',
-        '구독 부담 없음',
-      ],
-      cta: '신고 시즌 구매',
-      href: '/checkout?tier=onetime',
-      emphasis: false,
-    },
-  ];
-}
-
-function BillingToggle({
-  annual,
-  onChange,
-}: {
-  annual: boolean;
-  onChange: (a: boolean) => void;
-}) {
-  const options: ReadonlyArray<readonly [boolean, string]> = [
-    [false, '월간'],
-    [true, '연간'],
-  ];
-  return (
-    <div
-      role="group"
-      aria-label="결제 주기 선택"
-      className="inline-flex gap-1 rounded-full border border-line bg-card p-1"
-    >
-      {options.map(([k, lbl]) => {
-        const active = annual === k;
-        return (
-          <button
-            key={lbl}
-            type="button"
-            onClick={() => onChange(k)}
-            aria-pressed={active}
-            className={
-              'rounded-full px-[18px] py-2 text-[13px] font-semibold transition-colors ' +
-              (active
-                ? 'bg-ink text-white dark:bg-brand'
-                : 'bg-transparent text-muted hover:text-ink-2')
-            }
-          >
-            {lbl}
-            {k === true && (
-              <span
-                className="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
-                style={{ color: '#10B981', background: 'rgba(16,185,129,0.15)' }}
-              >
-                −66%
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+const TIERS: readonly Tier[] = [
+  {
+    name: '무료',
+    tag: '체험·검증',
+    price: '₩0',
+    sub: '영구 무료',
+    description: '결제 전 결과를 미리 확인할 수 있습니다.',
+    features: [
+      '모든 거래소 파일 업로드',
+      '총 양도차익 미리보기',
+      '계산 흐름 / 거래 내역',
+      '결제 전 결과 검증',
+    ],
+    cta: '무료로 시작',
+    href: '/signup',
+    emphasis: false,
+  },
+  {
+    name: '단일 과세연도',
+    tag: '한 해만 신고',
+    price: '₩29,900',
+    sub: '1개 연도 · 영구 접근',
+    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게.',
+    features: [
+      '선택한 1개 과세연도 결과 열람',
+      '해당 연도 PDF 리포트 무제한',
+      '모든 거래소 무제한',
+      '의제취득가액 자동 적용',
+      '코인별 손익 상세',
+    ],
+    cta: '단일 연도 구매',
+    href: '/signup',
+    emphasis: false,
+  },
+  {
+    name: '구독',
+    tag: '여러 해 신고',
+    price: '₩19,900',
+    sub: '/ 년 · 모든 과세연도',
+    description: '여러 해를 한꺼번에 정리하거나 연중 예상 세액을 추적하는 분에게.',
+    features: [
+      '모든 과세연도(과거·현재·미래)',
+      'PDF 리포트 무제한 생성',
+      '해지 후에도 기존 PDF 영구 다운로드',
+      '모든 거래소 무제한',
+      '의제취득가액 자동 적용',
+      '이메일 우선 지원',
+    ],
+    cta: '구독 시작',
+    href: '/signup',
+    emphasis: true,
+    badge: 'BEST VALUE',
+  },
+];
 
 function FeatureCheck({ emphasis }: { emphasis: boolean }) {
   return (
@@ -149,7 +102,7 @@ function PricingCard({ tier }: { tier: Tier }) {
   return (
     <HoverCard
       className={
-        'rounded-[18px] border p-8 ' +
+        'relative rounded-[18px] border p-8 ' +
         (e ? '' : 'border-line bg-card shadow-sm') +
         (e ? ' lg:-translate-y-3' : '')
       }
@@ -164,12 +117,12 @@ function PricingCard({ tier }: { tier: Tier }) {
           : undefined
       }
     >
-      {e && (
+      {tier.badge && (
         <div
           className="absolute left-1/2 -top-3.5 -translate-x-1/2 nowrap rounded-full bg-brand px-3.5 py-[5px] text-[11px] font-bold tracking-[0.06em] text-white"
           style={{ boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
         >
-          BEST VALUE
+          {tier.badge}
         </div>
       )}
 
@@ -182,12 +135,12 @@ function PricingCard({ tier }: { tier: Tier }) {
         >
           {tier.tag.toUpperCase()}
         </div>
-        <h3 className="text-[24px] font-extrabold tracking-tightish">{tier.name}</h3>
+        <h3 className="text-[22px] font-extrabold tracking-tightish">{tier.name}</h3>
       </div>
 
       <div
         className={
-          'mb-6 border-b pb-6 ' + (e ? 'border-white/[0.12]' : 'border-line-2')
+          'mb-5 border-b pb-5 ' + (e ? 'border-white/[0.12]' : 'border-line-2')
         }
       >
         <div className="flex items-baseline gap-1.5">
@@ -198,14 +151,14 @@ function PricingCard({ tier }: { tier: Tier }) {
             {tier.sub}
           </span>
         </div>
-        {tier.saving && (
-          <div
-            className={'mt-1.5 text-xs font-semibold ' + (e ? '' : 'text-good')}
-            style={e ? { color: '#6EE7B7' } : undefined}
-          >
-            ✓ {tier.saving}
-          </div>
-        )}
+        <p
+          className={
+            'mt-2.5 text-[12.5px] leading-[1.55] ' +
+            (e ? 'text-white/75' : 'text-muted')
+          }
+        >
+          {tier.description}
+        </p>
       </div>
 
       <ul className="mb-7 flex list-none flex-col gap-3">
@@ -238,34 +191,35 @@ function PricingCard({ tier }: { tier: Tier }) {
 }
 
 export function Pricing() {
-  const [annual, setAnnual] = useState(true);
-  const tiers = makeTiers(annual);
-
   return (
     <section id="pricing" className="section-pad">
       <div className="mx-auto max-w-content">
         <div className="mb-10 text-center">
           <SectionEyebrow>PRICING</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            합리적인 요금제
+            상황에 맞게 한 번만 선택하세요
           </h2>
-          <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            세금 한 번 신고하는 데 들이는 시간을 생각하면, 커피 4잔 값.
+          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
+            한 해만 신고하면 <strong className="font-semibold text-ink">단일 과세연도</strong>,
+            여러 해를 정리하면 <strong className="font-semibold text-ink">구독</strong>.
+            모두 결제 전에 무료로 결과를 미리 확인할 수 있어요.
           </p>
         </div>
 
-        <div className="mb-10 flex justify-center">
-          <BillingToggle annual={annual} onChange={setAnnual} />
-        </div>
-
         <div className="mx-auto grid max-w-[1080px] grid-cols-1 gap-4 lg:grid-cols-3">
-          {tiers.map((t) => (
+          {TIERS.map((t) => (
             <PricingCard key={t.name} tier={t} />
           ))}
         </div>
 
-        <p className="mt-8 text-center text-[12.5px] text-muted-2">
-          모든 요금제 14일 무료 체험 · 언제든 해지 가능 · 환불 보장
+        <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
+          <strong className="font-semibold text-ink-2">왜 두 가지 상품으로 나눴나요?</strong>{' '}
+          과세연도 2개만 결제해도 단일 상품은 ₩59,800인데 구독은 ₩19,900입니다.
+          여러 해를 다룰 거면 구독이, 한 해만 정리할 거면 단일 연도가 자연스럽게 유리합니다.
+        </div>
+
+        <p className="mt-6 text-center text-[12.5px] text-muted-2">
+          결제 전 환불 정책 안내 · 시스템 오류·중복결제 시 100% 환불
         </p>
       </div>
     </section>

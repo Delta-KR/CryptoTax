@@ -89,18 +89,21 @@ const jsonLd = {
       name: '무료',
       price: '0',
       priceCurrency: 'KRW',
+      description: '결제 전 결과 미리보기 및 검증',
     },
     {
       '@type': 'Offer',
-      name: '프리미엄 (연간)',
-      price: '19900',
-      priceCurrency: 'KRW',
-    },
-    {
-      '@type': 'Offer',
-      name: '원타임 (5월 신고 시즌)',
+      name: '단일 과세연도',
       price: '29900',
       priceCurrency: 'KRW',
+      description: '선택한 1개 과세연도 결과 열람 + PDF 리포트 무제한',
+    },
+    {
+      '@type': 'Offer',
+      name: '구독 (연간)',
+      price: '19900',
+      priceCurrency: 'KRW',
+      description: '모든 과세연도 무제한 + 해지 후에도 기존 PDF 영구 다운로드',
     },
   ],
 };
