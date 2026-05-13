@@ -5,6 +5,7 @@ import { Example } from '@/components/sections/example';
 import { Exchanges } from '@/components/sections/exchanges';
 import { Features } from '@/components/sections/features';
 import { Pricing } from '@/components/sections/pricing';
+import { Roadmap } from '@/components/sections/roadmap';
 import { CTA } from '@/components/sections/cta';
 
 // Hero·CTA의 D-day가 Date.now()를 호출하므로 페이지가 dynamic이 됨.
@@ -21,6 +22,7 @@ export default function Home() {
       <Exchanges />
       <Features />
       <Pricing />
+      <Roadmap />
       <CTA />
     </>
   );
