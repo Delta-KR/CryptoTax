@@ -1,9 +1,13 @@
 'use client';
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard } from '@/components/auth/AuthCard';
+import {
+  TurnstileWidget,
+  TURNSTILE_ENABLED,
+} from '@/components/auth/TurnstileWidget';
 import { resetPasswordForEmail } from '@/lib/auth';
 
 export default function ForgotPasswordPage() {
@@ -11,6 +15,15 @@ export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const handleToken = useCallback((t: string) => setCaptchaToken(t), []);
+  const handleCaptchaError = useCallback(
+    () => setError('보안 검증 실패. 페이지를 새로고침 해주세요.'),
+    [],
+  );
+
+  const captchaReady = !TURNSTILE_ENABLED || captchaToken !== null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -19,9 +32,13 @@ export default function ForgotPasswordPage() {
       setError('이메일을 입력해주세요.');
       return;
     }
+    if (TURNSTILE_ENABLED && !captchaToken) {
+      setError('보안 검증을 완료해주세요.');
+      return;
+    }
     setSubmitting(true);
     try {
-      await resetPasswordForEmail(email.trim());
+      await resetPasswordForEmail(email.trim(), captchaToken || undefined);
       setSubmitted(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '이메일 발송 실패');
@@ -83,7 +100,12 @@ export default function ForgotPasswordPage() {
           onChange={(e) => setEmail(e.target.value)}
           error={error ?? undefined}
         />
-        <Button type="submit" fullWidth disabled={submitting}>
+        <TurnstileWidget onToken={handleToken} onError={handleCaptchaError} />
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting || !captchaReady}
+        >
           {submitting ? '발송 중…' : '재설정 링크 보내기'}
         </Button>
       </form>

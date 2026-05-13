@@ -81,11 +81,13 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
 export async function signInWithPassword(
   email: string,
   password: string,
+  captchaToken?: string,
 ): Promise<void> {
   const supabase = createSupabaseBrowserClient();
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    options: captchaToken ? { captchaToken } : undefined,
   });
   if (error) throw new Error(translateSupabaseError(error.message));
 }
@@ -94,12 +96,16 @@ export async function signUpWithPassword(
   email: string,
   password: string,
   name?: string,
+  captchaToken?: string,
 ): Promise<{ needsEmailConfirmation: boolean }> {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: name ? { name } : undefined },
+    options: {
+      data: name ? { name } : undefined,
+      captchaToken: captchaToken || undefined,
+    },
   });
   if (error) throw new Error(translateSupabaseError(error.message));
   return {
@@ -107,13 +113,17 @@ export async function signUpWithPassword(
   };
 }
 
-export async function resetPasswordForEmail(email: string): Promise<void> {
+export async function resetPasswordForEmail(
+  email: string,
+  captchaToken?: string,
+): Promise<void> {
   const supabase = createSupabaseBrowserClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo:
       typeof window !== 'undefined'
         ? `${window.location.origin}/login`
         : undefined,
+    captchaToken: captchaToken || undefined,
   });
   if (error) throw new Error(translateSupabaseError(error.message));
 }
@@ -151,6 +161,11 @@ function translateSupabaseError(msg: string): string {
       '이메일 인증이 완료되지 않았습니다. 받은 이메일에서 인증 링크를 클릭해주세요.',
     'For security purposes, you can only request this after':
       '잠시 후 다시 시도해주세요.',
+    'captcha verification process failed':
+      '보안 검증에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.',
+    'captcha protection': '보안 검증이 필요합니다. 잠시 후 다시 시도해주세요.',
+    'Password should contain at least one character':
+      '비밀번호에 영문 대/소문자, 숫자를 모두 포함해야 합니다.',
   };
   for (const key of Object.keys(map)) {
     if (msg.includes(key)) return map[key];

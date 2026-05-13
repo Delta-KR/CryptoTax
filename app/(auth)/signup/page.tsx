@@ -1,12 +1,16 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { AuthCard, AuthDivider } from '@/components/auth/AuthCard';
 import { SocialButtons } from '@/components/auth/SocialButtons';
+import {
+  TurnstileWidget,
+  TURNSTILE_ENABLED,
+} from '@/components/auth/TurnstileWidget';
 import { signUpWithPassword } from '@/lib/auth';
 
 export default function SignupPage() {
@@ -17,8 +21,17 @@ export default function SignupPage() {
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const [success, setSuccess] = useState(false);
+
+  const handleToken = useCallback((t: string) => setCaptchaToken(t), []);
+  const handleCaptchaError = useCallback(
+    () => setError('보안 검증 실패. 페이지를 새로고침 해주세요.'),
+    [],
+  );
+
+  const captchaReady = !TURNSTILE_ENABLED || captchaToken !== null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -27,12 +40,20 @@ export default function SignupPage() {
       setError('이름, 이메일, 비밀번호를 모두 입력해주세요.');
       return;
     }
-    if (password.length < 8) {
-      setError('비밀번호는 8자 이상이어야 합니다.');
+    if (password.length < 10) {
+      setError('비밀번호는 10자 이상이어야 합니다.');
+      return;
+    }
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      setError('비밀번호는 영문 대/소문자와 숫자를 모두 포함해야 합니다.');
       return;
     }
     if (!agree) {
       setError('이용약관에 동의해주세요.');
+      return;
+    }
+    if (TURNSTILE_ENABLED && !captchaToken) {
+      setError('보안 검증을 완료해주세요.');
       return;
     }
     setSubmitting(true);
@@ -41,6 +62,7 @@ export default function SignupPage() {
         email.trim(),
         password,
         name.trim(),
+        captchaToken || undefined,
       );
       if (needsEmailConfirmation) {
         setSuccess(true);
@@ -99,8 +121,8 @@ export default function SignupPage() {
           label="비밀번호"
           type="password"
           autoComplete="new-password"
-          placeholder="8자 이상"
-          helper="영문/숫자 조합 8자 이상"
+          placeholder="10자 이상"
+          helper="영문 대/소문자 + 숫자 포함, 10자 이상"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
@@ -133,7 +155,12 @@ export default function SignupPage() {
             </span>
           }
         />
-        <Button type="submit" fullWidth disabled={submitting}>
+        <TurnstileWidget onToken={handleToken} onError={handleCaptchaError} />
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting || !captchaReady}
+        >
           {submitting ? '가입 중…' : '무료로 가입'}
         </Button>
       </form>

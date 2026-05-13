@@ -1,11 +1,15 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard, AuthDivider } from '@/components/auth/AuthCard';
 import { SocialButtons } from '@/components/auth/SocialButtons';
+import {
+  TurnstileWidget,
+  TURNSTILE_ENABLED,
+} from '@/components/auth/TurnstileWidget';
 import { signInWithPassword } from '@/lib/auth';
 
 export default function LoginPage() {
@@ -22,6 +26,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
+  const handleToken = useCallback((t: string) => setCaptchaToken(t), []);
+  const handleCaptchaError = useCallback(
+    () => setError('보안 검증 실패. 페이지를 새로고침 해주세요.'),
+    [],
+  );
+
+  const captchaReady = !TURNSTILE_ENABLED || captchaToken !== null;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,9 +43,17 @@ export default function LoginPage() {
       setError('이메일과 비밀번호를 모두 입력해주세요.');
       return;
     }
+    if (TURNSTILE_ENABLED && !captchaToken) {
+      setError('보안 검증을 완료해주세요.');
+      return;
+    }
     setSubmitting(true);
     try {
-      await signInWithPassword(email.trim(), password);
+      await signInWithPassword(
+        email.trim(),
+        password,
+        captchaToken || undefined,
+      );
       router.replace(nextUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : '로그인 실패');
@@ -89,7 +110,12 @@ export default function LoginPage() {
             비밀번호를 잊으셨나요?
           </Link>
         </div>
-        <Button type="submit" fullWidth disabled={submitting}>
+        <TurnstileWidget onToken={handleToken} onError={handleCaptchaError} />
+        <Button
+          type="submit"
+          fullWidth
+          disabled={submitting || !captchaReady}
+        >
           {submitting ? '로그인 중…' : '로그인'}
         </Button>
       </form>
