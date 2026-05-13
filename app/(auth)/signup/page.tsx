@@ -11,7 +11,9 @@ import {
   TurnstileWidget,
   TURNSTILE_ENABLED,
 } from '@/components/auth/TurnstileWidget';
+import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { signUpWithPassword } from '@/lib/auth';
+import { isPasswordValid } from '@/lib/auth/password-rules';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -32,6 +34,13 @@ export default function SignupPage() {
   );
 
   const captchaReady = !TURNSTILE_ENABLED || captchaToken !== null;
+  const passwordOk = isPasswordValid(password);
+  const formReady =
+    name.trim().length > 0 &&
+    email.trim().length > 0 &&
+    passwordOk &&
+    agree &&
+    captchaReady;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -40,19 +49,8 @@ export default function SignupPage() {
       setError('이름, 이메일, 비밀번호를 모두 입력해주세요.');
       return;
     }
-    if (password.length < 10) {
-      setError('비밀번호는 10자 이상이어야 합니다.');
-      return;
-    }
-    if (
-      !/[a-z]/.test(password) ||
-      !/[A-Z]/.test(password) ||
-      !/\d/.test(password) ||
-      !/[^A-Za-z0-9]/.test(password)
-    ) {
-      setError(
-        '비밀번호는 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다.',
-      );
+    if (!passwordOk) {
+      setError('비밀번호 조건을 모두 충족해주세요.');
       return;
     }
     if (!agree) {
@@ -128,13 +126,13 @@ export default function SignupPage() {
           label="비밀번호"
           type="password"
           autoComplete="new-password"
-          placeholder="10자 이상"
-          helper="영문 대/소문자 + 숫자 + 특수문자 포함, 10자 이상"
+          placeholder="안전한 비밀번호를 입력하세요"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
           error={error ?? undefined}
         />
+        <PasswordStrength password={password} />
         <Checkbox
           checked={agree}
           onChange={(e) => setAgree(e.target.checked)}
@@ -166,7 +164,7 @@ export default function SignupPage() {
         <Button
           type="submit"
           fullWidth
-          disabled={submitting || !captchaReady}
+          disabled={submitting || !formReady}
         >
           {submitting ? '가입 중…' : '무료로 가입'}
         </Button>
