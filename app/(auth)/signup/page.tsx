@@ -44,8 +44,15 @@ export default function SignupPage() {
       setError('비밀번호는 10자 이상이어야 합니다.');
       return;
     }
-    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
-      setError('비밀번호는 영문 대/소문자와 숫자를 모두 포함해야 합니다.');
+    if (
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/\d/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      setError(
+        '비밀번호는 영문 대/소문자, 숫자, 특수문자를 모두 포함해야 합니다.',
+      );
       return;
     }
     if (!agree) {
@@ -122,7 +129,7 @@ export default function SignupPage() {
           type="password"
           autoComplete="new-password"
           placeholder="10자 이상"
-          helper="영문 대/소문자 + 숫자 포함, 10자 이상"
+          helper="영문 대/소문자 + 숫자 + 특수문자 포함, 10자 이상"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
