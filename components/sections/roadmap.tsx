@@ -147,9 +147,13 @@ export function Roadmap() {
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
             지금 시작해야 하는 이유
           </h2>
-          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
+          <p
+            className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted"
+            style={{ wordBreak: 'keep-all' }}
+          >
             2027년 1월 1일부터 한국에서 가상자산 양도소득세가 시행됩니다.
-            첫 신고는 2028년 5월. 그 사이에 무엇이 어떻게 추가되는지 미리 보여드릴게요.
+            <br className="hidden sm:inline" />
+            {' '}첫 신고는 2028년 5월, 그 사이에 무엇이 어떻게 추가되는지 미리 보여드릴게요.
           </p>
         </div>
 
