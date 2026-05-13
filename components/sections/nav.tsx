@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const navLinks = [
   { href: '#how', label: '작동 방식' },
@@ -9,7 +10,13 @@ const navLinks = [
   { href: '#pricing', label: '요금제' },
 ];
 
-export function Nav() {
+export async function Nav() {
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isAuthed = !!user;
+
   return (
     <nav
       aria-label="주 메뉴"
@@ -34,18 +41,29 @@ export function Nav() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link
-            href="/login"
-            className="hidden px-3.5 py-2 text-body font-medium text-ink-2 transition-colors hover:text-ink sm:inline-block"
-          >
-            로그인
-          </Link>
-          <Link
-            href="/signup"
-            className="rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2"
-          >
-            무료 시작
-          </Link>
+          {isAuthed ? (
+            <Link
+              href="/dashboard"
+              className="rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2"
+            >
+              대시보드
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="hidden px-3.5 py-2 text-body font-medium text-ink-2 transition-colors hover:text-ink sm:inline-block"
+              >
+                로그인
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2"
+              >
+                무료 시작
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>
