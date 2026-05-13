@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { safeNext } from '@/lib/auth/safe-next';
 
 export type Plan = 'free' | 'premium';
 
@@ -140,9 +141,10 @@ export async function signInWithOAuth(
   options?: { nextUrl?: string },
 ): Promise<void> {
   const supabase = createSupabaseBrowserClient();
+  const validatedNext = options?.nextUrl ? safeNext(options.nextUrl) : null;
   const redirectTo =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/auth/callback${options?.nextUrl ? `?next=${encodeURIComponent(options.nextUrl)}` : ''}`
+      ? `${window.location.origin}/auth/callback${validatedNext ? `?next=${encodeURIComponent(validatedNext)}` : ''}`
       : undefined;
   const { error } = await supabase.auth.signInWithOAuth({
     provider,

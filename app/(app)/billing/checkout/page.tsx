@@ -1,86 +1,25 @@
 'use client';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { Modal } from '@/components/ui/Modal';
-import { useToast } from '@/components/ui/Toast';
-import { plans, subscribe, type PlanId } from '@/lib/mock/billing';
-import { upgradePlan } from '@/app/actions/upgrade-plan';
-import { calculateTaxFromFiles } from '@/app/actions/calculate';
-import { loadSession, saveSession } from '@/lib/storage/session';
+import { plans, type PlanId } from '@/lib/mock/billing';
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const params = useSearchParams();
-  const toast = useToast();
   const planParam = (params.get('plan') as PlanId) || 'premium';
   const plan = plans.find((p) => p.id === planParam) ?? plans[1];
-
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [name, setName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!cardNumber || !expiry || !cvc || !name) {
-      setError('모든 필드를 입력해주세요.');
-      return;
-    }
-    setSubmitting(true);
-
-    // 1. Local mock subscription state
-    subscribe(plan.id);
-
-    // 2. Real plan upgrade in Supabase
-    const upgrade = await upgradePlan();
-    if (!upgrade.ok) {
-      setError(upgrade.error ?? '플랜 업그레이드 실패');
-      setSubmitting(false);
-      return;
-    }
-
-    // 3. Re-calculate existing session with new plan (unmasks result)
-    const session = loadSession();
-    if (session?.allParsed?.length) {
-      const fd = new FormData();
-      fd.append('previousParsed', JSON.stringify(session.allParsed));
-      const recalc = await calculateTaxFromFiles(fd);
-      if (recalc.ok) {
-        saveSession({
-          ...session,
-          result: recalc.payload.result,
-          allUnified: recalc.payload.allUnified,
-        });
-      }
-    }
-
-    setSuccess(true);
-    setSubmitting(false);
-  }
 
   return (
     <>
       <PageHeader
         title="결제"
-        description={
-          plan.id === 'premium'
-            ? `${plan.name} 시작 — 모든 과세연도 무제한`
-            : plan.id === 'onetime'
-              ? `${plan.name} 구매 — 1개 연도 영구 접근`
-              : `${plan.name} 플랜으로 변경`
-        }
+        description="결제 시스템 준비 중"
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[360px_1fr]">
-        {/* Plan summary */}
+        {/* Plan summary (read-only) */}
         <Card padding="lg" className="h-fit">
           <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-2">
             선택한 플랜
@@ -102,105 +41,37 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
-          <div className="mt-5 rounded-md bg-bg-soft px-3 py-2.5 text-[11px] leading-[1.55] text-muted-2">
-            {plan.id === 'premium'
-              ? '결제 후 즉시 모든 과세연도 무제한 사용. 해지하더라도 기존에 생성한 PDF 리포트는 영구 다운로드 가능합니다.'
-              : plan.id === 'onetime'
-                ? '결제 후 해당 과세연도에 대해 영구적으로 결과·PDF 접근이 가능합니다.'
-                : '결제 전 환불 정책 안내 · 시스템 오류·중복결제 시 100% 환불'}
+        </Card>
+
+        {/* Not-ready notice */}
+        <Card padding="lg">
+          <div className="flex flex-col items-center gap-5 py-8 text-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-bg-soft text-muted">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-[18px] font-bold text-ink">
+                결제 시스템 준비 중입니다
+              </h2>
+              <p className="max-w-[420px] text-[13px] leading-[1.65] text-muted">
+                안전한 결제 처리를 위해 토스페이먼츠(Toss) 통합을 진행 중이에요.
+                서비스 오픈 시 등록하신 이메일로 안내드립니다.
+              </p>
+            </div>
+            <div className="mt-2 flex gap-2">
+              <Link href="/billing">
+                <Button variant="secondary">요금제 페이지로</Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button>대시보드로</Button>
+              </Link>
+            </div>
           </div>
         </Card>
-
-        {/* Payment form */}
-        <Card padding="lg">
-          <h2 className="mb-5 text-[16px] font-bold text-ink">결제 정보</h2>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            <Input
-              label="카드 번호"
-              placeholder="1234 5678 9012 3456"
-              autoComplete="cc-number"
-              inputMode="numeric"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
-              disabled={submitting || success}
-            />
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="만료일"
-                placeholder="MM / YY"
-                autoComplete="cc-exp"
-                value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
-                disabled={submitting || success}
-              />
-              <Input
-                label="CVC"
-                placeholder="123"
-                autoComplete="cc-csc"
-                inputMode="numeric"
-                value={cvc}
-                onChange={(e) => setCvc(e.target.value)}
-                disabled={submitting || success}
-              />
-            </div>
-            <Input
-              label="카드 소유자명"
-              placeholder="HONG GILDONG"
-              autoComplete="cc-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={submitting || success}
-              error={error ?? undefined}
-            />
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <span className="text-[12px] text-muted-2">
-                실제 결제는 발생하지 않습니다 (mock).
-              </span>
-              <Button type="submit" disabled={submitting || success}>
-                {submitting ? '처리 중…' : `${plan.price} 결제`}
-              </Button>
-            </div>
-          </form>
-        </Card>
       </div>
-
-      <Modal
-        open={success}
-        onClose={() => {
-          setSuccess(false);
-          router.push('/billing');
-        }}
-        title="결제가 완료되었습니다"
-        description={
-          plan.id === 'premium'
-            ? `${plan.name}이 활성화되었습니다. 모든 과세연도에 대한 계산·PDF 다운로드가 가능합니다. 영수증이 이메일로 발송됩니다.`
-            : plan.id === 'onetime'
-              ? `${plan.name}이 활성화되었습니다. 해당 과세연도에 대한 결과·PDF를 영구적으로 이용할 수 있습니다. 영수증이 이메일로 발송됩니다.`
-              : `${plan.name} 플랜이 활성화되었습니다. 영수증이 이메일로 발송됩니다.`
-        }
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setSuccess(false);
-                router.push('/billing/history');
-              }}
-            >
-              결제 내역 보기
-            </Button>
-            <Button
-              onClick={() => {
-                setSuccess(false);
-                router.push('/tax');
-                toast.show('전체 결과가 잠금 해제되었습니다.', 'success');
-              }}
-            >
-              세금 결과 보기
-            </Button>
-          </>
-        }
-      />
     </>
   );
 }

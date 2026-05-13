@@ -11,6 +11,7 @@ import {
   TURNSTILE_ENABLED,
 } from '@/components/auth/TurnstileWidget';
 import { signInWithPassword } from '@/lib/auth';
+import { safeNext } from '@/lib/auth/safe-next';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function LoginPage() {
   const [oauthError, setOauthError] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setNextUrl(params.get('next') || '/dashboard');
+    setNextUrl(safeNext(params.get('next')));
     const err = params.get('error');
     if (err) setOauthError(decodeURIComponent(err));
   }, []);

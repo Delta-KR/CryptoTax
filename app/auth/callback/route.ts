@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { safeNext } from '@/lib/auth/safe-next';
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const code = url.searchParams.get('code');
-  const next = url.searchParams.get('next') ?? '/dashboard';
+  const next = safeNext(url.searchParams.get('next'));
   const errorParam = url.searchParams.get('error');
   const errorDescription = url.searchParams.get('error_description');
 
