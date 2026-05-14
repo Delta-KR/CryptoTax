@@ -3,11 +3,11 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const navLinks = [
-  { href: '#how', label: '작동 방식' },
-  { href: '#exchanges', label: '지원 거래소' },
-  { href: '#features', label: '기능' },
+  { href: '/#how', label: '작동 방식' },
+  { href: '/#exchanges', label: '지원 거래소' },
+  { href: '/#features', label: '기능' },
   { href: '/guide', label: '사용 가이드' },
-  { href: '#pricing', label: '요금제' },
+  { href: '/#pricing', label: '요금제' },
 ];
 
 export async function Nav() {
