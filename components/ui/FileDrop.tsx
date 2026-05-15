@@ -2,8 +2,12 @@
 import { useCallback, useRef, useState, type DragEvent, type ChangeEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
+// 서버 측 한도와 동기화 (lib/validation/calculate.ts MAX_FILE_BYTES).
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 interface FileDropProps {
   onFile: (file: File) => void;
+  onReject?: (reason: string) => void;
   accept?: string;
   title?: string;
   description?: ReactNode;
@@ -13,6 +17,7 @@ interface FileDropProps {
 
 export function FileDrop({
   onFile,
+  onReject,
   accept = '.csv,.pdf,.xls,.xlsx',
   title = '파일을 끌어다 놓거나 클릭해서 선택',
   description = 'CSV · PDF · XLS · XLSX 지원',
@@ -25,9 +30,16 @@ export function FileDrop({
   const handleFiles = useCallback(
     (files: FileList | null) => {
       if (!files || files.length === 0 || disabled) return;
-      onFile(files[0]);
+      const file = files[0];
+      if (file.size > MAX_FILE_BYTES) {
+        onReject?.(
+          `파일이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)}MB). ${MAX_FILE_BYTES / 1024 / 1024}MB 이하만 가능합니다.`,
+        );
+        return;
+      }
+      onFile(file);
     },
-    [onFile, disabled]
+    [onFile, onReject, disabled]
   );
 
   function onDrop(e: DragEvent<HTMLLabelElement>) {

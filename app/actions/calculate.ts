@@ -1,6 +1,7 @@
 'use server';
 
-console.log('[calculate] action module loaded at', new Date().toISOString());
+// TODO(Phase 7): Add IP-based rate limit (Upstash Redis or Vercel KV).
+// calculate — 5 reqs / min per IP.
 
 import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
@@ -15,6 +16,11 @@ import type {
   UnifiedTransaction,
 } from '@/lib/engine/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import {
+  MAX_PREV_STRING,
+  previousParsedSchema,
+  validateFileList,
+} from '@/lib/validation/calculate';
 import type {
   CalculatePayload,
   CalculateResult,
@@ -133,24 +139,55 @@ function currentTargetYear(): number {
 export async function calculateTaxFromFiles(
   formData: FormData,
 ): Promise<CalculateResult> {
-  console.log('[calculate] invoked');
   try {
-    const files = formData.getAll('files') as File[];
-    console.log('[calculate] files received:', files.length);
+    const rawFiles = formData.getAll('files');
+    const files = rawFiles.filter((f): f is File => f instanceof File);
+
+    const filesCheck = validateFileList(files);
+    if (!filesCheck.ok) {
+      return {
+        ok: false,
+        error: filesCheck.error ?? '파일 검증 실패',
+        errorType: 'unsupported',
+      };
+    }
 
     const previousJson = formData.get('previousParsed');
-    const previous: ParsedTransaction[] =
-      typeof previousJson === 'string' && previousJson
-        ? (JSON.parse(previousJson) as ParsedTransactionWire[]).map(
-            parsedFromWire,
-          )
-        : [];
+    let previous: ParsedTransaction[] = [];
+    if (typeof previousJson === 'string' && previousJson.length > 0) {
+      if (previousJson.length > MAX_PREV_STRING) {
+        return {
+          ok: false,
+          error: '누적된 거래 데이터가 너무 큽니다. 초기화 후 다시 업로드해주세요.',
+          errorType: 'unknown',
+        };
+      }
+      let rawPrev: unknown;
+      try {
+        rawPrev = JSON.parse(previousJson);
+      } catch {
+        return {
+          ok: false,
+          error: '저장된 거래 데이터를 읽을 수 없습니다. 초기화 후 다시 업로드해주세요.',
+          errorType: 'unknown',
+        };
+      }
+      const prevParsed = previousParsedSchema.safeParse(rawPrev);
+      if (!prevParsed.success) {
+        return {
+          ok: false,
+          error: '저장된 거래 데이터 형식이 올바르지 않습니다. 초기화 후 다시 업로드해주세요.',
+          errorType: 'unknown',
+        };
+      }
+      previous = prevParsed.data.map((w) =>
+        parsedFromWire(w as ParsedTransactionWire),
+      );
+    }
 
     const newParsed: ParsedTransaction[] = [];
     for (const file of files) {
-      console.log('[calculate] parsing file:', file.name, file.size, 'bytes');
       const txs = await parseFile(file);
-      console.log('[calculate] parsed', txs.length, 'transactions from', file.name);
       newParsed.push(...txs);
     }
 
@@ -174,7 +211,6 @@ export async function calculateTaxFromFiles(
     });
 
     const plan = await getUserPlan();
-    console.log('[calculate] user plan:', plan);
     const wire = resultToWire(result, plan);
     const finalResult = plan === 'free' ? maskForFree(wire) : wire;
 

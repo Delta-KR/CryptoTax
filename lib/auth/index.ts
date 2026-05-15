@@ -134,6 +134,18 @@ export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
 }
 
+// 이메일+비번 provider가 연결돼 있는지. OAuth-only 계정에는 비밀번호 변경을 노출하지 않기 위한 가드.
+export function hasEmailIdentity(user: {
+  identities?: Array<{ provider?: string }> | null;
+  app_metadata?: { providers?: string[] } | null;
+}): boolean {
+  const providers =
+    user.identities?.map((i) => i.provider).filter(Boolean) ??
+    user.app_metadata?.providers ??
+    [];
+  return providers.includes('email');
+}
+
 export type OAuthProvider = 'google' | 'kakao';
 
 export async function signInWithOAuth(

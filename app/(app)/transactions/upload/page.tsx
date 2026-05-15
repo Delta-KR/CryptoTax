@@ -201,6 +201,7 @@ export default function UploadPage() {
 
                 <FileDrop
                   onFile={(file) => startUpload(ex.id, file)}
+                  onReject={(reason) => toast.show(reason, 'error')}
                   disabled={uploading}
                   title={
                     uploading ? '처리 중…' : '파일을 끌어다 놓거나 클릭'

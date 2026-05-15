@@ -8,7 +8,7 @@ import {
   getNotificationPrefs,
   updateNotificationPrefs,
   type NotificationPrefs,
-} from '@/lib/mock/profile';
+} from '@/lib/mock/notifications';
 
 interface NotificationItem {
   key: keyof NotificationPrefs;

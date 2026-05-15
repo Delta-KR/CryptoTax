@@ -57,7 +57,11 @@ const providers: ProviderConfig[] = [
   },
 ];
 
-export function SocialButtons() {
+interface SocialButtonsProps {
+  nextUrl?: string;
+}
+
+export function SocialButtons({ nextUrl }: SocialButtonsProps = {}) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,7 +70,7 @@ export function SocialButtons() {
     setError(null);
     setPending(p.id);
     try {
-      await signInWithOAuth(p.id as OAuthProvider);
+      await signInWithOAuth(p.id as OAuthProvider, { nextUrl });
       // browser navigates away to OAuth provider — no need to clear pending here
     } catch (e) {
       setError(e instanceof Error ? e.message : 'OAuth 로그인 실패');
