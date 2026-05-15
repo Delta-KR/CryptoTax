@@ -8,15 +8,18 @@ type Method = 'fifo' | 'avg';
 interface Item {
   coin: string;
   name: string;
-  buy: number;
+  // FIFO와 이동평균은 분할매수 lot이 있을 때 차익이 달라짐.
+  // 데모용으로 BTC만 분할매수(저가→고가) 가정 → FIFO 차익 > 이동평균.
+  // ETH·SOL은 단일 lot이라 양쪽 결과 동일.
+  buyFifo: number;
+  buyAvg: number;
   sell: number;
-  color: string;
 }
 
 const items: readonly Item[] = [
-  { coin: 'BTC', name: '비트코인', buy: 3000, sell: 5000, color: '#F7931A' },
-  { coin: 'ETH', name: '이더리움', buy: 1000, sell: 700, color: '#627EEA' },
-  { coin: 'SOL', name: '솔라나', buy: 500, sell: 800, color: '#9945FF' },
+  { coin: 'BTC', name: '비트코인', buyFifo: 3000, buyAvg: 3500, sell: 5000 },
+  { coin: 'ETH', name: '이더리움', buyFifo: 1000, buyAvg: 1000, sell: 700 },
+  { coin: 'SOL', name: '솔라나', buyFifo: 500, buyAvg: 500, sell: 800 },
 ];
 
 interface CalcRowProps {
@@ -122,16 +125,19 @@ function TradesCard({
       <div className="flex items-center justify-between border-b border-line-2 px-6 py-[18px]">
         <div>
           <div className="nowrap mb-0.5 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
-            STEP 1
+            거래 내역 손익
           </div>
-          <div className="nowrap text-[15px] font-bold text-ink">거래 내역 손익</div>
+          <div className="nowrap text-[15px] font-bold text-ink">
+            {method === 'fifo' ? '선입선출법(FIFO) 기준' : '이동평균법(MA) 기준'}
+          </div>
         </div>
         <ToggleSegment current={method} onChange={setMethod} />
       </div>
 
       <div className="px-6 pb-4 pt-2">
         {items.map((it, i) => {
-          const diff = it.sell - it.buy;
+          const buy = method === 'fifo' ? it.buyFifo : it.buyAvg;
+          const diff = it.sell - buy;
           const isGain = diff >= 0;
           return (
             <div
@@ -146,7 +152,7 @@ function TradesCard({
                 <div>
                   <div className="text-sm font-semibold text-ink">{it.name}</div>
                   <div className="num font-mono text-[11.5px] text-muted">
-                    매수 {it.buy.toLocaleString()}만 → 매도 {it.sell.toLocaleString()}만
+                    매수 {buy.toLocaleString()}만 → 매도 {it.sell.toLocaleString()}만
                   </div>
                 </div>
               </div>
@@ -188,9 +194,9 @@ function CalculationCard({
       }}
     >
       <div className="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
-        STEP 2
+        세액 산출
       </div>
-      <div className="mb-[18px] text-[15px] font-bold text-ink">세액 산출</div>
+      <div className="mb-[18px] text-[15px] font-bold text-ink">2027년 5월 신고 기준</div>
 
       <CalcRow label="총 양도차익" value={`+${totalGain.toLocaleString()}만원`} tone="good" />
       <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
@@ -232,9 +238,20 @@ function SectionBlob({
 export function Example() {
   const [method, setMethod] = useState<Method>('fifo');
 
-  const totalGain = items.reduce((s, i) => s + (i.sell - i.buy), 0);
+  const totalGain = items.reduce(
+    (s, i) => s + (i.sell - (method === 'fifo' ? i.buyFifo : i.buyAvg)),
+    0,
+  );
   const taxable = Math.max(0, totalGain - 250);
   const tax = Math.round(taxable * 0.22);
+
+  // 양쪽 방식 차이 — 사용자에게 토글 효과를 명시적으로 보여주기 위한 보조 수치
+  const fifoTotal = items.reduce((s, i) => s + (i.sell - i.buyFifo), 0);
+  const avgTotal = items.reduce((s, i) => s + (i.sell - i.buyAvg), 0);
+  const fifoTax = Math.round(Math.max(0, fifoTotal - 250) * 0.22);
+  const avgTax = Math.round(Math.max(0, avgTotal - 250) * 0.22);
+  const diffTax = Math.abs(fifoTax - avgTax);
+  const cheaper: Method = fifoTax <= avgTax ? 'fifo' : 'avg';
 
   return (
     <section className="section-pad relative">
@@ -276,6 +293,22 @@ export function Example() {
         <div className="mx-auto grid max-w-[1080px] gap-6 lg:grid-cols-[1.2fr_1fr]">
           <TradesCard method={method} setMethod={setMethod} />
           <CalculationCard totalGain={totalGain} taxable={taxable} tax={tax} />
+        </div>
+
+        <div className="mx-auto mt-6 max-w-[1080px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-[13px] leading-[1.65] text-muted">
+          <strong className="font-semibold text-ink-2">방식에 따른 세액 차이</strong>{' '}
+          이 예시에서 선입선출법은{' '}
+          <span className="num font-semibold text-ink">{fifoTax.toLocaleString()}만원</span>,
+          이동평균법은{' '}
+          <span className="num font-semibold text-ink">{avgTax.toLocaleString()}만원</span>으로
+          약{' '}
+          <span className="num font-semibold text-ink">{diffTax.toLocaleString()}만원</span>{' '}
+          차이가 납니다. 같은 거래·같은 세법인데 분할매수 lot 평가 방식이 달라 결과가
+          바뀝니다. 크립토택스는{' '}
+          <strong className="font-semibold text-ink-2">
+            {cheaper === 'fifo' ? '선입선출법' : '이동평균법'}
+          </strong>
+          이 유리한 case를 자동으로 비교해드립니다.
         </div>
       </div>
     </section>

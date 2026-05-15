@@ -29,7 +29,7 @@ const TIERS: readonly Tier[] = [
       '결제 전 결과 검증',
     ],
     cta: '무료로 시작',
-    href: '/signup',
+    href: '/signup?plan=free',
     emphasis: false,
   },
   {
@@ -46,8 +46,8 @@ const TIERS: readonly Tier[] = [
       '의제취득가액 자동 적용',
       '이메일 우선 지원',
     ],
-    cta: '구독 시작',
-    href: '/signup',
+    cta: '구독 사전 등록',
+    href: '/signup?plan=subscription',
     emphasis: true,
     badge: 'BEST VALUE',
   },
@@ -64,8 +64,8 @@ const TIERS: readonly Tier[] = [
       '의제취득가액 자동 적용',
       '코인별 손익 상세',
     ],
-    cta: '단일 연도 구매',
-    href: '/signup',
+    cta: '단일 연도 사전 등록',
+    href: '/signup?plan=annual',
     emphasis: false,
   },
 ];
@@ -203,6 +203,10 @@ export function Pricing() {
             여러 해를 정리하면 <strong className="font-semibold text-ink">구독</strong>.
             모두 결제 전에 무료로 결과를 미리 확인할 수 있어요.
           </p>
+          <div className="mx-auto mt-5 inline-flex max-w-[640px] items-center gap-2 rounded-full border border-warn/40 bg-warn-soft px-3.5 py-1.5 text-[12.5px] font-medium text-warn">
+            <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warn" />
+            유료 플랜 결제는 곧 출시 — 지금 가입하면 무료 미리보기 + 출시 시 우선 알림
+          </div>
         </div>
 
         <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 lg:grid-cols-[1fr_1.18fr_1fr]">

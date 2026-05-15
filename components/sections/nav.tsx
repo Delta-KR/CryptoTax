@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { MobileNav } from '@/components/sections/mobile-nav';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const navLinks = [
@@ -44,7 +45,7 @@ export async function Nav() {
           {isAuthed ? (
             <Link
               href="/dashboard"
-              className="rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2"
+              className="hidden rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2 md:inline-block"
             >
               대시보드
             </Link>
@@ -52,18 +53,19 @@ export async function Nav() {
             <>
               <Link
                 href="/login"
-                className="hidden px-3.5 py-2 text-body font-medium text-ink-2 transition-colors hover:text-ink sm:inline-block"
+                className="hidden px-3.5 py-2 text-body font-medium text-ink-2 transition-colors hover:text-ink md:inline-block"
               >
                 로그인
               </Link>
               <Link
                 href="/signup"
-                className="rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2"
+                className="hidden rounded-sm bg-brand px-4 py-[9px] text-body font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_1px_2px_rgba(37,99,235,0.2)] transition-colors hover:bg-brand-2 md:inline-block"
               >
                 무료 시작
               </Link>
             </>
           )}
+          <MobileNav links={navLinks} isAuthed={isAuthed} />
         </div>
       </div>
     </nav>

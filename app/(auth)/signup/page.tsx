@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
@@ -15,8 +15,26 @@ import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { signUpWithPassword } from '@/lib/auth';
 import { isPasswordValid } from '@/lib/auth/password-rules';
 
+// Pricing 섹션 CTA에서 ?plan=free|subscription|annual로 의도가 전달됨.
+// 결제(Phase 7) 출시 전까지는 sessionStorage에 보관해 추후 checkout에서 사용.
+type PendingPlan = 'free' | 'subscription' | 'annual';
+const PLAN_VALUES: ReadonlyArray<PendingPlan> = ['free', 'subscription', 'annual'];
+const PLAN_LABEL: Record<PendingPlan, string> = {
+  free: '무료',
+  subscription: '구독',
+  annual: '단일 과세연도',
+};
+
 export default function SignupPage() {
   const router = useRouter();
+  const [pendingPlan, setPendingPlan] = useState<PendingPlan | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const p = params.get('plan');
+    if (p && (PLAN_VALUES as ReadonlyArray<string>).includes(p)) {
+      setPendingPlan(p as PendingPlan);
+    }
+  }, []);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,6 +81,11 @@ export default function SignupPage() {
     }
     setSubmitting(true);
     try {
+      if (pendingPlan && pendingPlan !== 'free') {
+        try {
+          sessionStorage.setItem('crypto-tax-pending-plan', pendingPlan);
+        } catch {}
+      }
       const { needsEmailConfirmation } = await signUpWithPassword(
         email.trim(),
         password,
@@ -84,7 +107,7 @@ export default function SignupPage() {
   return (
     <AuthCard
       title="회원가입"
-      subtitle="1분이면 가입 완료. 1거래소 영구 무료."
+      subtitle="1분이면 가입 완료. 결제 전 결과 미리보기까지 무료."
       footer={
         <>
           이미 회원이신가요?{' '}
@@ -104,6 +127,15 @@ export default function SignupPage() {
         </div>
       ) : (
         <>
+      {pendingPlan && pendingPlan !== 'free' && (
+        <div className="mb-4 rounded-md border border-brand/30 bg-brand-soft px-3.5 py-3 text-[12.5px] leading-[1.55] text-brand-2">
+          <strong className="font-semibold">선택한 플랜: {PLAN_LABEL[pendingPlan]}</strong>
+          <span className="text-ink-2/80">
+            {' '}— 결제는 곧 출시 예정. 지금 가입하면 결과를 무료로 미리보고 출시 시 우선
+            알림을 받습니다.
+          </span>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="이름"

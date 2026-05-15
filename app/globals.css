@@ -126,6 +126,8 @@
     overflow-wrap: break-word;
   }
   html { scroll-behavior: smooth; }
+  /* Anchor 점프 시 sticky 헤더(56~64px)에 섹션 헤딩이 가리지 않도록 보정 */
+  :where(section[id]) { scroll-margin-top: 72px; }
   body {
     color: rgb(var(--ink));
     background: rgb(var(--bg));

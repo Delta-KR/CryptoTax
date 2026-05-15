@@ -91,10 +91,11 @@ function FeatureIcon({ name, color }: { name: IconName; color: string }) {
   }
 }
 
+// MVP 출시 시점 LIVE 거래소(업비트·바이낸스) 기준 예시.
+// 빗썸은 거래내역 추출 방식 확보 후 추가 예정이라 mock에서 제외.
 const exchangeCounts: ReadonlyArray<readonly [string, string, number]> = [
-  ['업비트', '#0E48F0', 124],
-  ['빗썸', '#F37321', 78],
-  ['바이낸스', '#F0B90B', 45],
+  ['업비트', '#0E48F0', 152],
+  ['바이낸스', '#F0B90B', 95],
 ];
 
 function FeatureBig({ data }: { data: BigData }) {
@@ -130,7 +131,7 @@ function FeatureBig({ data }: { data: BigData }) {
       {/* 247건 visual */}
       <div className="mt-6 rounded-md border border-line bg-card px-4 py-3.5 shadow-sm">
         <div className="mb-2.5 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
-          통합된 거래 — 247건
+          예시 통합 결과 — 247건
         </div>
         <div className="flex flex-wrap gap-1.5">
           {exchangeCounts.map(([n, c, v]) => (

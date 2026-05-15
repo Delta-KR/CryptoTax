@@ -330,7 +330,7 @@ export function Hero() {
 
           <div className="flex flex-wrap gap-6 text-[13px] text-muted-2">
             <Check>신용카드 불필요</Check>
-            <Check>1거래소 영구 무료</Check>
+            <Check>결제 전 미리보기 무료</Check>
             <Check>2분만에 첫 결과</Check>
           </div>
         </div>

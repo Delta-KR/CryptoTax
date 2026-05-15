@@ -113,7 +113,7 @@ export function Exchanges() {
             국내외 주요 거래소 지원
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            MVP 출시 시 2개 거래소. 매월 새 거래소가 추가됩니다.
+            초기 출시 시 2개 거래소. 매월 새 거래소가 추가됩니다.
           </p>
         </div>
 

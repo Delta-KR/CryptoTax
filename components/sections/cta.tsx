@@ -142,7 +142,7 @@ export function CTA() {
           </span>
         </h2>
         <p className="mx-auto mb-9 max-w-[560px] text-[17px] leading-[1.6] text-muted">
-          신용카드 없이 1분 가입. 거래 100건까지 영구 무료.
+          신용카드 없이 1분 가입. 결제 전 결과 미리보기까지 무료.
           <br />
           첫 결과를 받아본 뒤 결정해도 늦지 않습니다.
         </p>
