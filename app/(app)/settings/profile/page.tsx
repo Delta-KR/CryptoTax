@@ -26,7 +26,10 @@ export default function ProfilePage() {
   const [oldPw, setOldPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [newPwConfirm, setNewPwConfirm] = useState('');
-  const [pwError, setPwError] = useState<string | null>(null);
+  // 에러를 입력란별로 분리해 사용자가 어느 필드를 고쳐야 할지 즉시 알 수 있게.
+  const [oldPwError, setOldPwError] = useState<string | null>(null);
+  const [newPwError, setNewPwError] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
   const [savingName, setSavingName] = useState(false);
   const [changingPw, setChangingPw] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -55,27 +58,50 @@ export default function ProfilePage() {
     e.preventDefault();
     setSavingName(true);
     const result = await updateDisplayName(name);
-    setSavingName(false);
     if (result.ok) {
+      // 서버에서 user_metadata.name이 변경됐지만 클라이언트 supabase 인스턴스는 모름.
+      // refreshSession()이 TOKEN_REFRESHED를 emit → useCurrentUser의 onAuthStateChange 트리거
+      // → 우측 상단 UserMenu 즉시 갱신.
+      try {
+        const supabase = createSupabaseBrowserClient();
+        await supabase.auth.refreshSession();
+      } catch {
+        // refresh 실패해도 server-side 저장은 성공 — 다음 페이지 로드 시 반영됨.
+      }
       toast.show('이름이 저장되었습니다.', 'success');
     } else {
       toast.show(result.error ?? '저장 실패', 'error');
     }
+    setSavingName(false);
+  }
+
+  function clearPwErrors() {
+    setOldPwError(null);
+    setNewPwError(null);
+    setConfirmError(null);
   }
 
   async function handlePwChange(e: FormEvent) {
     e.preventDefault();
-    setPwError(null);
-    if (!oldPw || !newPw || !newPwConfirm) {
-      setPwError('모든 필드를 입력해주세요.');
+    clearPwErrors();
+    if (!oldPw) {
+      setOldPwError('현재 비밀번호를 입력해주세요.');
       return;
     }
-    if (newPw !== newPwConfirm) {
-      setPwError('새 비밀번호가 일치하지 않습니다.');
+    if (!newPw) {
+      setNewPwError('새 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (!newPwConfirm) {
+      setConfirmError('새 비밀번호 확인을 입력해주세요.');
       return;
     }
     if (!isPasswordValid(newPw)) {
-      setPwError('새 비밀번호 조건을 모두 충족해주세요.');
+      setNewPwError('새 비밀번호 조건을 모두 충족해주세요.');
+      return;
+    }
+    if (newPw !== newPwConfirm) {
+      setConfirmError('새 비밀번호가 일치하지 않습니다.');
       return;
     }
     setChangingPw(true);
@@ -89,8 +115,23 @@ export default function ProfilePage() {
       setNewPw('');
       setNewPwConfirm('');
       toast.show('비밀번호가 변경되었습니다.', 'success');
-    } else {
-      setPwError(result.error ?? '비밀번호 변경 실패');
+      return;
+    }
+    // 서버가 돌려준 code에 따라 적절한 입력란에 에러 표시.
+    switch (result.code) {
+      case 'wrong_password':
+        setOldPwError(result.error ?? '기존 비밀번호가 일치하지 않습니다.');
+        break;
+      case 'weak':
+        setNewPwError(result.error ?? '새 비밀번호 조건을 충족하지 않습니다.');
+        break;
+      case 'oauth_only':
+      case 'missing_email':
+      case 'unauthenticated':
+        toast.show(result.error ?? '비밀번호 변경 실패', 'error');
+        break;
+      default:
+        setConfirmError(result.error ?? '비밀번호 변경 실패');
     }
   }
 
@@ -151,16 +192,24 @@ export default function ProfilePage() {
                 type="password"
                 autoComplete="current-password"
                 value={oldPw}
-                onChange={(e) => setOldPw(e.target.value)}
+                onChange={(e) => {
+                  setOldPw(e.target.value);
+                  if (oldPwError) setOldPwError(null);
+                }}
                 disabled={changingPw}
+                error={oldPwError ?? undefined}
               />
               <Input
                 label="새 비밀번호"
                 type="password"
                 autoComplete="new-password"
                 value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
+                onChange={(e) => {
+                  setNewPw(e.target.value);
+                  if (newPwError) setNewPwError(null);
+                }}
                 disabled={changingPw}
+                error={newPwError ?? undefined}
               />
               <PasswordStrength password={newPw} />
               <Input
@@ -168,9 +217,12 @@ export default function ProfilePage() {
                 type="password"
                 autoComplete="new-password"
                 value={newPwConfirm}
-                onChange={(e) => setNewPwConfirm(e.target.value)}
+                onChange={(e) => {
+                  setNewPwConfirm(e.target.value);
+                  if (confirmError) setConfirmError(null);
+                }}
                 disabled={changingPw}
-                error={pwError ?? undefined}
+                error={confirmError ?? undefined}
               />
               <div className="flex justify-end pt-1">
                 <Button type="submit" variant="secondary" disabled={changingPw}>
