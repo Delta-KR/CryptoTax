@@ -9,11 +9,9 @@ import { getDaysUntilTaxStart } from '@/lib/dday';
 function Badge() {
   const dday = getDaysUntilTaxStart();
   return (
-    <div className="nowrap inline-flex items-center gap-2 rounded-full border border-brand/[0.18] bg-brand/[0.08] py-1.5 pl-2 pr-3 text-xs font-semibold tracking-[-0.005em] text-brand-2">
-      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-brand text-[10px] font-bold text-white">
-        !
-      </span>
-      2027년 1월 1일 과세 시행 확정 · D-{dday}
+    <div className="nowrap inline-flex items-center gap-2 rounded-full border border-line bg-bg-soft px-3 py-1 text-[11px] font-medium text-muted">
+      <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+      2027.01.01 시행 · D-{dday}
     </div>
   );
 }
@@ -257,48 +255,24 @@ function DashboardMock() {
 
 export function Hero() {
   return (
-    <section className="section-pad-hero relative overflow-hidden">
-      {/* Notebook grid overlay — hero only, masked to a soft ellipse */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(color-mix(in srgb, rgb(var(--brand)) 22%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, rgb(var(--brand)) 22%, transparent) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-          backgroundPosition: 'center',
-          maskImage:
-            'radial-gradient(ellipse 60% 70% at 50% 50%, black 0%, black 35%, transparent 80%)',
-          WebkitMaskImage:
-            'radial-gradient(ellipse 60% 70% at 50% 50%, black 0%, black 35%, transparent 80%)',
-          opacity: 0.55,
-        }}
-      />
-
-      <div className="relative z-10 mx-auto grid max-w-content items-center gap-14 lg:grid-cols-[1fr_1.05fr]">
+    <section className="section-pad-hero">
+      <div className="mx-auto grid max-w-content items-center gap-16 lg:grid-cols-[1fr_1.05fr] lg:gap-20">
         {/* Copy */}
         <div>
           <Badge />
-          <h1 className="mb-[22px] mt-[22px] text-[36px] font-extrabold leading-[1.12] tracking-tightest text-ink lg:text-[56px]">
-            가상자산 과세가
+          <h1 className="mb-7 mt-7 text-[40px] font-extrabold leading-[1.05] tracking-tightest text-ink lg:text-[68px]">
+            가상자산 양도세,
             <br />
-            다가오는데
-            <br />
-            <span className="bg-hero-gradient bg-clip-text text-transparent">
-              세금 계산은 아직도 엑셀?
-            </span>
+            <span className="text-brand">정확하게.</span>
           </h1>
-          <p className="mb-8 max-w-[520px] text-[18px] leading-[1.6] text-muted">
-            거래소별 거래내역을 업로드하면, 한국 세법 기준 과세 금액을
-            <br />
-            <strong className="font-semibold text-ink-2">3초 만에</strong> 계산해드립니다.
-            수작업 반나절 → 클릭 한 번.
+          <p className="mb-10 max-w-[520px] text-[18px] leading-[1.6] text-muted">
+            거래소 데이터를 통합해 한국 세법 기준으로 자동 계산하고, 세무사 전달용 PDF까지 만들어드립니다.
           </p>
 
           <div className="mb-7 flex flex-wrap items-center gap-2.5">
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-[22px] py-3.5 text-[15px] font-semibold tracking-[-0.005em] text-white shadow-[0_1px_0_rgba(255,255,255,0.2)_inset,0_6px_18px_-4px_rgba(37,99,235,0.4)] transition-colors hover:bg-brand-2"
+              className="inline-flex items-center gap-2 rounded-[10px] bg-brand px-6 py-4 text-[15px] font-semibold tracking-[-0.005em] text-white transition-colors hover:bg-brand-2"
             >
               무료로 시작하기
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -313,7 +287,7 @@ export function Hero() {
             </Link>
             <Link
               href="/sample"
-              className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-card px-5 py-[13px] text-[15px] font-medium tracking-[-0.005em] text-ink-2 transition-colors hover:bg-bg-soft"
+              className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-card px-5 py-[15px] text-[15px] font-medium tracking-[-0.005em] text-ink-2 transition-colors hover:bg-bg-soft"
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M4 2h5l3 3v9H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -328,7 +302,7 @@ export function Hero() {
             </Link>
           </div>
 
-          <div className="flex flex-wrap gap-6 text-[13px] text-muted-2">
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted-2">
             <Check>신용카드 불필요</Check>
             <Check>결제 전 미리보기 무료</Check>
             <Check>2분만에 첫 결과</Check>

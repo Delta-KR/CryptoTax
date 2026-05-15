@@ -47,10 +47,7 @@ export default function SamplePage() {
             샘플 미리보기 · 로그인 없이 확인 가능
           </Pill>
           <h1 className="text-[32px] font-extrabold tracking-tighter3 text-ink sm:text-[44px]">
-            홍길동님의{' '}
-            <span className="bg-hero-gradient bg-clip-text text-transparent">
-              2027년 양도소득세
-            </span>
+            홍길동님의 <span className="text-brand">2027년 양도소득세</span>
           </h1>
           <p className="max-w-[640px] text-body-lead text-muted">
             247건의 거래를 통합해서 한국 세법 기준으로 계산한 결과입니다. 가입하시면 본인 데이터로 동일한 리포트를 받아볼 수 있습니다.

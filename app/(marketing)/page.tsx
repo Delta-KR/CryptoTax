@@ -1,9 +1,11 @@
 import { Hero } from '@/components/sections/hero';
+import { TrustStrip } from '@/components/sections/trust-strip';
 import { Problem } from '@/components/sections/problem';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { Example } from '@/components/sections/example';
 import { Exchanges } from '@/components/sections/exchanges';
 import { Features } from '@/components/sections/features';
+import { Security } from '@/components/sections/security';
 import { Pricing } from '@/components/sections/pricing';
 import { Roadmap } from '@/components/sections/roadmap';
 import { CTA } from '@/components/sections/cta';
@@ -16,11 +18,13 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <TrustStrip />
       <Problem />
       <HowItWorks />
       <Example />
       <Exchanges />
       <Features />
+      <Security />
       <Pricing />
       <Roadmap />
       <CTA />

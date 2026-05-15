@@ -6,8 +6,6 @@ interface Step {
   n: number;
   title: string;
   desc: string;
-  tone: string;
-  soft: string;
   icon: ReactNode;
 }
 
@@ -16,8 +14,6 @@ const steps: readonly Step[] = [
     n: 1,
     title: '거래내역 업로드',
     desc: '거래소에서 다운받은 PDF · XLS · CSV 파일을 그대로 끌어다 놓으세요. 파일 형식은 자동 인식됩니다.',
-    tone: '#2563EB',
-    soft: '#EEF4FF',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -40,8 +36,6 @@ const steps: readonly Step[] = [
     n: 2,
     title: '한국 세법 기준 자동 계산',
     desc: '선입선출법·이동평균법 선택, 의제취득가액 자동 적용, 코인 간 교환 처리, 환율 변환까지 한 번에.',
-    tone: '#7C3AED',
-    soft: '#F5F3FF',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
@@ -58,8 +52,6 @@ const steps: readonly Step[] = [
     n: 3,
     title: 'PDF 리포트 다운로드',
     desc: '종합소득세 신고 항목별로 정리된 리포트. 세무사에게 그대로 전달하거나 홈택스에 직접 입력하세요.',
-    tone: '#16A34A',
-    soft: '#ECFDF5',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -83,31 +75,22 @@ const steps: readonly Step[] = [
 
 function StepCard({ step }: { step: Step }) {
   return (
-    <HoverCard
-      className="relative flex flex-col rounded-[18px] border border-line bg-card px-7 pb-8 pt-9 shadow-sm"
-    >
+    <HoverCard className="relative flex flex-col rounded-[18px] border border-line bg-card px-7 pb-8 pt-9 shadow-sm">
       {/* Big background numeral — primary ordering cue */}
       <div
-        className="num pointer-events-none absolute right-6 top-[18px] text-[64px] font-extrabold leading-none tracking-[-0.04em] opacity-70"
-        style={{ color: step.tone }}
+        className="num pointer-events-none absolute right-6 top-[18px] text-[64px] font-extrabold leading-none tracking-[-0.04em] text-bg-tint"
         aria-hidden="true"
       >
         0{step.n}
       </div>
 
       {/* STEP pill */}
-      <div
-        className="nowrap mb-[22px] inline-flex items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-[11px] font-bold tracking-[0.08em]"
-        style={{ background: step.soft, color: step.tone }}
-      >
+      <div className="nowrap mb-[22px] inline-flex items-center gap-1.5 self-start rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] text-brand-2">
         <span className="num">STEP 0{step.n}</span>
       </div>
 
       {/* Icon tile */}
-      <div
-        className="mb-[18px] flex h-12 w-12 items-center justify-center rounded-md"
-        style={{ background: step.soft, color: step.tone }}
-      >
+      <div className="mb-[18px] flex h-12 w-12 items-center justify-center rounded-md bg-brand-soft text-brand">
         {step.icon}
       </div>
 

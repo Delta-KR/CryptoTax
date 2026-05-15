@@ -127,8 +127,6 @@ interface FlowItem {
   n: number;
   title: string;
   desc: string;
-  tone: string;
-  soft: string;
 }
 
 const FLOW_STEPS: readonly FlowItem[] = [
@@ -136,29 +134,21 @@ const FLOW_STEPS: readonly FlowItem[] = [
     n: 1,
     title: '거래내역 파일 업로드',
     desc: '거래소에서 받은 PDF나 CSV 파일을 그대로 드래그&드롭합니다. 형식·거래소는 자동 인식됩니다.',
-    tone: '#2563EB',
-    soft: '#EEF4FF',
   },
   {
     n: 2,
     title: '자동 파싱 + 정규화',
     desc: '서버에서 거래소별 양식을 통일된 형태로 변환합니다. USDT 등 외화 거래는 시점 환율로 KRW 환산됩니다.',
-    tone: '#7C3AED',
-    soft: '#F5F3FF',
   },
   {
     n: 3,
     title: 'FIFO + 세법 적용',
     desc: '매도 시점마다 선입선출(FIFO)로 취득가액을 산출하고, 의제취득가액 등 한국 세법 규칙을 자동 적용합니다.',
-    tone: '#16A34A',
-    soft: '#ECFDF5',
   },
   {
     n: 4,
     title: '결과 + PDF 리포트',
     desc: '연간 손익·과세표준·납부 세액을 즉시 확인하고, 신고용 PDF로 다운받습니다.',
-    tone: '#EA580C',
-    soft: '#FFF7ED',
   },
 ];
 
@@ -277,16 +267,12 @@ export default function GuidePage() {
                 className="relative rounded-[14px] border border-line bg-card p-6 shadow-sm"
               >
                 <div
-                  className="num pointer-events-none absolute right-4 top-2 text-[48px] font-extrabold leading-none tracking-[-0.04em] opacity-60"
-                  style={{ color: s.tone }}
+                  className="num pointer-events-none absolute right-4 top-2 text-[48px] font-extrabold leading-none tracking-[-0.04em] text-bg-tint"
                   aria-hidden="true"
                 >
                   0{s.n}
                 </div>
-                <div
-                  className="mb-4 inline-block rounded-full px-2 py-0.5 text-[10.5px] font-bold tracking-[0.06em]"
-                  style={{ background: s.soft, color: s.tone }}
-                >
+                <div className="mb-4 inline-block rounded-full bg-brand-soft px-2 py-0.5 text-[10.5px] font-bold tracking-[0.06em] text-brand-2">
                   STEP 0{s.n}
                 </div>
                 <h3 className="mb-2 text-[16px] font-bold leading-snug text-ink">

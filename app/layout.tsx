@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { pretendard, jetbrainsMono } from './fonts';
-import { Atmosphere } from '@/components/atmosphere';
-import { PointerSpotlight } from '@/components/pointer-spotlight';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -120,8 +118,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="font-sans">
         <a href="#main" className="skip-link">본문으로 건너뛰기</a>
-        <Atmosphere />
-        <PointerSpotlight />
         <div className="page">{children}</div>
       </body>
     </html>

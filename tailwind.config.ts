@@ -106,11 +106,9 @@ const config: Config = {
         'hero-headline': ['56px', { lineHeight: '1.12', letterSpacing: '-0.035em', fontWeight: '800' }],
       },
       backgroundImage: {
-        // Headline gradient (Hero last clause) and CTA gradient
-        'hero-gradient': 'linear-gradient(120deg, rgb(var(--brand)) 0%, #6366F1 60%, #8B5CF6 100%)',
-        'cta-gradient': 'linear-gradient(120deg, rgb(var(--brand)), #7C3AED)',
-        // Pricing emphasized card — NOT theme-aware (reads well on both)
-        'pricing-emphasized': 'linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)',
+        // Solid-feel emphasis surface — single brand tone, no rainbow.
+        'pricing-emphasized':
+          'linear-gradient(180deg, rgb(var(--brand-2)) 0%, rgb(var(--brand)) 100%)',
       },
       transitionTimingFunction: {
         hov: 'cubic-bezier(.2,.7,.2,1)',

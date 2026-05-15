@@ -39,7 +39,7 @@ export function Footer() {
   return (
     <footer className="section-pad-footer border-t border-line bg-bg-soft text-muted">
       <div className="mx-auto max-w-content">
-        <div className="grid grid-cols-1 gap-10 border-b border-line pb-10 lg:grid-cols-[1.6fr_1fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 border-b border-line pb-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <div className="mb-3.5 text-base font-bold text-ink">크립토택스</div>
             <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted">
@@ -58,6 +58,18 @@ export function Footer() {
             ]}
           />
           <FooterCol
+            title="보안"
+            items={[
+              { label: '보안 개요', href: '/#security' },
+              {
+                label: '취약점 신고',
+                href: 'mailto:security@cryptotax.example?subject=취약점 신고',
+                external: true,
+              },
+              { label: '개인정보처리방침', href: '/legal/privacy' },
+            ]}
+          />
+          <FooterCol
             title="고객지원"
             items={[
               {
@@ -65,7 +77,6 @@ export function Footer() {
                 href: 'mailto:hello@cryptotax.example?subject=문의',
                 external: true,
               },
-              { label: '개인정보처리방침', href: '/legal/privacy' },
               { label: '이용약관', href: '/legal/terms' },
             ]}
           />

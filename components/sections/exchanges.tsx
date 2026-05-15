@@ -136,9 +136,14 @@ export function Exchanges() {
             <StatusPillSoon />
             <span className="nowrap text-[13px] text-muted">2026년 7월 ~ 9월 순차 추가</span>
           </div>
-          <div className="mx-auto grid max-w-[880px] grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="mx-auto flex max-w-[880px] flex-wrap justify-center gap-3">
             {soon.map((e) => (
-              <ComingSoonCard key={e.name} exchange={e} />
+              <div
+                key={e.name}
+                className="w-[calc(50%-6px)] md:w-[calc(25%-9px)]"
+              >
+                <ComingSoonCard exchange={e} />
+              </div>
             ))}
           </div>
           <p className="mt-6 text-center text-[12.5px] text-muted-2">

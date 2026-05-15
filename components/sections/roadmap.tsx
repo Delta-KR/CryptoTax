@@ -70,66 +70,27 @@ function StepCard({ step }: { step: Step }) {
   return (
     <HoverCard
       className={
-        'relative flex h-full flex-col rounded-[18px] border p-6 ' +
-        (h ? '' : 'border-line bg-card shadow-sm')
-      }
-      style={
-        h
-          ? {
-              background: 'linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)',
-              borderColor: '#1E3A8A',
-              color: '#fff',
-              boxShadow: '0 24px 48px -12px rgba(30,58,138,0.45)',
-            }
-          : undefined
+        'relative flex h-full flex-col rounded-[18px] border bg-card p-6 shadow-sm ' +
+        (h ? 'border-brand ring-1 ring-brand/15' : 'border-line')
       }
     >
       <div className="mb-4 flex items-center justify-between gap-2">
-        <span
-          className={
-            'num text-[28px] font-extrabold leading-none tracking-tighter3 ' +
-            (h ? 'text-white/85' : 'text-brand')
-          }
-        >
+        <span className="num text-[28px] font-extrabold leading-none tracking-tighter3 text-brand">
           {step.index}
         </span>
-        {h ? (
-          <span className="nowrap inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/15 px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] text-white">
-            <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-white" />
-            {step.when}
-          </span>
-        ) : (
-          <Pill tone={step.tone} dot size="sm">
-            {step.when}
-          </Pill>
-        )}
+        <Pill tone={step.tone} dot size="sm">
+          {step.when}
+        </Pill>
       </div>
 
-      <h3
-        className={
-          'mb-4 text-[18px] font-bold leading-[1.3] tracking-tightish ' +
-          (h ? 'text-white' : 'text-ink')
-        }
-      >
+      <h3 className="mb-4 text-[18px] font-bold leading-[1.3] tracking-tightish text-ink">
         {step.title}
       </h3>
 
       <ul className="flex flex-1 list-none flex-col gap-2.5">
         {step.items.map((item) => (
-          <li
-            key={item}
-            className={
-              'flex items-start gap-2 text-[13px] leading-[1.55] ' +
-              (h ? 'text-white/85' : 'text-ink-2')
-            }
-          >
-            <span
-              className={
-                'mt-[7px] h-1 w-1 flex-shrink-0 rounded-full ' +
-                (h ? 'bg-white/60' : 'bg-muted-2')
-              }
-              aria-hidden="true"
-            />
+          <li key={item} className="flex items-start gap-2 text-[13px] leading-[1.55] text-ink-2">
+            <span className="mt-[7px] h-1 w-1 flex-shrink-0 rounded-full bg-muted-2" aria-hidden="true" />
             <span>{item}</span>
           </li>
         ))}

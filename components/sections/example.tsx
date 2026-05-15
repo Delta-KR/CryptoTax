@@ -113,15 +113,7 @@ function TradesCard({
   setMethod: (m: Method) => void;
 }) {
   return (
-    <div
-      className="glass overflow-hidden rounded-lg shadow-md"
-      style={{
-        background: 'color-mix(in srgb, rgb(var(--card)) 75%, transparent)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        border: '1px solid color-mix(in srgb, rgb(var(--line)) 60%, transparent)',
-      }}
-    >
+    <div className="overflow-hidden rounded-lg border border-line bg-card shadow-sm">
       <div className="flex items-center justify-between border-b border-line-2 px-6 py-[18px]">
         <div>
           <div className="nowrap mb-0.5 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
@@ -183,16 +175,7 @@ function CalculationCard({
   tax: number;
 }) {
   return (
-    <div
-      className="glass flex flex-col rounded-lg px-7 py-6 shadow-sm"
-      style={{
-        background:
-          'linear-gradient(180deg, color-mix(in srgb, rgb(var(--card)) 75%, transparent) 0%, color-mix(in srgb, rgb(var(--card-2)) 75%, transparent) 100%)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        border: '1px solid color-mix(in srgb, rgb(var(--line)) 60%, transparent)',
-      }}
-    >
+    <div className="flex flex-col rounded-lg border border-line bg-card px-7 py-6 shadow-sm">
       <div className="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
         세액 산출
       </div>
@@ -206,7 +189,7 @@ function CalculationCard({
       <Divider thick />
 
       {/* Brand-filled result box */}
-      <div className="mt-2 rounded-md bg-brand px-[22px] py-5 text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)]">
+      <div className="mt-2 rounded-md bg-brand px-[22px] py-5 text-white">
         <div className="nowrap mb-1 text-xs font-medium opacity-90">
           2027년 5월 납부 세액
         </div>
@@ -216,22 +199,6 @@ function CalculationCard({
         </div>
       </div>
     </div>
-  );
-}
-
-function SectionBlob({
-  className,
-  style,
-}: {
-  className?: string;
-  style: React.CSSProperties;
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      className={'pointer-events-none absolute z-0 ' + (className ?? '')}
-      style={style}
-    />
   );
 }
 
@@ -254,32 +221,8 @@ export function Example() {
   const cheaper: Method = fifoTax <= avgTax ? 'fifo' : 'avg';
 
   return (
-    <section className="section-pad relative">
-      {/* Section-local blobs (separate from global atmosphere) */}
-      <SectionBlob
-        style={{
-          top: '20%',
-          left: '-10%',
-          width: 500,
-          height: 500,
-          background:
-            'radial-gradient(closest-side, color-mix(in srgb, rgb(var(--brand)) 20%, transparent), transparent 70%)',
-          filter: 'blur(80px)',
-        }}
-      />
-      <SectionBlob
-        style={{
-          bottom: '10%',
-          right: '-8%',
-          width: 480,
-          height: 480,
-          background:
-            'radial-gradient(closest-side, color-mix(in srgb, #8B5CF6 18%, transparent), transparent 70%)',
-          filter: 'blur(80px)',
-        }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-content">
+    <section className="section-pad bg-bg-soft">
+      <div className="mx-auto max-w-content">
         <div className="mb-14 text-center">
           <SectionEyebrow>TAX CALCULATION</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">

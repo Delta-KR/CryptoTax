@@ -70,7 +70,7 @@ const TIERS: readonly Tier[] = [
   },
 ];
 
-function FeatureCheck({ emphasis }: { emphasis: boolean }) {
+function FeatureCheck() {
   return (
     <svg
       width="16"
@@ -80,15 +80,10 @@ function FeatureCheck({ emphasis }: { emphasis: boolean }) {
       className="flex-shrink-0"
       aria-hidden="true"
     >
-      <circle
-        cx="8"
-        cy="8"
-        r="8"
-        fill={emphasis ? 'rgba(255,255,255,0.15)' : 'rgb(var(--brand-soft))'}
-      />
+      <circle cx="8" cy="8" r="8" fill="rgb(var(--brand-soft))" />
       <path
         d="M5 8L7 10L11 6"
-        stroke={emphasis ? '#fff' : 'rgb(var(--brand))'}
+        stroke="rgb(var(--brand))"
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -103,68 +98,39 @@ function PricingCard({ tier }: { tier: Tier }) {
     <HoverCard
       className={
         'relative flex h-full flex-col rounded-[18px] border p-8 ' +
-        (e ? '' : 'border-line bg-card shadow-sm')
-      }
-      style={
-        e
-          ? {
-              background: 'linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)',
-              borderColor: '#1E3A8A',
-              color: '#fff',
-              boxShadow: '0 24px 48px -12px rgba(30,58,138,0.45)',
-            }
-          : undefined
+        (e
+          ? 'border-brand bg-card shadow-sm ring-1 ring-brand/10'
+          : 'border-line bg-card shadow-sm')
       }
     >
       {tier.badge && (
-        <div
-          className="absolute left-1/2 -top-3.5 -translate-x-1/2 nowrap rounded-full bg-brand px-3.5 py-[5px] text-[11px] font-bold tracking-[0.06em] text-white"
-          style={{ boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
-        >
+        <div className="absolute left-1/2 -top-3.5 -translate-x-1/2 nowrap rounded-full bg-brand px-3.5 py-[5px] text-[11px] font-bold tracking-[0.06em] text-white">
           {tier.badge}
         </div>
       )}
 
       <div className="mb-5">
-        <div
-          className={
-            'mb-1 text-[11px] font-semibold tracking-[0.06em] ' +
-            (e ? 'text-white/60' : 'text-muted-2')
-          }
-        >
+        <div className={'mb-1 text-[11px] font-semibold tracking-[0.06em] ' + (e ? 'text-brand-2' : 'text-muted-2')}>
           {tier.tag.toUpperCase()}
         </div>
-        <h3 className="text-[22px] font-extrabold tracking-tightish">{tier.name}</h3>
+        <h3 className="text-[22px] font-extrabold tracking-tightish text-ink">{tier.name}</h3>
       </div>
 
-      <div
-        className={
-          'mb-5 border-b pb-5 ' + (e ? 'border-white/[0.12]' : 'border-line-2')
-        }
-      >
+      <div className="mb-5 border-b border-line-2 pb-5">
         <div className="flex items-baseline gap-1.5">
-          <span className="num text-[40px] font-extrabold leading-none tracking-tighter3">
+          <span className="num text-[40px] font-extrabold leading-none tracking-tighter3 text-ink">
             {tier.price}
           </span>
-          <span className={'text-[13px] ' + (e ? 'text-white/70' : 'text-muted')}>
-            {tier.sub}
-          </span>
+          <span className="text-[13px] text-muted">{tier.sub}</span>
         </div>
-        <p
-          className={
-            'mt-2.5 text-[12.5px] leading-[1.55] ' +
-            (e ? 'text-white/75' : 'text-muted')
-          }
-        >
-          {tier.description}
-        </p>
+        <p className="mt-2.5 text-[12.5px] leading-[1.55] text-muted">{tier.description}</p>
       </div>
 
       <ul className="mb-7 flex flex-1 list-none flex-col gap-3">
         {tier.features.map((f) => (
           <li key={f} className="flex items-center gap-2.5 text-sm">
-            <FeatureCheck emphasis={e} />
-            <span className={e ? 'text-white/[0.92]' : 'text-ink-2'}>{f}</span>
+            <FeatureCheck />
+            <span className="text-ink-2">{f}</span>
           </li>
         ))}
       </ul>
@@ -172,15 +138,10 @@ function PricingCard({ tier }: { tier: Tier }) {
       <Link
         href={tier.href}
         className={
-          'block w-full rounded-[10px] px-[18px] py-3.5 text-center text-sm font-bold tracking-[-0.005em] ' +
+          'block w-full rounded-[10px] px-[18px] py-3.5 text-center text-sm font-bold tracking-[-0.005em] transition-colors ' +
           (e
-            ? 'bg-white'
-            : 'bg-card text-ink shadow-[inset_0_0_0_1px_rgb(var(--line))]')
-        }
-        style={
-          e
-            ? { color: '#1E3A8A', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }
-            : undefined
+            ? 'bg-brand text-white hover:bg-brand-2'
+            : 'border border-line bg-card text-ink hover:bg-bg-soft')
         }
       >
         {tier.cta}

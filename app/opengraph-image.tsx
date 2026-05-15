@@ -21,8 +21,7 @@ export default async function Image() {
         style={{
           width: '100%',
           height: '100%',
-          background:
-            'linear-gradient(135deg, #2563EB 0%, #6366F1 55%, #8B5CF6 100%)',
+          background: '#0B1220',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',

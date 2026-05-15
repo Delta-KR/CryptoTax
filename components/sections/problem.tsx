@@ -254,13 +254,7 @@ export function Problem() {
         </div>
 
         {/* Reconciliation diagram */}
-        <div
-          className="mt-8 grid grid-cols-1 items-center gap-6 rounded-lg border border-line px-6 py-6 sm:px-8 sm:py-7 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:px-10 lg:py-8"
-          style={{
-            background:
-              'linear-gradient(135deg, color-mix(in srgb, rgb(var(--brand)) 8%, rgb(var(--card))) 0%, rgb(var(--card)) 50%, color-mix(in srgb, #8B5CF6 8%, rgb(var(--card))) 100%)',
-          }}
-        >
+        <div className="mt-8 grid grid-cols-1 items-center gap-6 rounded-lg border border-line bg-bg-soft px-6 py-6 sm:px-8 sm:py-7 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:px-10 lg:py-8">
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Pill tone="bad">PDF · KRW · 한글</Pill>
             <Pill tone="bad">XLS · 원 · 한글</Pill>
