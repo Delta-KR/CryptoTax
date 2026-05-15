@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { safeNext } from '@/lib/auth/safe-next';
+import { classifyOAuthError } from '@/lib/auth/oauth-errors';
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
@@ -10,10 +11,14 @@ export async function GET(request: NextRequest) {
   const errorDescription = url.searchParams.get('error_description');
 
   if (errorParam) {
+    console.error('[auth/callback] provider error:', errorParam, errorDescription);
     const loginUrl = url.clone();
     loginUrl.pathname = '/login';
     loginUrl.search = '';
-    loginUrl.searchParams.set('error', errorDescription ?? errorParam);
+    loginUrl.searchParams.set(
+      'error',
+      classifyOAuthError(errorDescription ?? errorParam),
+    );
     return NextResponse.redirect(loginUrl);
   }
 
@@ -25,7 +30,7 @@ export async function GET(request: NextRequest) {
       const loginUrl = url.clone();
       loginUrl.pathname = '/login';
       loginUrl.search = '';
-      loginUrl.searchParams.set('error', error.message);
+      loginUrl.searchParams.set('error', classifyOAuthError(error.message));
       return NextResponse.redirect(loginUrl);
     }
   }

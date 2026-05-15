@@ -1,27 +1,22 @@
-'use client';
-import { useState } from 'react';
-import { useCurrentUser } from '@/lib/auth';
-import { Sidebar } from '@/components/app-chrome/Sidebar';
-import { Topbar } from '@/components/app-chrome/Topbar';
-import { MobileDrawer } from '@/components/app-chrome/MobileDrawer';
-import { ToastProvider } from '@/components/ui/Toast';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { AppShell } from '@/components/app-chrome/AppShell';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useCurrentUser();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+// 서버 사이드 auth 가드 — middleware matcher 누락 시에도 보호 페이지가 노출되지 않도록 defense-in-depth.
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    const pathname = headers().get('x-pathname') ?? '/dashboard';
+    redirect(`/login?next=${encodeURIComponent(pathname)}`);
+  }
 
-  if (loading || !user) return null;
-
-  return (
-    <ToastProvider>
-      <Sidebar user={user} variant="desktop" />
-      <MobileDrawer open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} user={user} />
-      <div className="lg:pl-[240px]">
-        <Topbar user={user} onMobileNavToggle={() => setMobileNavOpen(true)} />
-        <main id="main" className="mx-auto max-w-[1280px] px-5 py-8 sm:px-8 lg:px-10">
-          {children}
-        </main>
-      </div>
-    </ToastProvider>
-  );
+  return <AppShell>{children}</AppShell>;
 }

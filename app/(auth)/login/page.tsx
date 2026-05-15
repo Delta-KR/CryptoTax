@@ -12,6 +12,7 @@ import {
 } from '@/components/auth/TurnstileWidget';
 import { signInWithPassword } from '@/lib/auth';
 import { safeNext } from '@/lib/auth/safe-next';
+import { oauthErrorMessage } from '@/lib/auth/oauth-errors';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function LoginPage() {
     const params = new URLSearchParams(window.location.search);
     setNextUrl(safeNext(params.get('next')));
     const err = params.get('error');
-    if (err) setOauthError(decodeURIComponent(err));
+    if (err) setOauthError(oauthErrorMessage(err));
   }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,7 +81,7 @@ export default function LoginPage() {
           role="alert"
           className="mb-4 rounded-md border border-bad/40 bg-bad-soft px-4 py-3 text-[13px] text-bad"
         >
-          소셜 로그인 실패: {oauthError}
+          {oauthError}
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
@@ -122,7 +123,7 @@ export default function LoginPage() {
       </form>
 
       <AuthDivider label="또는" />
-      <SocialButtons />
+      <SocialButtons nextUrl={nextUrl} />
     </AuthCard>
   );
 }
