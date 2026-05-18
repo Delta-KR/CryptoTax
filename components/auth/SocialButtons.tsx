@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { signInWithOAuth, type OAuthProvider } from '@/lib/auth';
 
 interface ProviderConfig {
-  id: OAuthProvider | 'apple';
+  id: OAuthProvider;
   name: string;
   bg: string;
   text: string;
@@ -39,19 +39,6 @@ const providers: ProviderConfig[] = [
     icon: (
       <svg width="16" height="16" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
         <path d="M9 1.5C4.86 1.5 1.5 4.16 1.5 7.43c0 2.13 1.41 3.99 3.52 5.04l-.9 3.27c-.08.28.24.5.48.34l3.93-2.6c.15.01.31.02.47.02 4.14 0 7.5-2.65 7.5-5.92S13.14 1.5 9 1.5z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'apple',
-    name: 'Apple',
-    bg: '#000',
-    text: '#fff',
-    border: '0',
-    enabled: false,
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
-        <path d="M13.36 9.55a4 4 0 012.16-3.4 4.1 4.1 0 00-3.27-1.75c-1.39-.14-2.71.83-3.41.83s-1.8-.8-2.96-.78a4.32 4.32 0 00-3.63 2.2c-1.56 2.7-.4 6.68 1.1 8.87.75 1.07 1.65 2.27 2.81 2.23 1.13-.05 1.56-.72 2.93-.72s1.75.72 2.95.7c1.22-.02 2-1.08 2.74-2.15a9.7 9.7 0 001.25-2.55 4 4 0 01-2.67-3.48zM11.18 2.86A4 4 0 0012.1 0a4 4 0 00-2.65 1.36 3.74 3.74 0 00-.95 2.78 3.3 3.3 0 002.68-1.28z" />
       </svg>
     ),
   },
