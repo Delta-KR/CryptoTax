@@ -1,9 +1,13 @@
 import { ImageResponse } from 'next/og';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { getDaysUntilTaxStart } from '@/lib/dday';
 
 // Auto-generated OpenGraph image for the whole site. Next.js convention:
 // 파일명이 opengraph-image.tsx 면 자동으로 og:image / twitter:image에 등록.
 
+// fs.readFile로 로고 SVG 임베드 — Edge runtime은 fs 미지원이라 nodejs 명시.
+export const runtime = 'nodejs';
 export const alt = 'Kontaxt — 2027년 가상자산 양도소득세 완벽 대비';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
@@ -14,6 +18,13 @@ export default async function Image() {
   const fontData = await fetch(
     'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/web/static/woff/Pretendard-Bold.woff'
   ).then((r) => r.arrayBuffer());
+
+  // 다크 배경(#0B1220) 위에 흰색 로고 — public/logo-dark.svg를 빌드 시 base64 inline.
+  const logoSvg = await fs.readFile(
+    path.join(process.cwd(), 'public', 'logo-dark.svg'),
+    'utf-8',
+  );
+  const logoDataUri = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString('base64')}`;
 
   return new ImageResponse(
     (
@@ -55,20 +66,20 @@ export default async function Image() {
           2027년 1월 1일 과세 시행 · D-{dday}
         </div>
 
-        {/* Middle: brand + headline */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Middle: logo mark + headline */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* SVG viewBox가 정사각이라 그대로 박으면 위아래 공백이 큼.
+              negative margin으로 시각 영역만 노출. */}
+          <img
+            src={logoDataUri}
+            width={360}
+            height={360}
+            alt="Kontaxt"
+            style={{ marginLeft: -72, marginTop: -72, marginBottom: -72 }}
+          />
           <div
             style={{
-              fontSize: 128,
-              letterSpacing: '-0.05em',
-              lineHeight: 1,
-            }}
-          >
-            Kontaxt
-          </div>
-          <div
-            style={{
-              fontSize: 38,
+              fontSize: 42,
               opacity: 0.95,
               maxWidth: 980,
               letterSpacing: '-0.02em',

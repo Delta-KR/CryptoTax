@@ -25,8 +25,11 @@ export async function Nav() {
       className="sticky top-0 z-50 border-b border-line bg-bg/85 backdrop-blur-[20px] backdrop-saturate-[1.8]"
     >
       <div className="mx-auto flex max-w-content items-center justify-between px-8 py-3.5">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="text-base font-bold tracking-[-0.01em] text-ink">Kontaxt</span>
+        <Link href="/" className="flex items-center" aria-label="Kontaxt 홈으로">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Kontaxt" className="logo-light h-7 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-dark.svg" alt="Kontaxt" className="logo-dark h-7 w-auto" />
         </Link>
 
         <div className="hidden items-center gap-8 text-body text-ink-2 md:flex">

@@ -204,3 +204,12 @@ nav, section, footer { position: relative; z-index: 1; }
   .hov { transition: none; }
   .hov:hover { transform: none; }
 }
+
+/* =============================================================================
+   .logo-light / .logo-dark — theme-aware brand mark.
+   nav·footer가 두 img 모두 렌더하고, 활성 테마에 맞는 것만 표시.
+============================================================================= */
+.logo-light { display: block; }
+.logo-dark { display: none; }
+[data-theme="dark"] .logo-light { display: none; }
+[data-theme="dark"] .logo-dark { display: block; }

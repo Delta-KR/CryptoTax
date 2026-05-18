@@ -41,7 +41,12 @@ export function Footer() {
       <div className="mx-auto max-w-content">
         <div className="grid grid-cols-1 gap-10 border-b border-line pb-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
-            <div className="mb-3.5 text-base font-bold text-ink">Kontaxt</div>
+            <div className="mb-3.5 flex items-center" aria-label="Kontaxt">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.svg" alt="Kontaxt" className="logo-light h-7 w-auto" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-dark.svg" alt="Kontaxt" className="logo-dark h-7 w-auto" />
+            </div>
             <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted">
               한국 가상자산 투자자를 위한 세금 정산 플랫폼.
               <br />
