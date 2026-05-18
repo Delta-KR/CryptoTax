@@ -7,9 +7,13 @@ export type OAuthErrorCode =
   | 'invalid_request'
   | 'server_error'
   | 'session_expired'
+  | 'otp_expired'
   | 'unknown';
 
+// otp_expired는 메일 링크(비번 재설정·가입 인증·매직 링크)가 만료되거나 이미 사용된 케이스.
+// access_denied보다 먼저 매칭해야 함 — Supabase가 둘 다 박아 보내므로.
 const RAW_TO_CODE: Array<[RegExp, OAuthErrorCode]> = [
+  [/otp_expired|email[ _]link[ _]is[ _]invalid|email[ _]link[ _]has[ _]expired/i, 'otp_expired'],
   [/cancel|user.?denied/i, 'cancelled'],
   [/access[ _]denied/i, 'access_denied'],
   [/invalid[ _]request/i, 'invalid_request'],
@@ -31,6 +35,7 @@ const MESSAGES: Record<OAuthErrorCode, string> = {
   invalid_request: '소셜 로그인 요청이 올바르지 않습니다. 다시 시도해주세요.',
   server_error: '소셜 로그인 서비스에 일시적인 문제가 있습니다. 잠시 후 다시 시도해주세요.',
   session_expired: '로그인 세션이 만료되었습니다. 다시 시도해주세요.',
+  otp_expired: '메일 링크가 만료됐거나 이미 사용됐어요. 비밀번호 찾기를 다시 요청해주세요.',
   unknown: '소셜 로그인 중 오류가 발생했습니다.',
 };
 

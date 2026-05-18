@@ -12,7 +12,7 @@ import {
 } from '@/components/auth/TurnstileWidget';
 import { signInWithPassword } from '@/lib/auth';
 import { safeNext } from '@/lib/auth/safe-next';
-import { oauthErrorMessage } from '@/lib/auth/oauth-errors';
+import { classifyOAuthError, oauthErrorMessage } from '@/lib/auth/oauth-errors';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,8 +21,14 @@ export default function LoginPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setNextUrl(safeNext(params.get('next')));
+    // Supabase는 OTP 만료 시 error=access_denied + error_code=otp_expired 둘 다 박아 보냄.
+    // error_code를 우선 매칭해 otp_expired를 access_denied보다 정확히 분류.
     const err = params.get('error');
-    if (err) setOauthError(oauthErrorMessage(err));
+    const errCode = params.get('error_code');
+    const errDesc = params.get('error_description');
+    if (err || errCode) {
+      setOauthError(oauthErrorMessage(classifyOAuthError(errCode ?? errDesc ?? err)));
+    }
   }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

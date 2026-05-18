@@ -122,10 +122,18 @@ export async function resetPasswordForEmail(
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo:
       typeof window !== 'undefined'
-        ? `${window.location.origin}/login`
+        ? `${window.location.origin}/reset-password`
         : undefined,
     captchaToken: captchaToken || undefined,
   });
+  if (error) throw new Error(translateSupabaseError(error.message));
+}
+
+// 비번 재설정 메일 링크 클릭 후 reset-password 페이지에서 새 비밀번호 저장.
+// 호출 시점에 Supabase recovery 세션이 활성화돼 있어야 함.
+export async function updateUserPassword(newPassword: string): Promise<void> {
+  const supabase = createSupabaseBrowserClient();
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw new Error(translateSupabaseError(error.message));
 }
 
