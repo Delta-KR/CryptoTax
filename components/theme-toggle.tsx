@@ -15,7 +15,7 @@ export function ThemeToggle() {
     setDark(next);
     document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
     try {
-      localStorage.setItem('crypto-tax-theme', next ? 'dark' : 'light');
+      localStorage.setItem('kontaxt-theme', next ? 'dark' : 'light');
     } catch {}
   }
 

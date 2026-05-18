@@ -46,7 +46,7 @@ function HowItWorks() {
             letterSpacing: '-0.03em', marginBottom: 16,
           }}>단 3단계, <span style={{ color: 'var(--brand)' }}>약 2분</span>이면 끝납니다</h2>
           <p style={{ fontSize: 17, color: 'var(--muted)', maxWidth: 540, margin: '0 auto' }}>
-            복잡한 계산은 크립토택스가 대신 합니다. 당신은 파일만 올리세요.
+            복잡한 계산은 Kontaxt가 대신 합니다. 당신은 파일만 올리세요.
           </p>
         </div>
 

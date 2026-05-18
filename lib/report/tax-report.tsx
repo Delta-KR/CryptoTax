@@ -214,7 +214,7 @@ export function TaxReport({
     .slice(0, 50);
 
   return (
-    <Document title={`크립토택스 ${year}년 양도소득 신고 자료`}>
+    <Document title={`Kontaxt ${year}년 양도소득 신고 자료`}>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>

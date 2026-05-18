@@ -8,7 +8,7 @@ export interface NotificationPrefs {
   announcements: boolean;
 }
 
-const NOTIF_KEY = 'crypto-tax-notifications';
+const NOTIF_KEY = 'kontaxt-notifications';
 
 const defaultNotifs: NotificationPrefs = {
   email: true,

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { SectionEyebrow } from '@/components/ui/section-heading';
 
 export const metadata: Metadata = {
-  title: '개인정보처리방침 — 크립토택스',
+  title: '개인정보처리방침 — Kontaxt',
   description:
-    '크립토택스가 처리하는 개인정보 항목, 처리 목적, 보유 기간, 제3자 제공·위탁, 정보주체의 권리 등을 안내합니다.',
+    'Kontaxt가 처리하는 개인정보 항목, 처리 목적, 보유 기간, 제3자 제공·위탁, 정보주체의 권리 등을 안내합니다.',
 };
 
 const EFFECTIVE_DATE = '2026년 5월 12일';
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
       <section className="section-pad pt-0">
         <div className="mx-auto max-w-content">
           <p className="text-[15px] leading-[1.75] text-muted">
-            크립토택스(이하 &ldquo;서비스&rdquo;)는 「개인정보 보호법」 제30조 및 같은 법 시행령
+            Kontaxt(이하 &ldquo;서비스&rdquo;)는 「개인정보 보호법」 제30조 및 같은 법 시행령
             제31조에 따라 정보주체의 개인정보를 보호하고 이와 관련한 고충을 신속하고 원활하게 처리할 수
             있도록 다음과 같이 개인정보처리방침을 수립·공개합니다.
           </p>

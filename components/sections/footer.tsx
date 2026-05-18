@@ -41,7 +41,7 @@ export function Footer() {
       <div className="mx-auto max-w-content">
         <div className="grid grid-cols-1 gap-10 border-b border-line pb-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
-            <div className="mb-3.5 text-base font-bold text-ink">크립토택스</div>
+            <div className="mb-3.5 text-base font-bold text-ink">Kontaxt</div>
             <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted">
               한국 가상자산 투자자를 위한 세금 정산 플랫폼.
               <br />
@@ -63,7 +63,7 @@ export function Footer() {
               { label: '보안 개요', href: '/#security' },
               {
                 label: '취약점 신고',
-                href: 'mailto:security@cryptotax.example?subject=취약점 신고',
+                href: 'mailto:security@kontaxt.kr?subject=취약점 신고',
                 external: true,
               },
               { label: '개인정보처리방침', href: '/legal/privacy' },
@@ -74,7 +74,7 @@ export function Footer() {
             items={[
               {
                 label: '문의하기',
-                href: 'mailto:hello@cryptotax.example?subject=문의',
+                href: 'mailto:hello@kontaxt.kr?subject=문의',
                 external: true,
               },
               { label: '이용약관', href: '/legal/terms' },
@@ -82,7 +82,7 @@ export function Footer() {
           />
         </div>
         <div className="flex flex-col gap-3 pt-6 text-xs text-muted-2 md:flex-row md:justify-between md:gap-0">
-          <div>© 2026 크립토택스. All rights reserved.</div>
+          <div>© 2026 Kontaxt. All rights reserved.</div>
           <div>본 서비스는 세무 신고의 참고 자료를 제공하며, 최종 신고는 세무사 검토를 권장합니다.</div>
         </div>
       </div>

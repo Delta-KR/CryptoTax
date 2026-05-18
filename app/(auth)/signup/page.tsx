@@ -83,7 +83,7 @@ export default function SignupPage() {
     try {
       if (pendingPlan && pendingPlan !== 'free') {
         try {
-          sessionStorage.setItem('crypto-tax-pending-plan', pendingPlan);
+          sessionStorage.setItem('kontaxt-pending-plan', pendingPlan);
         } catch {}
       }
       const { needsEmailConfirmation } = await signUpWithPassword(

@@ -7,7 +7,7 @@ import type {
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
 
-const KEY = 'crypto-tax-session-v1';
+const KEY = 'kontaxt-session-v1';
 
 export interface SessionData {
   allParsed: ParsedTransactionWire[];

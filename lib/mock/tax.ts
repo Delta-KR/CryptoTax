@@ -60,7 +60,7 @@ export function calculateTax(
   };
 }
 
-const METHOD_KEY = 'crypto-tax-method';
+const METHOD_KEY = 'kontaxt-method';
 
 export function getTaxMethod(): TaxMethod {
   if (typeof window === 'undefined') return 'fifo';

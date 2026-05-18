@@ -263,7 +263,7 @@ export function Problem() {
           <ArrowRight className="hidden lg:block" />
           <div className="flex items-center justify-center">
             <div className="text-center">
-              <div className="nowrap text-xs font-medium text-muted">크립토택스가 통일</div>
+              <div className="nowrap text-xs font-medium text-muted">Kontaxt가 통일</div>
               <div className="nowrap text-base font-bold text-ink">한국 세법 표준 포맷</div>
             </div>
           </div>

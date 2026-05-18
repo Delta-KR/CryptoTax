@@ -3,7 +3,7 @@ import { pretendard, jetbrainsMono } from './fonts';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
-const title = '크립토택스 — 2027년 가상자산 양도소득세 완벽 대비';
+const title = 'Kontaxt — 2027년 가상자산 양도소득세 완벽 대비';
 const description =
   '업비트, 빗썸, 바이낸스 등 모든 거래소의 거래내역을 자동으로 통합해 한국 세법 기준으로 양도소득세를 계산합니다. 2027년 1월 1일 시행.';
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     '가상자산 세금',
     '암호화폐 세금',
     '양도소득세',
-    '크립토택스',
+    'Kontaxt',
     '업비트 세금',
     '빗썸 세금',
     '바이낸스 세금',
@@ -58,11 +58,41 @@ export const metadata: Metadata = {
   },
 };
 
-// Inline before-paint script: restore saved theme so we don't flash light → dark.
-const themeRestoreScript = `
+// Inline before-paint script: one-time migration of legacy `crypto-tax-*` storage
+// keys to `kontaxt-*` (rebrand 2026-05), then restore saved theme so we don't
+// flash light → dark on first paint.
+const bootScript = `
 (function () {
   try {
-    var t = localStorage.getItem('crypto-tax-theme');
+    var FLAG = 'kontaxt-migration-v1';
+    if (localStorage.getItem(FLAG) !== 'done') {
+      var L = [
+        ['crypto-tax-theme', 'kontaxt-theme'],
+        ['crypto-tax-plan', 'kontaxt-plan'],
+        ['crypto-tax-billing-history', 'kontaxt-billing-history'],
+        ['crypto-tax-taxpro', 'kontaxt-taxpro'],
+        ['crypto-tax-method', 'kontaxt-method'],
+        ['crypto-tax-notifications', 'kontaxt-notifications'],
+        ['crypto-tax-session-v1', 'kontaxt-session-v1']
+      ];
+      for (var i = 0; i < L.length; i++) {
+        var ov = localStorage.getItem(L[i][0]);
+        if (ov !== null && localStorage.getItem(L[i][1]) === null) {
+          localStorage.setItem(L[i][1], ov);
+        }
+        localStorage.removeItem(L[i][0]);
+      }
+      var S = [['crypto-tax-pending-plan', 'kontaxt-pending-plan']];
+      for (var j = 0; j < S.length; j++) {
+        var sv = sessionStorage.getItem(S[j][0]);
+        if (sv !== null && sessionStorage.getItem(S[j][1]) === null) {
+          sessionStorage.setItem(S[j][1], sv);
+        }
+        sessionStorage.removeItem(S[j][0]);
+      }
+      localStorage.setItem(FLAG, 'done');
+    }
+    var t = localStorage.getItem('kontaxt-theme');
     if (t === 'dark' || t === 'light') {
       document.documentElement.setAttribute('data-theme', t);
     }
@@ -110,7 +140,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={`${pretendard.variable} ${jetbrainsMono.variable}`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeRestoreScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

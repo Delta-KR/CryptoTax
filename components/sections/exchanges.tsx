@@ -150,7 +150,7 @@ export function Exchanges() {
             요청하시는 거래소가 있다면{' '}
             <a
               className="text-brand underline"
-              href="mailto:hello@cryptotax.example?subject=거래소 추가 요청"
+              href="mailto:hello@kontaxt.kr?subject=거래소 추가 요청"
             >
               알려주세요
             </a>{' '}

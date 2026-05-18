@@ -9,7 +9,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           href="/"
           className="text-base font-bold tracking-[-0.01em] text-ink"
         >
-          크립토택스
+          Kontaxt
         </Link>
         <ThemeToggle />
       </header>

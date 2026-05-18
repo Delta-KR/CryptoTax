@@ -175,7 +175,7 @@ export default function TaxProPage() {
             </li>
             <li className="flex gap-2">
               <span className="text-good">✓</span>
-              크립토택스 리포트 형식에 익숙
+              Kontaxt 리포트 형식에 익숙
             </li>
             <li className="flex gap-2">
               <span className="text-good">✓</span>

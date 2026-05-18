@@ -96,7 +96,7 @@ export function Sidebar({ user, variant = 'desktop', onNavigate }: SidebarProps)
         onClick={onNavigate}
         className="flex h-[60px] items-center border-b border-line px-6 text-base font-bold tracking-[-0.01em] text-ink"
       >
-        크립토택스
+        Kontaxt
       </Link>
 
       <nav aria-label="대시보드 메뉴" className="flex-1 px-3 py-4">

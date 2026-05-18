@@ -26,7 +26,7 @@ export async function Nav() {
     >
       <div className="mx-auto flex max-w-content items-center justify-between px-8 py-3.5">
         <Link href="/" className="flex items-center gap-2.5">
-          <span className="text-base font-bold tracking-[-0.01em] text-ink">크립토택스</span>
+          <span className="text-base font-bold tracking-[-0.01em] text-ink">Kontaxt</span>
         </Link>
 
         <div className="hidden items-center gap-8 text-body text-ink-2 md:flex">

@@ -96,7 +96,7 @@ function Problem() {
           <ArrowRight />
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>크립토택스가 통일</div>
+              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 500, whiteSpace: 'nowrap' }}>Kontaxt가 통일</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)', whiteSpace: 'nowrap' }}>한국 세법 표준 포맷</div>
             </div>
           </div>

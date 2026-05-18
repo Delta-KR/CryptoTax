@@ -6,9 +6,9 @@ import { Pill } from '@/components/ui/Pill';
 import { SectionEyebrow } from '@/components/ui/section-heading';
 
 export const metadata: Metadata = {
-  title: '사용 가이드 — 크립토택스',
+  title: '사용 가이드 — Kontaxt',
   description:
-    '업비트 PDF · 바이낸스 CSV 거래내역을 다운로드해서 크립토택스에 업로드하는 방법, 그리고 세금 계산 결과를 해석하는 단계별 안내.',
+    '업비트 PDF · 바이낸스 CSV 거래내역을 다운로드해서 Kontaxt에 업로드하는 방법, 그리고 세금 계산 결과를 해석하는 단계별 안내.',
 };
 
 interface Step {
@@ -45,7 +45,7 @@ const UPBIT_STEPS: readonly Step[] = [
   },
   {
     n: 6,
-    title: '크립토택스에 업로드',
+    title: 'Kontaxt에 업로드',
     desc: '받은 PDF 파일을 업로드 페이지의 [업비트] 탭에 끌어다 놓습니다. 자동으로 파싱·계산이 진행됩니다.',
   },
 ];
@@ -83,7 +83,7 @@ const BINANCE_STEPS: readonly Step[] = [
   },
   {
     n: 7,
-    title: '크립토택스에 업로드',
+    title: 'Kontaxt에 업로드',
     desc: '받은 .csv 파일을 업로드 페이지의 [바이낸스] 탭에 끌어다 놓습니다. 여러 기간의 파일을 따로 받았다면 순서 상관없이 차례로 업로드하세요.',
   },
 ];
@@ -99,7 +99,7 @@ const FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: '의제취득가액이 뭔가요?',
-    a: '2026년 12월 31일 이전에 매수한 가상자산의 취득가액을 "실제 매수 가격"과 "2026.12.31 기준 시가" 중 더 큰 값으로 적용하는 규칙입니다. 한국 세법이 시행되기 전 매수분에 대한 보호 장치이며, 크립토택스가 자동으로 적용합니다.',
+    a: '2026년 12월 31일 이전에 매수한 가상자산의 취득가액을 "실제 매수 가격"과 "2026.12.31 기준 시가" 중 더 큰 값으로 적용하는 규칙입니다. 한국 세법이 시행되기 전 매수분에 대한 보호 장치이며, Kontaxt가 자동으로 적용합니다.',
   },
   {
     q: 'USDT 같은 외화 거래는 어떻게 처리되나요?',

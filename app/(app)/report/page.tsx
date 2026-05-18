@@ -85,7 +85,7 @@ export default function ReportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `크립토택스_${session.year}.pdf`;
+      a.download = `Kontaxt_${session.year}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -216,7 +216,7 @@ export default function ReportPage() {
                   {year}년 귀속 양도소득세 신고서
                 </h2>
                 <p className="mt-1 text-[12px] text-muted">
-                  발행: {new Date().toLocaleDateString('ko-KR')} · 크립토택스
+                  발행: {new Date().toLocaleDateString('ko-KR')} · Kontaxt
                 </p>
               </div>
               <Pill tone="brand" size="sm">

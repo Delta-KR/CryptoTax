@@ -1,7 +1,7 @@
-# Handoff: 크립토택스 (CryptoTax KR) — Marketing Landing Page
+# Handoff: Kontaxt — Marketing Landing Page
 
 ## Overview
-A marketing landing page for **크립토택스 (CryptoTax)**, a Korean crypto-tax reconciliation platform. The page introduces the 2027 Korean crypto capital-gains tax, explains how the product unifies trade data across exchanges (Upbit / Bithumb / Binance and more), walks through how the calculation works, and converts visitors to free signup.
+A marketing landing page for **Kontaxt**, a Korean crypto-tax reconciliation platform. The page introduces the 2027 Korean crypto capital-gains tax, explains how the product unifies trade data across exchanges (Upbit / Bithumb / Binance and more), walks through how the calculation works, and converts visitors to free signup.
 
 Sections (in order):
 1. **Nav** (sticky) — logo, anchor links (작동 방식 / 지원 거래소 / 기능 / 요금제), theme toggle, login, 무료 시작 CTA
@@ -158,7 +158,7 @@ Hover-tracked spotlight: a JS `pointermove` listener writes `--mx` / `--my` CSS 
 ## Section-by-section
 
 ### 1. Nav (`parts/chrome.jsx` → `Nav`)
-Sticky top, `border-bottom: 1px solid var(--line)`, `backdrop-filter: blur(20px) saturate(180%)` over `color-mix(in srgb, var(--bg) 85%, transparent)`. Layout: brand wordmark left, anchor links centered, theme toggle + 로그인 + 무료 시작 right. Anchors target `#how`, `#exchanges`, `#features`, `#pricing`. Theme toggle persists to `localStorage` under key `crypto-tax-theme`; the value is restored by an inline `<script>` in the document head before React mounts (prevents flash).
+Sticky top, `border-bottom: 1px solid var(--line)`, `backdrop-filter: blur(20px) saturate(180%)` over `color-mix(in srgb, var(--bg) 85%, transparent)`. Layout: brand wordmark left, anchor links centered, theme toggle + 로그인 + 무료 시작 right. Anchors target `#how`, `#exchanges`, `#features`, `#pricing`. Theme toggle persists to `localStorage` under key `kontaxt-theme`; the value is restored by an inline `<script>` in the document head before React mounts (prevents flash).
 
 ### 2. Hero (`parts/hero.jsx`)
 2-column grid (`1fr 1.05fr`, gap 56). Left:
@@ -244,7 +244,7 @@ Bottom bar: copyright left, disclaimer right ("본 서비스는 세무 신고의
 
 ## Interactions & Behavior
 
-- **Theme toggle** — Light / Dark via `data-theme` attribute on `<html>`. Persisted in `localStorage["crypto-tax-theme"]`. **Implement an inline script that reads the saved value before first paint** to avoid theme flash.
+- **Theme toggle** — Light / Dark via `data-theme` attribute on `<html>`. Persisted in `localStorage["kontaxt-theme"]`. **Implement an inline script that reads the saved value before first paint** to avoid theme flash.
 - **`.hov` hover** — pointer-tracked spotlight + lift on cards (CSV cards, step cards, exchange cards, feature cards, pricing cards). Transition `transform .35s cubic-bezier(.2,.7,.2,1)`.
 - **CSV card highlight** — `onMouseEnter` sets an active exchange in `Problem`; the active card gets a colored border + soft glow.
 - **Example FIFO/MA toggle** — toggles `method` state; the active segment animates background. Values shown are static (no real recompute needed for v1).

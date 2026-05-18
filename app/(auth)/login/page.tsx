@@ -66,7 +66,7 @@ export default function LoginPage() {
   return (
     <AuthCard
       title="로그인"
-      subtitle="크립토택스 계정으로 계속하세요."
+      subtitle="Kontaxt 계정으로 계속하세요."
       footer={
         <>
           회원이 아니신가요?{' '}

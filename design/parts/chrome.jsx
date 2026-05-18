@@ -5,7 +5,7 @@ function ThemeToggle() {
   );
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
-    try {localStorage.setItem('crypto-tax-theme', dark ? 'dark' : 'light');} catch (e) {}
+    try {localStorage.setItem('kontaxt-theme', dark ? 'dark' : 'light');} catch (e) {}
   }, [dark]);
   return (
     <button
@@ -52,7 +52,7 @@ function Nav() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
         <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>크립토택스</span>
+          <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em' }}>Kontaxt</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 32, fontSize: 14, color: 'var(--ink-2)' }}>
           <a href="#how">작동 방식</a>
@@ -101,7 +101,7 @@ function Footer() {
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 40, paddingBottom: 40, borderBottom: '1px solid var(--line)' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>크립토택스</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--ink)' }}>Kontaxt</span>
             </div>
             <p style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--muted)', maxWidth: 320 }}>
               한국 가상자산 투자자를 위한 세금 정산 플랫폼.<br />
@@ -113,7 +113,7 @@ function Footer() {
           <FooterCol title="고객지원" items={['문의하기', '개인정보처리방침', '이용약관']} />
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 24, fontSize: 12, color: 'var(--muted-2)' }}>
-          <div>© 2026 크립토택스. All rights reserved.</div>
+          <div>© 2026 Kontaxt. All rights reserved.</div>
           <div>본 서비스는 세무 신고의 참고 자료를 제공하며, 최종 신고는 세무사 검토를 권장합니다.</div>
         </div>
       </div>

@@ -61,8 +61,8 @@ export interface PaymentRecord {
   receiptUrl?: string;
 }
 
-const PLAN_KEY = 'crypto-tax-plan';
-const HISTORY_KEY = 'crypto-tax-billing-history';
+const PLAN_KEY = 'kontaxt-plan';
+const HISTORY_KEY = 'kontaxt-billing-history';
 
 export function getCurrentPlan(): PlanId {
   if (typeof window === 'undefined') return 'free';
@@ -116,7 +116,7 @@ function addPayment(p: Omit<PaymentRecord, 'id' | 'date'>) {
 const defaultHistory: PaymentRecord[] = [];
 
 // 세무사 매칭 신청
-const TAXPRO_KEY = 'crypto-tax-taxpro';
+const TAXPRO_KEY = 'kontaxt-taxpro';
 export interface TaxProRequest {
   id: string;
   name: string;

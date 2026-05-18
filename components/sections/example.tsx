@@ -247,7 +247,7 @@ export function Example() {
           약{' '}
           <span className="num font-semibold text-ink">{diffTax.toLocaleString()}만원</span>{' '}
           차이가 납니다. 같은 거래·같은 세법인데 분할매수 lot 평가 방식이 달라 결과가
-          바뀝니다. 크립토택스는{' '}
+          바뀝니다. Kontaxt는{' '}
           <strong className="font-semibold text-ink-2">
             {cheaper === 'fifo' ? '선입선출법' : '이동평균법'}
           </strong>

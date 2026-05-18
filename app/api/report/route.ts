@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     );
 
     const filename = encodeURIComponent(
-      `크립토택스_${body.year}_${userName}.pdf`,
+      `Kontaxt_${body.year}_${userName}.pdf`,
     );
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,

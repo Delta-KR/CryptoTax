@@ -3,9 +3,9 @@ import type { Metadata } from 'next';
 import { SectionEyebrow } from '@/components/ui/section-heading';
 
 export const metadata: Metadata = {
-  title: '이용약관 — 크립토택스',
+  title: '이용약관 — Kontaxt',
   description:
-    '크립토택스 서비스 이용에 관한 권리·의무·책임을 규정하는 약관. 유료 서비스의 종류, 환불 정책, 책임 제한 사항을 포함합니다.',
+    'Kontaxt 서비스 이용에 관한 권리·의무·책임을 규정하는 약관. 유료 서비스의 종류, 환불 정책, 책임 제한 사항을 포함합니다.',
 };
 
 const EFFECTIVE_DATE = '2026년 5월 12일';
@@ -59,14 +59,14 @@ export default function TermsPage() {
         <div className="mx-auto max-w-content">
           <Article num={1} title="목적">
             <p>
-              본 약관은 크립토택스(이하 &ldquo;서비스&rdquo;)가 제공하는 가상자산 양도소득세 계산 서비스의
+              본 약관은 Kontaxt(이하 &ldquo;서비스&rdquo;)가 제공하는 가상자산 양도소득세 계산 서비스의
               이용 조건 및 절차, 서비스와 회원 간의 권리·의무·책임 등을 규정함을 목적으로 합니다.
             </p>
           </Article>
 
           <Article num={2} title="정의">
             <Clause num={1}>
-              &ldquo;서비스&rdquo;라 함은 크립토택스가 운영하는 가상자산 양도소득세 계산·리포트 생성 웹
+              &ldquo;서비스&rdquo;라 함은 Kontaxt가 운영하는 가상자산 양도소득세 계산·리포트 생성 웹
               서비스를 의미합니다.
             </Clause>
             <Clause num={2}>
