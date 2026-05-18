@@ -56,6 +56,11 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    other: {
+      'naver-site-verification': 'd81b5e07ea5596e0e3e16d48727cc98d152cc232',
+    },
+  },
 };
 
 // Inline before-paint script: one-time migration of legacy `crypto-tax-*` storage
