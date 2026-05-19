@@ -91,7 +91,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
     }
 
-    // 5. magic link로 redirect → Supabase가 verify + 세션 발급 + /dashboard로 이동
+    // 5. app_metadata에 provider=naver 박기. Supabase native OAuth는 자동으로
+    //    identities + app_metadata에 박는데, admin.generateLink는 email로 분류함.
+    //    Dashboard Users의 Providers 컬럼이 app_metadata.provider 기반이라 명시 설정.
+    const userId = linkData.user?.id;
+    if (userId) {
+      await admin.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          provider: 'naver',
+          providers: ['naver'],
+        },
+      });
+    }
+
+    // 6. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
     const response = NextResponse.redirect(linkData.properties.action_link);
     response.cookies.delete('naver_oauth_state');
     return response;
