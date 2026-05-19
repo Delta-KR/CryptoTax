@@ -69,12 +69,15 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Supabase admin: 사용자 upsert + magic link 발급
+    //    redirectTo는 /auth/finish (client component) — magic link verify가
+    //    URL fragment에 access_token을 박아 보내는데, server middleware는
+    //    fragment를 못 보므로 client-side에서 setSession 명시 호출 필요.
     const admin = createSupabaseAdminClient();
     const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email: naverUser.email,
       options: {
-        redirectTo: `${url.origin}/dashboard`,
+        redirectTo: `${url.origin}/auth/finish`,
         // 신규 가입자에게만 user_metadata로 박힘. 기존 사용자는 그대로.
         data: {
           name: naverUser.name || naverUser.nickname,
