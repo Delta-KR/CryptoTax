@@ -70,6 +70,7 @@ export default function ReportPage() {
           result: session.result,
           transactions: session.allUnified,
           year: session.year,
+          method: session.method,
         }),
       });
       if (!response.ok) {
@@ -227,10 +228,10 @@ export default function ReportPage() {
             <dl className="mt-5 grid grid-cols-2 gap-4">
               <div>
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-2">
-                  총 양도차익
+                  순손익
                 </dt>
-                <dd className="num mt-1 text-[18px] font-bold text-good">
-                  {formatKrw(result.totalGain)}
+                <dd className={`num mt-1 text-[18px] font-bold ${result.netPnL >= 0 ? 'text-good' : 'text-bad'}`}>
+                  {formatKrw(result.netPnL)}
                 </dd>
               </div>
               <div>

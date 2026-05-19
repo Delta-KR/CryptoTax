@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
 import { getTaxMethod, setTaxMethod, type TaxMethod } from '@/lib/mock/tax';
+import { calculateTaxFromFiles } from '@/app/actions/calculate';
+import {
+  loadSession,
+  replaceCalculation,
+} from '@/lib/storage/session';
 import { cn } from '@/lib/utils';
 
 interface MethodOption {
@@ -41,6 +46,7 @@ export default function TaxSettingsPage() {
   const toast = useToast();
   const [current, setCurrent] = useState<TaxMethod>('fifo');
   const [selected, setSelected] = useState<TaxMethod>('fifo');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const m = getTaxMethod();
@@ -48,14 +54,56 @@ export default function TaxSettingsPage() {
     setSelected(m);
   }, []);
 
-  function handleApply() {
+  async function handleApply() {
+    // 1) localStorage 선호 갱신.
     setTaxMethod(selected);
     setCurrent(selected);
-    toast.show(
-      `계산 방식이 ${selected === 'fifo' ? '선입선출법' : '이동평균법'}으로 변경되었습니다.`,
-      'success'
-    );
-    router.push('/tax');
+
+    // 2) 세션에 거래 데이터가 있으면 새 method로 즉시 재계산.
+    const session = loadSession();
+    const hasData = (session?.allParsed.length ?? 0) > 0;
+
+    if (!hasData) {
+      toast.show(
+        `계산 방식이 ${selected === 'fifo' ? '선입선출법' : '이동평균법'}으로 변경되었습니다. 다음 업로드부터 적용됩니다.`,
+        'success',
+      );
+      router.push('/tax');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      // 신규 파일 없음 — 기존 parsed 데이터를 그대로 사용해 재계산만 트리거.
+      formData.append(
+        'previousParsed',
+        JSON.stringify(session?.allParsed ?? []),
+      );
+      formData.append('method', selected);
+
+      const result = await calculateTaxFromFiles(formData);
+      if (!result.ok) {
+        // 실패 시 localStorage 롤백.
+        setTaxMethod(current);
+        setCurrent(current);
+        toast.show(`재계산 실패: ${result.error}`, 'error');
+        setSubmitting(false);
+        return;
+      }
+      replaceCalculation(result.payload);
+      toast.show(
+        `${selected === 'fifo' ? '선입선출법' : '이동평균법'}으로 재계산 완료`,
+        'success',
+      );
+      router.push('/tax');
+    } catch (e) {
+      setTaxMethod(current);
+      setCurrent(current);
+      const msg = e instanceof Error ? e.message : '재계산 중 오류';
+      toast.show(msg, 'error');
+      setSubmitting(false);
+    }
   }
 
   const dirty = current !== selected;
@@ -155,12 +203,14 @@ export default function TaxSettingsPage() {
 
       <div className="mt-6 flex items-center justify-between rounded-lg border border-line bg-card-2 px-5 py-4">
         <p className="text-[13px] text-muted">
-          {dirty
-            ? '변경사항을 적용하면 모든 연도의 세금 계산이 재실행됩니다.'
-            : '변경할 방식을 선택해주세요.'}
+          {submitting
+            ? '재계산 중…'
+            : dirty
+              ? '변경사항을 적용하면 기존 거래 내역이 새 방식으로 재계산됩니다.'
+              : '변경할 방식을 선택해주세요.'}
         </p>
-        <Button onClick={handleApply} disabled={!dirty}>
-          적용
+        <Button onClick={handleApply} disabled={!dirty || submitting}>
+          {submitting ? '재계산 중…' : '적용'}
         </Button>
       </div>
     </>

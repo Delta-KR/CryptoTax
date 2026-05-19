@@ -180,9 +180,9 @@ export default function TaxPage() {
       {/* 4 StatCards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          label="총 양도차익"
-          value={formatKrw(result.totalGain)}
-          tone={result.totalGain >= 0 ? 'good' : 'bad'}
+          label="순손익"
+          value={formatKrw(result.netPnL)}
+          tone={result.netPnL >= 0 ? 'good' : 'bad'}
           sub={`${result.transactionCount}건 거래`}
         />
         <StatCard
@@ -194,7 +194,7 @@ export default function TaxPage() {
           <StatCard
             label="과세표준"
             value={formatKrw(result.taxable)}
-            sub="총 양도차익 − 공제"
+            sub="순손익 − 공제"
           />
         </BlurOverlay>
         <BlurOverlay masked={masked}>
@@ -223,6 +223,19 @@ export default function TaxPage() {
             label="총 양도차익"
             value={formatKrw(result.totalGain)}
             tone="good"
+            sub="양수 손익만 합산"
+          />
+          <CalcRow
+            label="총 양도손실"
+            value={`−${formatKrw(result.totalLoss).replace('+', '').replace('−', '')}`}
+            sub="음수 손익 절댓값"
+          />
+          <Divider />
+          <CalcRow
+            label="순손익"
+            value={formatKrw(result.netPnL)}
+            tone={result.netPnL >= 0 ? 'good' : undefined}
+            bold
           />
           <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
           <Divider />
@@ -363,6 +376,92 @@ export default function TaxPage() {
           )}
         </Card>
       </div>
+
+      {/* 환율·시세 출처 — 신뢰성 audit trail */}
+      {result.rateSource && (
+        <div
+          className={
+            'mt-5 rounded-lg border px-5 py-4 text-[12.5px] leading-[1.65] ' +
+            (result.rateSource.fallbackUsed
+              ? 'border-warn/40 bg-warn-soft'
+              : 'border-line bg-card-2')
+          }
+        >
+          <div className="mb-1 font-semibold text-ink-2">환율·시세 출처</div>
+          <div className="text-muted">
+            일별 시세: {result.rateSource.primary}
+            {result.rateSource.lastFetchedAt && (
+              <>
+                {' '}· 마지막 갱신{' '}
+                {new Date(
+                  result.rateSource.lastFetchedAt,
+                ).toLocaleDateString('ko-KR')}
+              </>
+            )}
+          </div>
+          {result.rateSource.fallbackUsed && (
+            <div className="mt-1.5 text-warn">
+              ⚠ 일부 거래에 정적 분기별 fallback 환율이 사용됐습니다. 정확한 신고를
+              위해 시세 데이터 갱신 후 재계산을 권장합니다.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 의제취득가액 시가 출처 — pre-2027 매수가 있을 때만 */}
+      {result.deemedCostSource &&
+        (result.deemedCostSource.realCoins.length +
+          result.deemedCostSource.estimateCoins.length +
+          result.deemedCostSource.userOverrideCoins.length +
+          result.deemedCostSource.missingCoins.length >
+          0) && (
+          <div
+            className={
+              'mt-3 rounded-lg border px-5 py-4 text-[12.5px] leading-[1.65] ' +
+              (result.deemedCostSource.estimateCoins.length > 0 ||
+              result.deemedCostSource.missingCoins.length > 0
+                ? 'border-warn/40 bg-warn-soft'
+                : 'border-line bg-card-2')
+            }
+          >
+            <div className="mb-1 font-semibold text-ink-2">
+              의제취득가액 시가 ({result.deemedCostSource.deemedDate} 기준)
+            </div>
+            {result.deemedCostSource.realCoins.length > 0 && (
+              <div className="text-muted">
+                ✓ 실측 시가 적용:{' '}
+                <span className="font-semibold text-good">
+                  {result.deemedCostSource.realCoins.join(', ')}
+                </span>
+              </div>
+            )}
+            {result.deemedCostSource.userOverrideCoins.length > 0 && (
+              <div className="mt-0.5 text-muted">
+                ✓ 사용자 수동 입력:{' '}
+                <span className="font-semibold text-ink-2">
+                  {result.deemedCostSource.userOverrideCoins.join(', ')}
+                </span>
+              </div>
+            )}
+            {result.deemedCostSource.estimateCoins.length > 0 && (
+              <div className="mt-1.5 text-warn">
+                ⚠ 추정치 적용 (실시가 미확정):{' '}
+                <span className="font-semibold">
+                  {result.deemedCostSource.estimateCoins.join(', ')}
+                </span>
+                . {result.deemedCostSource.deemedDate} 종가 확정 후 재계산을 권장합니다.
+              </div>
+            )}
+            {result.deemedCostSource.missingCoins.length > 0 && (
+              <div className="mt-1.5 text-bad">
+                ⚠ 시가 정보 없음 (실가로 처리됨, 의제 혜택 없음):{' '}
+                <span className="font-semibold">
+                  {result.deemedCostSource.missingCoins.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
     </>
   );
 }

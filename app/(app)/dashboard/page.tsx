@@ -142,10 +142,10 @@ export default function DashboardPage() {
       {/* 4 StatCards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          label="총 양도차익"
-          value={formatKrw(result.totalGain)}
-          tone={result.totalGain >= 0 ? 'good' : 'bad'}
-          sub={`${year}년 귀속`}
+          label="순손익"
+          value={formatKrw(result.netPnL)}
+          tone={result.netPnL >= 0 ? 'good' : 'bad'}
+          sub={`총 양도차익 ${formatKrw(result.totalGain)} − 손실 ${formatKrw(result.totalLoss)}`}
         />
         <StatCard
           label="기본공제"
