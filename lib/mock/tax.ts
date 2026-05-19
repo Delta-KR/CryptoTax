@@ -5,8 +5,25 @@ import type { Transaction } from './transactions';
 
 export type TaxMethod = 'fifo' | 'avg';
 
+export interface RateSourceClient {
+  primary: string;
+  fallbackUsed: boolean;
+  lastFetchedAt: string | null;
+  fallbackName: string;
+}
+
+export interface DeemedCostSourceClient {
+  realCoins: string[];
+  estimateCoins: string[];
+  userOverrideCoins: string[];
+  missingCoins: string[];
+  deemedDate: string;
+}
+
 export interface TaxResult {
-  totalGain: number;
+  totalGain: number; // 양수 손익 합계 (순수 이익 합계)
+  totalLoss: number; // 음수 손익 합계의 절댓값 (순수 손실 합계)
+  netPnL: number; // 순손익 = totalGain - totalLoss (= taxable + deduction 전)
   deduction: number;
   taxable: number;
   tax: number;
@@ -14,12 +31,16 @@ export interface TaxResult {
   transactionCount: number;
   plan: 'free' | 'premium';
   masked: boolean;
+  rateSource: RateSourceClient | null;
+  deemedCostSource: DeemedCostSourceClient | null;
 }
 
 const DEDUCTION_KRW = 2_500_000;
 
 const EMPTY_RESULT: TaxResult = {
   totalGain: 0,
+  totalLoss: 0,
+  netPnL: 0,
   deduction: DEDUCTION_KRW,
   taxable: 0,
   tax: 0,
@@ -27,6 +48,8 @@ const EMPTY_RESULT: TaxResult = {
   transactionCount: 0,
   plan: 'free',
   masked: false,
+  rateSource: null,
+  deemedCostSource: null,
 };
 
 export function calculateTax(
@@ -40,7 +63,9 @@ export function calculateTax(
 
   const r = session.result;
   return {
-    totalGain: r.netPnLKRW,
+    totalGain: r.totalGainKRW,
+    totalLoss: r.totalLossKRW,
+    netPnL: r.netPnLKRW,
     deduction: r.deductionKRW,
     taxable: r.taxableIncomeKRW,
     tax: r.taxAmountKRW,
@@ -57,6 +82,8 @@ export function calculateTax(
     ),
     plan: r.plan ?? 'free',
     masked: r.masked ?? false,
+    rateSource: r.rateSource ?? null,
+    deemedCostSource: r.deemedCostSource ?? null,
   };
 }
 

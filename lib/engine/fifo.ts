@@ -1,13 +1,10 @@
 import type { Lot, ConsumedLot } from './types';
+import type { ConsumeResult, TaxEngine } from './tax-engine';
 import { roundCoin, roundKRW } from './constants';
 
-export interface ConsumeResult {
-  costBasisKRW: number;
-  consumedLots: ConsumedLot[];
-  buyFeeKRW: number;
-}
+export type { ConsumeResult } from './tax-engine';
 
-export class FIFOEngine {
+export class FIFOEngine implements TaxEngine {
   private lots: Map<string, Lot[]> = new Map();
 
   addLot(coin: string, lot: Lot): void {

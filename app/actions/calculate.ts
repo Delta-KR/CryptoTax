@@ -5,11 +5,9 @@
 
 import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
-import { calculateTax } from '@/lib/engine/tax-calculator';
-import {
-  StaticExchangeRateProvider,
-  type StaticRateEntry,
-} from '@/lib/engine/exchange-rate';
+import { calculateTax, type TaxMethod } from '@/lib/engine/tax-calculator';
+import { DBExchangeRateProvider } from '@/lib/engine/rate-provider';
+import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
 import type {
   ParsedTransaction,
   TaxResult,
@@ -61,41 +59,68 @@ function maskForFree(wire: TaxResultWire): TaxResultWire {
   };
 }
 
-const DEFAULT_RATES: readonly StaticRateEntry[] = [
-  ['2024-01-01', 'USDT', 'KRW', 1330],
-  ['2024-04-01', 'USDT', 'KRW', 1370],
-  ['2024-07-01', 'USDT', 'KRW', 1380],
-  ['2024-10-01', 'USDT', 'KRW', 1370],
-  ['2025-01-01', 'USDT', 'KRW', 1450],
-  ['2025-04-01', 'USDT', 'KRW', 1440],
-  ['2025-07-01', 'USDT', 'KRW', 1395],
-  ['2025-10-01', 'USDT', 'KRW', 1500],
-  ['2026-01-01', 'USDT', 'KRW', 1460],
-  ['2026-04-01', 'USDT', 'KRW', 1488],
-  ['2026-07-01', 'USDT', 'KRW', 1450],
-  ['2026-10-01', 'USDT', 'KRW', 1500],
-  ['2027-01-01', 'USDT', 'KRW', 1480],
-  ['2027-04-01', 'USDT', 'KRW', 1500],
-  ['2027-07-01', 'USDT', 'KRW', 1520],
-  ['2027-10-01', 'USDT', 'KRW', 1550],
-  ['2024-07-01', 'BTC', 'KRW', 80_000_000],
-  ['2026-12-31', 'BTC', 'KRW', 150_000_000],
-  ['2027-01-01', 'BTC', 'KRW', 150_000_000],
-  ['2027-07-01', 'BTC', 'KRW', 160_000_000],
-];
+// 시세는 Supabase daily_rates 테이블에서 우선 조회 (정적 fallback rates-data.ts).
+// 의제취득가액 시가는 Supabase deemed_cost_snapshots 테이블에서 직접 조회.
 
-const DEEMED_COST_SNAPSHOTS = new Map<string, number>([
-  ['USDT', 1500],
-  ['USDC', 1500],
-  ['BTC', 150_000_000],
-  ['ETH', 5_000_000],
-  ['SOL', 300_000],
-  ['XRP', 800],
-  ['DUSK', 5],
-  ['GOAT', 800],
-  ['ETC', 30_000],
-  ['1000FLOKI', 200],
-]);
+interface DeemedSnapshotRow {
+  coin: string;
+  price_krw: number | string;
+  source_type: 'real' | 'estimate' | 'user_override';
+  deemed_date: string;
+}
+
+interface DeemedCostResolution {
+  prices: Map<string, number>;
+  realCoins: string[];
+  estimateCoins: string[];
+  userOverrideCoins: string[];
+  missingCoins: string[];
+  deemedDate: string;
+}
+
+async function resolveDeemedCostPrices(
+  preCoins: ReadonlySet<string>,
+): Promise<DeemedCostResolution> {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('deemed_cost_snapshots')
+    .select('coin, price_krw, source_type, deemed_date');
+
+  const prices = new Map<string, number>();
+  const realCoins: string[] = [];
+  const estimateCoins: string[] = [];
+  const userOverrideCoins: string[] = [];
+  let deemedDate = '2026-12-31';
+
+  if (error) {
+    console.error('[resolveDeemedCostPrices] error:', error);
+  } else if (data) {
+    for (const row of data as DeemedSnapshotRow[]) {
+      const price = Number(row.price_krw);
+      if (!Number.isFinite(price) || price <= 0) continue;
+      prices.set(row.coin, price);
+      if (row.source_type === 'real') realCoins.push(row.coin);
+      else if (row.source_type === 'estimate') estimateCoins.push(row.coin);
+      else if (row.source_type === 'user_override') userOverrideCoins.push(row.coin);
+      if (row.deemed_date) deemedDate = row.deemed_date;
+    }
+  }
+
+  const missingCoins = Array.from(preCoins).filter((c) => !prices.has(c));
+  realCoins.sort();
+  estimateCoins.sort();
+  userOverrideCoins.sort();
+  missingCoins.sort();
+
+  return {
+    prices,
+    realCoins,
+    estimateCoins,
+    userOverrideCoins,
+    missingCoins,
+    deemedDate,
+  };
+}
 
 function parsedToWire(tx: ParsedTransaction): ParsedTransactionWire {
   return { ...tx, date: tx.date.toISOString() };
@@ -199,19 +224,74 @@ export async function calculateTaxFromFiles(
       };
     }
 
+    // method: 'fifo' | 'avg'. 미지정 또는 알 수 없는 값은 'fifo' 기본.
+    const methodRaw = formData.get('method');
+    const method: TaxMethod = methodRaw === 'avg' ? 'avg' : 'fifo';
+
     const allParsed = [...previous, ...newParsed];
-    const rates = new StaticExchangeRateProvider(DEFAULT_RATES, 35);
+
+    // DB(daily_rates) 우선 조회. preload로 거래 전체 (date × from_currency)를 한 번에 가져옴.
+    const rates = new DBExchangeRateProvider(7);
+    const dates = allParsed.map((tx) => tx.date);
+    const fromCurrencies = Array.from(
+      new Set(
+        allParsed.flatMap((tx) => [tx.quoteCurrency, tx.feeCurrency]),
+      ),
+    );
+    await rates.preload(dates, fromCurrencies);
+
     const unified = await normalize(allParsed, rates);
+
+    // 의제취득가액 시가 — DB 조회. pre-2027 매수가 있는 코인만 관심.
+    const preCoinsSet = new Set<string>();
+    for (const tx of unified) {
+      if (tx.type === 'BUY' && isPreDeemedDate(tx.date)) {
+        preCoinsSet.add(tx.coin);
+      }
+    }
+    const deemedRes = await resolveDeemedCostPrices(preCoinsSet);
 
     const year = currentTargetYear();
     const result = calculateTax({
       transactions: unified,
       year,
-      deemedCostPrices: DEEMED_COST_SNAPSHOTS,
+      deemedCostPrices: deemedRes.prices,
+      method,
     });
 
     const plan = await getUserPlan();
     const wire = resultToWire(result, plan);
+    const sourceInfo = rates.getSourceInfo();
+    wire.rateSource = sourceInfo;
+    wire.deemedCostSource = {
+      realCoins: deemedRes.realCoins,
+      estimateCoins: deemedRes.estimateCoins,
+      userOverrideCoins: deemedRes.userOverrideCoins,
+      missingCoins: deemedRes.missingCoins,
+      deemedDate: deemedRes.deemedDate,
+    };
+
+    // 정적 fallback 사용 시 사용자에게 정확도 경고 추가.
+    if (sourceInfo.fallbackUsed) {
+      wire.warnings = [
+        ...wire.warnings,
+        '일부 거래에 정적 분기별 환율이 사용되었습니다 (DB에 일별 시세 미적재). 정확한 신고를 위해 시세 갱신 후 재계산을 권장합니다.',
+      ];
+    }
+
+    // 의제취득가액 추정치 사용 시 경고. real로 갱신되기 전엔 모두 estimate.
+    if (deemedRes.estimateCoins.length > 0 && preCoinsSet.size > 0) {
+      const applied = deemedRes.estimateCoins.filter((c) =>
+        preCoinsSet.has(c),
+      );
+      if (applied.length > 0) {
+        wire.warnings = [
+          ...wire.warnings,
+          `의제취득가액 추정치 적용: ${applied.join(', ')}. ${deemedRes.deemedDate} 실시가 확정 후 재계산을 권장합니다.`,
+        ];
+      }
+    }
+
     const finalResult = plan === 'free' ? maskForFree(wire) : wire;
 
     const payload: CalculatePayload = {
@@ -220,6 +300,7 @@ export async function calculateTaxFromFiles(
       allUnified: unified.map(unifiedToWire),
       result: finalResult,
       year,
+      method,
     };
     return { ok: true, payload };
   } catch (err) {

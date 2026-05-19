@@ -67,6 +67,22 @@ export interface CoinSummaryWire {
   transactionCount: number;
 }
 
+export interface RateSourceInfoWire {
+  primary: string; // DB 적재 출처 (예: 'Upbit (KRW market daily close)')
+  fallbackUsed: boolean; // 정적 fallback이 한 건이라도 사용됐는지
+  lastFetchedAt: string | null; // ISO timestamp
+  fallbackName: string;
+}
+
+// 의제취득가액 시가 source 분포 (DB 조회 결과 요약).
+export interface DeemedCostSourceWire {
+  realCoins: string[]; // 2026-12-31 실측 (source_type='real')
+  estimateCoins: string[]; // 추정치 (source_type='estimate')
+  userOverrideCoins: string[]; // 사용자 수동 입력 (source_type='user_override')
+  missingCoins: string[]; // pre-2027 매수 있는데 시가 DB에 없음 → 의제 미적용 (실가 사용)
+  deemedDate: string; // 'YYYY-MM-DD' — 기본 '2026-12-31'
+}
+
 export interface TaxResultWire {
   year: number;
   totalGainKRW: number;
@@ -83,7 +99,11 @@ export interface TaxResultWire {
   warnings: string[];
   plan: 'free' | 'premium';
   masked: boolean;
+  rateSource?: RateSourceInfoWire;
+  deemedCostSource?: DeemedCostSourceWire;
 }
+
+export type TaxMethodWire = 'fifo' | 'avg';
 
 export interface CalculatePayload {
   newParsed: ParsedTransactionWire[];
@@ -91,6 +111,7 @@ export interface CalculatePayload {
   allUnified: UnifiedTransactionWire[];
   result: TaxResultWire;
   year: number;
+  method: TaxMethodWire;
 }
 
 export interface CalculateSuccess {
