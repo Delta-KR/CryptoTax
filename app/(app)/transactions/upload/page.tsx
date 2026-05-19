@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
 import { type ExchangeId } from '@/lib/mock/transactions';
+import { getTaxMethod } from '@/lib/mock/tax';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import { appendUpload, loadSession, clearSession } from '@/lib/storage/session';
 
@@ -82,6 +83,8 @@ export default function UploadPage() {
         'previousParsed',
         JSON.stringify(session?.allParsed ?? []),
       );
+      // 사용자가 Tax 페이지에서 선택한 방식(FIFO/MA)을 localStorage에서 읽어 적용.
+      formData.append('method', getTaxMethod());
 
       const result = await calculateTaxFromFiles(formData);
 

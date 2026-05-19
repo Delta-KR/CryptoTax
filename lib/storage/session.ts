@@ -3,6 +3,7 @@ import { reportRequestSchema } from '@/lib/validation/report';
 import type {
   CalculatePayload,
   ParsedTransactionWire,
+  TaxMethodWire,
   TaxResultWire,
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
@@ -14,6 +15,7 @@ export interface SessionData {
   allUnified: UnifiedTransactionWire[];
   result: TaxResultWire;
   year: number;
+  method: TaxMethodWire;
   uploads: Array<{
     fileName: string;
     exchange: string;
@@ -29,6 +31,8 @@ const sessionSchema = z.object({
   allUnified: reportRequestSchema.shape.transactions,
   result: reportRequestSchema.shape.result,
   year: z.number().int().min(2020).max(2030),
+  // 구버전 세션 호환: method 누락 시 'fifo'로 기본값 처리 (loadSession에서 보강).
+  method: z.enum(['fifo', 'avg']).optional(),
   uploads: z
     .array(
       z.object({
@@ -54,7 +58,11 @@ export function loadSession(): SessionData | null {
       localStorage.removeItem(KEY);
       return null;
     }
-    return validated.data as unknown as SessionData;
+    // 구버전 세션(method 미보유) 호환: 기본 'fifo' 보강.
+    return {
+      ...(validated.data as unknown as Omit<SessionData, 'method'>),
+      method: validated.data.method ?? 'fifo',
+    } as SessionData;
   } catch {
     return null;
   }
@@ -91,7 +99,25 @@ export function appendUpload(
     allUnified: payload.allUnified,
     result: payload.result,
     year: payload.year,
+    method: payload.method,
     uploads: [...(previous?.uploads ?? []), upload],
+  };
+  saveSession(next);
+  return next;
+}
+
+// 토글 재계산 — 신규 파일 없이 method만 바꿔 결과 갱신.
+export function replaceCalculation(
+  payload: CalculatePayload,
+): SessionData {
+  const previous = loadSession();
+  const next: SessionData = {
+    allParsed: payload.allParsed,
+    allUnified: payload.allUnified,
+    result: payload.result,
+    year: payload.year,
+    method: payload.method,
+    uploads: previous?.uploads ?? [],
   };
   saveSession(next);
   return next;

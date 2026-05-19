@@ -294,6 +294,117 @@ describe('E2E Scenario D — Deemed cost (2026 buy + 2027 sell)', () => {
   });
 });
 
+describe('E2E Scenario E — Method comparison (FIFO vs MA): 같은 거래, 다른 결과', () => {
+  it('다른 가격 매수×2 → 부분 매도: FIFO와 MA가 다른 cost basis', async () => {
+    const parsed: ParsedTransaction[] = [
+      ptx({
+        date: new Date('2027-01-01T09:00:00+09:00'),
+        type: 'BUY',
+        coin: 'BTC',
+        amount: 0.1,
+        pricePerUnit: 50_000_000,
+        total: 5_000_000,
+        exchange: 'Upbit',
+      }),
+      ptx({
+        date: new Date('2027-02-01T10:00:00+09:00'),
+        type: 'BUY',
+        coin: 'BTC',
+        amount: 0.1,
+        pricePerUnit: 70_000_000,
+        total: 7_000_000,
+        exchange: 'Upbit',
+      }),
+      ptx({
+        date: new Date('2027-06-01T15:00:00+09:00'),
+        type: 'SELL',
+        coin: 'BTC',
+        amount: 0.1,
+        pricePerUnit: 60_000_000,
+        total: 6_000_000,
+        exchange: 'Upbit',
+      }),
+    ];
+
+    const rates = new StaticExchangeRateProvider([]);
+    const unified = await normalize(parsed, rates);
+
+    const fifoResult = calculateTax({
+      transactions: unified,
+      year: 2027,
+      method: 'fifo',
+    });
+    // FIFO: 첫 매수 lot (50M) 소비 → cost = 5M, proceeds = 6M, PnL = 1M
+    expect(fifoResult.realizedGains[0].costBasisKRW).toBe(5_000_000);
+    expect(fifoResult.realizedGains[0].pnlKRW).toBe(1_000_000);
+
+    const avgResult = calculateTax({
+      transactions: unified,
+      year: 2027,
+      method: 'avg',
+    });
+    // MA: avg = (5M + 7M)/0.2 = 60M, cost = 6M, proceeds = 6M, PnL = 0
+    expect(avgResult.realizedGains[0].costBasisKRW).toBe(6_000_000);
+    expect(avgResult.realizedGains[0].pnlKRW).toBe(0);
+  });
+
+  it('의제취득가액 + MA: pre-2027 + post-2027 매수 혼합 후 매도', async () => {
+    const parsed: ParsedTransaction[] = [
+      ptx({
+        date: new Date('2026-06-01T10:00:00+09:00'),
+        type: 'BUY',
+        coin: 'BTC',
+        amount: 1,
+        pricePerUnit: 50_000_000,
+        total: 50_000_000,
+        exchange: 'Upbit',
+      }),
+      ptx({
+        date: new Date('2027-03-01T10:00:00+09:00'),
+        type: 'BUY',
+        coin: 'BTC',
+        amount: 1,
+        pricePerUnit: 80_000_000,
+        total: 80_000_000,
+        exchange: 'Upbit',
+      }),
+      ptx({
+        date: new Date('2027-06-01T10:00:00+09:00'),
+        type: 'SELL',
+        coin: 'BTC',
+        amount: 1,
+        pricePerUnit: 100_000_000,
+        total: 100_000_000,
+        exchange: 'Upbit',
+      }),
+    ];
+
+    const rates = new StaticExchangeRateProvider([]);
+    const unified = await normalize(parsed, rates);
+    const deemed = new Map([['BTC', 70_000_000]]);
+
+    const fifoResult = calculateTax({
+      transactions: unified,
+      year: 2027,
+      method: 'fifo',
+      deemedCostPrices: deemed,
+    });
+    // FIFO: 첫 lot = max(50M, 70M) = 70M cost, PnL = 30M
+    expect(fifoResult.realizedGains[0].costBasisKRW).toBe(70_000_000);
+    expect(fifoResult.realizedGains[0].pnlKRW).toBe(30_000_000);
+
+    const avgResult = calculateTax({
+      transactions: unified,
+      year: 2027,
+      method: 'avg',
+      deemedCostPrices: deemed,
+    });
+    // MA: 의제 후 avg = (70M + 80M)/2 = 75M, cost = 75M, PnL = 25M
+    expect(avgResult.realizedGains[0].costBasisKRW).toBe(75_000_000);
+    expect(avgResult.realizedGains[0].pnlKRW).toBe(25_000_000);
+  });
+});
+
 describe('E2E Full pipeline — Binance CSV → ParsedTransaction → UnifiedTransaction → TaxResult', () => {
   it('processes Binance BTCUSDT BUY + SELL through full pipeline', async () => {
     const csv = `Time,Pair,Side,Price,Executed,Amount,Fee

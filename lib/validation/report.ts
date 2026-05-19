@@ -56,6 +56,25 @@ const coinSummarySchema = z.object({
   transactionCount: z.number().int().min(0).max(100_000),
 });
 
+const rateSourceSchema = z
+  .object({
+    primary: z.string().max(128),
+    fallbackUsed: z.boolean(),
+    lastFetchedAt: z.string().max(64).nullable(),
+    fallbackName: z.string().max(256),
+  })
+  .optional();
+
+const deemedCostSourceSchema = z
+  .object({
+    realCoins: z.array(coinName).max(500),
+    estimateCoins: z.array(coinName).max(500),
+    userOverrideCoins: z.array(coinName).max(500),
+    missingCoins: z.array(coinName).max(500),
+    deemedDate: z.string().max(16),
+  })
+  .optional();
+
 const taxResultSchema = z.object({
   year: z.number().int().min(2020).max(2030),
   totalGainKRW: moneyKRW,
@@ -77,6 +96,8 @@ const taxResultSchema = z.object({
   warnings: z.array(z.string().max(500)).max(50),
   plan: z.enum(['free', 'premium']),
   masked: z.boolean(),
+  rateSource: rateSourceSchema,
+  deemedCostSource: deemedCostSourceSchema,
 });
 
 const unifiedTransactionSchema = z.object({
@@ -96,6 +117,8 @@ export const reportRequestSchema = z.object({
   year: z.number().int().min(2020).max(2030),
   result: taxResultSchema,
   transactions: z.array(unifiedTransactionSchema).max(10_000),
+  // 구버전 세션 호환: method 누락 시 'fifo' 디폴트 (route.ts에서 보강).
+  method: z.enum(['fifo', 'avg']).optional(),
 });
 
 export type ReportRequest = z.infer<typeof reportRequestSchema>;

@@ -196,6 +196,16 @@ interface TaxReportProps {
   year: number;
   result: TaxResultWire;
   transactions: UnifiedTransactionWire[];
+  method?: 'fifo' | 'avg';
+}
+
+function formatFetchedAt(iso: string | null | undefined): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 }
 
 export function TaxReport({
@@ -203,6 +213,7 @@ export function TaxReport({
   year,
   result,
   transactions,
+  method = 'fifo',
 }: TaxReportProps) {
   const generatedAt = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -219,11 +230,14 @@ export function TaxReport({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.eyebrow}>
-            CRYPTOTAX · 가상자산 양도소득 자기 신고 자료
+            KONTAXT · 가상자산 양도소득 자기 신고 자료
           </Text>
           <Text style={styles.title}>{year}년 귀속 양도소득 신고 자료</Text>
           <View style={styles.metaRow}>
             <Text style={styles.metaText}>사용자: {userName}</Text>
+            <Text style={styles.metaText}>
+              계산 방식: {method === 'fifo' ? '선입선출법 (FIFO)' : '이동평균법 (MA)'}
+            </Text>
             <Text style={styles.metaText}>발행일: {generatedAt}</Text>
           </View>
         </View>
@@ -352,6 +366,66 @@ export function TaxReport({
                 · {w}
               </Text>
             ))}
+          </View>
+        )}
+
+        {/* 환율 출처 + 의제취득가액 시가 출처 — 신뢰성 audit trail */}
+        {(result.rateSource || result.deemedCostSource) && (
+          <View
+            style={{
+              marginTop: 14,
+              padding: 10,
+              borderRadius: 4,
+              borderWidth: 1,
+              borderColor: LINE,
+              backgroundColor: BG_SOFT,
+            }}
+          >
+            <Text style={{ fontSize: 9, fontWeight: 700, color: INK, marginBottom: 3 }}>
+              데이터 출처 (신뢰성 검증용)
+            </Text>
+            {result.rateSource && (
+              <>
+                <Text style={{ fontSize: 9, color: MUTED, lineHeight: 1.5 }}>
+                  · 일별 환율·시세: {result.rateSource.primary}
+                  {result.rateSource.lastFetchedAt
+                    ? ` (마지막 갱신: ${formatFetchedAt(result.rateSource.lastFetchedAt)})`
+                    : ''}
+                </Text>
+                {result.rateSource.fallbackUsed && (
+                  <Text style={{ fontSize: 9, color: '#92400E', lineHeight: 1.5, marginTop: 2 }}>
+                    ⚠ 일부 거래에 정적 분기별 fallback 환율 사용 — 시세 갱신 후 재계산 권장.
+                  </Text>
+                )}
+              </>
+            )}
+            {result.deemedCostSource && (
+              <>
+                <Text style={{ fontSize: 9, color: MUTED, lineHeight: 1.5, marginTop: 4 }}>
+                  · 의제취득가액 시가 ({result.deemedCostSource.deemedDate} 기준):
+                </Text>
+                {result.deemedCostSource.realCoins.length > 0 && (
+                  <Text style={{ fontSize: 9, color: GOOD, lineHeight: 1.5, marginLeft: 6 }}>
+                    ✓ 실측: {result.deemedCostSource.realCoins.join(', ')}
+                  </Text>
+                )}
+                {result.deemedCostSource.userOverrideCoins.length > 0 && (
+                  <Text style={{ fontSize: 9, color: MUTED, lineHeight: 1.5, marginLeft: 6 }}>
+                    ✓ 사용자 수동: {result.deemedCostSource.userOverrideCoins.join(', ')}
+                  </Text>
+                )}
+                {result.deemedCostSource.estimateCoins.length > 0 && (
+                  <Text style={{ fontSize: 9, color: '#92400E', lineHeight: 1.5, marginLeft: 6 }}>
+                    ⚠ 추정치: {result.deemedCostSource.estimateCoins.join(', ')} (실시가 확정 후 재계산 권장)
+                  </Text>
+                )}
+                {result.deemedCostSource.missingCoins.length > 0 && (
+                  <Text style={{ fontSize: 9, color: BAD, lineHeight: 1.5, marginLeft: 6 }}>
+                    ⚠ 시가 없음 → 실가 처리: {result.deemedCostSource.missingCoins.join(', ')}
+                  </Text>
+                )}
+              </>
+            )}
           </View>
         )}
 

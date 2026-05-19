@@ -8,8 +8,12 @@ import type {
   UnifiedTransaction,
 } from './types';
 import { FIFOEngine } from './fifo';
+import { MAEngine } from './moving-average';
+import type { TaxEngine } from './tax-engine';
 import { applyDeemedCost } from './deemed-cost';
 import { TAX_CONSTANTS, roundKRW } from './constants';
+
+export type TaxMethod = 'fifo' | 'avg';
 
 const KST_OFFSET_MS = 9 * 3600 * 1000;
 
@@ -21,6 +25,7 @@ export interface TaxCalculatorInput {
   transactions: UnifiedTransaction[];
   year: number;
   deemedCostPrices?: Map<string, number>;
+  method?: TaxMethod;
 }
 
 interface ConsumeOutcome {
@@ -52,11 +57,11 @@ function makeLot(
 }
 
 function consumeWithFallback(
-  fifo: FIFOEngine,
+  engine: TaxEngine,
   tx: UnifiedTransaction,
 ): ConsumeOutcome {
   try {
-    const r = fifo.consumeLots(tx.coin, tx.amount);
+    const r = engine.consumeLots(tx.coin, tx.amount);
     return { ...r, orphan: false };
   } catch {
     return {
@@ -100,16 +105,17 @@ function buildSummary(
 }
 
 export function calculateTax(input: TaxCalculatorInput): TaxResult {
-  const fifo = new FIFOEngine();
+  const method: TaxMethod = input.method ?? 'fifo';
+  const engine: TaxEngine = method === 'avg' ? new MAEngine() : new FIFOEngine();
   const realizedGains: RealizedGain[] = [];
   const warnings: string[] = [];
   const orphanCounts = new Map<string, number>();
 
   for (const tx of input.transactions) {
     if (tx.type === 'BUY') {
-      fifo.addLot(tx.coin, makeLot(tx, input.deemedCostPrices, warnings));
+      engine.addLot(tx.coin, makeLot(tx, input.deemedCostPrices, warnings));
     } else if (tx.type === 'SELL') {
-      const outcome = consumeWithFallback(fifo, tx);
+      const outcome = consumeWithFallback(engine, tx);
       const pnl = roundKRW(
         tx.totalKRW - outcome.costBasisKRW - tx.feeKRW - outcome.buyFeeKRW,
       );
@@ -167,7 +173,7 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
     incomeTaxKRW: incomeTax,
     localTaxKRW: localTax,
     realizedGains,
-    holdingsAfter: Object.fromEntries(fifo.getHoldings()),
+    holdingsAfter: Object.fromEntries(engine.getHoldings()),
     summary: buildSummary(realizedGains, input.transactions, input.year),
     warnings,
   };
