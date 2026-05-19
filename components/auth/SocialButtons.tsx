@@ -3,13 +3,15 @@ import { useState } from 'react';
 import { signInWithOAuth, type OAuthProvider } from '@/lib/auth';
 
 interface ProviderConfig {
-  id: OAuthProvider;
+  id: OAuthProvider | 'naver';
   name: string;
   bg: string;
   text: string;
   border: string;
   icon: React.ReactNode;
   enabled: boolean;
+  // Supabase native가 아닌 자체 OAuth flow (예: Naver)는 customHref로 직접 navigate.
+  customHref?: string;
 }
 
 const providers: ProviderConfig[] = [
@@ -42,6 +44,20 @@ const providers: ProviderConfig[] = [
       </svg>
     ),
   },
+  {
+    id: 'naver',
+    name: '네이버',
+    bg: '#03C75A',
+    text: '#fff',
+    border: '0',
+    enabled: true,
+    customHref: '/api/auth/naver/start',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M10.18 8.55 5.5 1.6H1.83v12.8h4V7.45l4.68 6.95h3.66V1.6h-3.99v6.95z" />
+      </svg>
+    ),
+  },
 ];
 
 interface SocialButtonsProps {
@@ -57,6 +73,11 @@ export function SocialButtons({ nextUrl }: SocialButtonsProps = {}) {
     setError(null);
     setPending(p.id);
     try {
+      // 자체 OAuth flow (Naver 등) — Next.js API route로 직접 navigate.
+      if (p.customHref) {
+        window.location.href = p.customHref;
+        return;
+      }
       await signInWithOAuth(p.id as OAuthProvider, { nextUrl });
       // browser navigates away to OAuth provider — no need to clear pending here
     } catch (e) {
