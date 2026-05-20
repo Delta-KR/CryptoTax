@@ -11,7 +11,12 @@ import {
   parseText as parseUpbit,
   upbitParser,
 } from '../upbit.parser';
-import { parseFile, isBinanceFutures, findParser } from '../registry';
+import {
+  parseFile,
+  isBinanceFutures,
+  isBinanceOrderHistory,
+  findParser,
+} from '../registry';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const fixturesDir = resolve(__dirname, 'fixtures');
@@ -215,5 +220,35 @@ describe('Registry', () => {
   it('parseFile throws clear error for unknown file type', async () => {
     const file = new File(['hello'], 'unknown.txt');
     await expect(parseFile(file)).rejects.toThrow(/지원하지 않는/);
+  });
+
+  // 바이낸스 Order History 친절 안내 — Trade History와 혼동하는 흔한 케이스.
+  it('isBinanceOrderHistory detects via filename', () => {
+    expect(
+      isBinanceOrderHistory('Binance-Spot-Order-History-202605120058.csv', ''),
+    ).toBe(true);
+    expect(
+      isBinanceOrderHistory('Binance-Spot-Trade-History.csv', ''),
+    ).toBe(false);
+  });
+
+  it('isBinanceOrderHistory detects via header (OrderNo + Status)', () => {
+    const header =
+      'Time,OrderNo,Pair,Type¹,Side,Order Price,Order Amount,Time,Executed²,Average Price,Trading total³,Status';
+    expect(isBinanceOrderHistory('foo.csv', header)).toBe(true);
+    // Trade History 헤더에는 OrderNo도 Status도 없음
+    expect(
+      isBinanceOrderHistory('foo.csv', 'Time,Pair,Side,Price,Executed,Amount,Fee'),
+    ).toBe(false);
+  });
+
+  it('parseFile throws guided error for Binance Order History CSV', async () => {
+    const csv = `Time,OrderNo,Pair,Type¹,Side,Order Price,Order Amount,Time,Executed²,Average Price,Trading total³,Status
+24-07-05 12:07:20,28325058974,BTCUSDT,Market,SELL,0,0.00093BTC,24-07-05 12:07:20,0.00093BTC,55607.31,51.7147983USDT,FILLED`;
+    const file = new File([csv], 'Binance-Spot-Order-History-202605120058.csv', {
+      type: 'text/csv',
+    });
+    // 메시지에 Trade History 안내가 포함돼야 함
+    await expect(parseFile(file)).rejects.toThrow(/Trade History/);
   });
 });
