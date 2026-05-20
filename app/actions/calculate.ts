@@ -8,6 +8,7 @@ import { normalize } from '@/lib/engine/normalizer';
 import { calculateTax, type TaxMethod } from '@/lib/engine/tax-calculator';
 import { DBExchangeRateProvider } from '@/lib/engine/rate-provider';
 import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
+import { dedupeParsedTransactions } from '@/lib/engine/dedupe';
 import type {
   ParsedTransaction,
   TaxResult,
@@ -236,7 +237,11 @@ export async function calculateTaxFromFiles(
     const methodRaw = formData.get('method');
     const method: TaxMethod = methodRaw === 'avg' ? 'avg' : 'fifo';
 
-    const allParsed = [...previous, ...newParsed];
+    // 같은 파일(또는 기간 겹친 파일) 재업로드 시 cost basis 2배 방지.
+    // 모든 핵심 필드가 동일한 거래는 자동 제거. 결과 warnings에 N건 명시.
+    const merged = [...previous, ...newParsed];
+    const { unique: allParsed, duplicates: duplicateCount } =
+      dedupeParsedTransactions(merged);
 
     // DB(daily_rates) 우선 조회. preload로 거래 전체 (date × from_currency)를 한 번에 가져옴.
     const rates = new DBExchangeRateProvider(7);
@@ -278,6 +283,14 @@ export async function calculateTaxFromFiles(
       missingCoins: deemedRes.missingCoins,
       deemedDate: deemedRes.deemedDate,
     };
+
+    // 중복 자동 제거 알림 — 같은 파일을 두 번 올렸거나 기간이 겹치는 파일을 합친 케이스.
+    if (duplicateCount > 0) {
+      wire.warnings = [
+        ...wire.warnings,
+        `중복 거래 ${duplicateCount}건이 자동 제거되었습니다 (거래소·시각·코인·수량·가격·수수료가 모두 동일한 거래).`,
+      ];
+    }
 
     // 정적 fallback 사용 시 사용자에게 정확도 경고 추가.
     if (sourceInfo.fallbackUsed) {
