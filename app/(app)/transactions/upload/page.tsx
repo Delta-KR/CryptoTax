@@ -98,6 +98,18 @@ export default function UploadPage() {
       }
 
       const payload = result.payload;
+
+      // 거래 0건이면 success가 아닌 명확한 안내. parser가 시그니처 검증을 통과해도
+      // 파일이 비어있거나 헤더만 있는 경우 여기까지 도달할 수 있음.
+      if (payload.newParsed.length === 0) {
+        setProgress((p) => ({ ...p, [exchangeId]: 0 }));
+        toast.show(
+          `${file.name}에서 거래 행을 찾지 못했습니다. 올바른 거래내역 파일인지, 해당 기간에 거래가 있는지 확인해주세요.`,
+          'error',
+        );
+        return;
+      }
+
       appendUpload(payload, file.name);
       setProgress((p) => ({ ...p, [exchangeId]: 100 }));
       setUploaded((u) => ({
