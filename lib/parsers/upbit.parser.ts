@@ -1,6 +1,27 @@
 import { v4 as uuid } from 'uuid';
 import type { ParsedTransaction } from '@/lib/engine/types';
-import { type ExchangeParser, ParseError } from './parser.interface';
+import {
+  type ExchangeParser,
+  ParseError,
+  UnsupportedFileError,
+} from './parser.interface';
+
+// 업비트 거래내역 PDF가 맞는지 텍스트에서 검증. 무관한 PDF(이용동의서·계약서·영수증 등)는 거부.
+// "거래내역" / "Upbit" / "체결시간" 등 한국 업비트 PDF의 흔한 키워드 하나라도 있으면 통과.
+const UPBIT_SIGNATURES = [
+  '업비트',
+  'Upbit',
+  'UPBIT',
+  '체결시간',
+  '주문시간',
+  '거래수량',
+  '거래단가',
+  '거래금액',
+];
+
+export function looksLikeUpbitTransactionPdf(text: string): boolean {
+  return UPBIT_SIGNATURES.some((s) => text.includes(s));
+}
 
 type PdfParseFn = (
   buffer: Buffer,
@@ -163,14 +184,33 @@ export const upbitParser: ExchangeParser = {
       );
     }
 
+    let text: string;
     try {
       const data = await pdf(buf);
-      return parseText(data.text);
+      text = data.text ?? '';
     } catch (e) {
       throw new ParseError(
         `PDF 텍스트 추출 실패: ${e instanceof Error ? e.message : String(e)}`,
         e,
       );
     }
+
+    // 시그니처 검증: 업비트 거래내역 PDF가 아니면 즉시 거부 (이용동의서·영수증 등 차단).
+    if (!looksLikeUpbitTransactionPdf(text)) {
+      throw new UnsupportedFileError(
+        "업비트 거래내역 PDF가 아닙니다. 업비트 웹사이트 → 거래내역 → 양도소득 → PDF 다운로드 메뉴에서 받은 파일을 업로드해주세요. (이용동의서·영수증·계약서 등은 처리할 수 없습니다.)",
+      );
+    }
+
+    const txs = parseText(text);
+
+    // 시그니처는 있는데 거래 행이 하나도 없는 경우 — 잘못된 양식이거나 빈 기간 PDF.
+    if (txs.length === 0) {
+      throw new ParseError(
+        '업비트 PDF에서 거래 행을 찾을 수 없습니다. 양도소득 메뉴에서 받은 PDF인지, 해당 기간에 거래가 있는지 확인해주세요.',
+      );
+    }
+
+    return txs;
   },
 };

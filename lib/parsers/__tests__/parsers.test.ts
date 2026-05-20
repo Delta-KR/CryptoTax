@@ -10,6 +10,7 @@ import {
 import {
   parseText as parseUpbit,
   upbitParser,
+  looksLikeUpbitTransactionPdf,
 } from '../upbit.parser';
 import {
   parseFile,
@@ -171,6 +172,46 @@ describe('Parser canParse', () => {
 
   it('upbitParser rejects non-PDF', () => {
     expect(upbitParser.canParse('a.csv', '')).toBe(false);
+  });
+});
+
+describe('looksLikeUpbitTransactionPdf (signature check)', () => {
+  it('"업비트" 키워드 포함 → true', () => {
+    expect(
+      looksLikeUpbitTransactionPdf('업비트 거래내역 양도소득 기간 2024'),
+    ).toBe(true);
+  });
+
+  it('영문 "Upbit" 포함 → true', () => {
+    expect(looksLikeUpbitTransactionPdf('Upbit Transaction History')).toBe(true);
+  });
+
+  it('"체결시간" 컬럼 헤더만 있어도 → true', () => {
+    expect(
+      looksLikeUpbitTransactionPdf('체결시간 코인 마켓 종류 거래수량'),
+    ).toBe(true);
+  });
+
+  it('"거래단가" 헤더 포함 → true', () => {
+    expect(looksLikeUpbitTransactionPdf('일자 거래단가 거래금액')).toBe(true);
+  });
+
+  it('이용동의서·계약서 등 무관한 텍스트 → false', () => {
+    expect(
+      looksLikeUpbitTransactionPdf(
+        '퀀트솔루션 이용동의서 본 동의서는 서비스 이용에 관한 약관입니다.',
+      ),
+    ).toBe(false);
+  });
+
+  it('영수증 무관 텍스트 → false', () => {
+    expect(
+      looksLikeUpbitTransactionPdf('카드 영수증 결제 일시 2024-07-05'),
+    ).toBe(false);
+  });
+
+  it('빈 텍스트 → false', () => {
+    expect(looksLikeUpbitTransactionPdf('')).toBe(false);
   });
 });
 
