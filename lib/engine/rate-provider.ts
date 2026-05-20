@@ -4,6 +4,7 @@ import {
   StaticExchangeRateProvider,
   toKSTDateStr,
   type ExchangeRateProvider,
+  type RateResolution,
 } from './exchange-rate';
 import { DAILY_RATES_FALLBACK, RATES_FALLBACK_SOURCE } from './rates-data';
 
@@ -25,10 +26,16 @@ interface DBRow {
   fetched_at: string;
 }
 
+// Cache entry — preload된 daily_rates row의 환율 + 출처. sourceDate는 cache key에서 추출.
+interface CacheEntry {
+  rate: number;
+  sourceName: string;
+}
+
 // DB(daily_rates)에서 시세를 조회하고, 미스 시 정적 fallback. 둘 다 실패 시 throw.
 // `preload`로 전체 거래의 (from, date) 조합을 한 번에 가져와 normalize 중 in-memory 조회.
 export class DBExchangeRateProvider implements ExchangeRateProvider {
-  private cache = new Map<string, number>();
+  private cache = new Map<string, CacheEntry>();
   private staticFallback: StaticExchangeRateProvider;
   private fallbackDays: number;
   private fallbackUsed = false;
@@ -41,6 +48,7 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
       DAILY_RATES_FALLBACK,
       // 정적 fallback은 분기별이라 35일까지 봐도 됨 (실제로 90일 차이도 있음)
       90,
+      RATES_FALLBACK_SOURCE.name,
     );
   }
 
@@ -80,7 +88,10 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
 
     for (const row of data as DBRow[]) {
       const key = `${row.date}|${row.from_currency}|${row.to_currency}`;
-      this.cache.set(key, Number(row.rate));
+      this.cache.set(key, {
+        rate: Number(row.rate),
+        sourceName: row.source,
+      });
       if (!this.primarySource) this.primarySource = row.source;
       if (
         !this.latestFetchedAt ||
@@ -92,19 +103,42 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
   }
 
   async getRate(date: Date, from: Currency, to: Currency): Promise<number> {
-    if (from === to) return 1;
+    return (await this.getRateWithMeta(date, from, to)).rate;
+  }
+
+  async getRateWithMeta(
+    date: Date,
+    from: Currency,
+    to: Currency,
+  ): Promise<RateResolution> {
+    if (from === to) {
+      return {
+        rate: 1,
+        sourceDate: toKSTDateStr(date),
+        source: 'static',
+        sourceName: 'Identity (KRW)',
+      };
+    }
 
     // 1) Cache (preload 결과) — 거래일에서 fallbackDays까지 거슬러 올라가며 시도
     for (let i = 0; i <= this.fallbackDays; i++) {
       const d = new Date(date.getTime() - i * MS_PER_DAY);
-      const key = `${toKSTDateStr(d)}|${from}|${to}`;
+      const sourceDate = toKSTDateStr(d);
+      const key = `${sourceDate}|${from}|${to}`;
       const cached = this.cache.get(key);
-      if (cached !== undefined) return cached;
+      if (cached !== undefined) {
+        return {
+          rate: cached.rate,
+          sourceDate,
+          source: 'db',
+          sourceName: cached.sourceName,
+        };
+      }
     }
 
     // 2) 정적 fallback (분기별 — 정확도 낮음, 사용 시 flag)
     try {
-      const r = await this.staticFallback.getRate(date, from, to);
+      const r = await this.staticFallback.getRateWithMeta(date, from, to);
       this.fallbackUsed = true;
       return r;
     } catch {

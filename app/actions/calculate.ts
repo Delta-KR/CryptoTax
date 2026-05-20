@@ -55,6 +55,10 @@ function maskForFree(wire: TaxResultWire): TaxResultWire {
     localTaxKRW: 0,
     realizedGains: [],
     summary: wire.summary.map((s) => ({ ...s, realizedPnLKRW: 0 })),
+    summaryByExchange: wire.summaryByExchange.map((s) => ({
+      ...s,
+      realizedPnLKRW: 0,
+    })),
     masked: true,
   };
 }
@@ -143,6 +147,10 @@ function resultToWire(
     realizedGains: r.realizedGains.map((g) => ({
       ...g,
       sellDate: g.sellDate.toISOString(),
+      consumedLots: g.consumedLots.map((cl) => ({
+        ...cl,
+        buyDate: cl.buyDate ? cl.buyDate.toISOString() : undefined,
+      })),
     })),
     holdingsAfter: Object.fromEntries(
       Object.entries(r.holdingsAfter).map(([k, lots]) => [

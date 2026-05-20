@@ -45,6 +45,9 @@ export class FIFOEngine implements TaxEngine {
         amount: roundCoin(take),
         pricePerUnitKRW: lot.pricePerUnitKRW,
         costKRW: roundKRW(cost),
+        buyDate: lot.date,
+        exchange: lot.exchange,
+        isDeemedCost: lot.isDeemedCost,
       });
 
       costBasis += cost;

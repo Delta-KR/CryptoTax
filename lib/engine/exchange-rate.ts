@@ -1,7 +1,25 @@
 import type { Currency } from './types';
 
+// 환율 해석 결과 — P1 #8 audit trail용. 거래별로 어느 출처/어느 날짜의 환율이 적용됐는지.
+export interface RateResolution {
+  rate: number;
+  // 실제 데이터 날짜 (fallback 시 거래일과 다를 수 있음). YYYY-MM-DD KST.
+  sourceDate: string;
+  // 'db': Supabase daily_rates 테이블, 'static': 코드 내 분기별 fallback
+  source: 'db' | 'static';
+  // 'db'이면 row.source (예: 'Upbit'), 'static'이면 fallback 출처명
+  sourceName: string;
+}
+
 export interface ExchangeRateProvider {
+  // 후방 호환 — 단순 환율값만 필요한 경우.
   getRate(date: Date, from: Currency, to: Currency): Promise<number>;
+  // P1 #8: 환율 + 출처 메타.
+  getRateWithMeta(
+    date: Date,
+    from: Currency,
+    to: Currency,
+  ): Promise<RateResolution>;
 }
 
 const MS_PER_DAY = 24 * 3600 * 1000;
@@ -17,13 +35,19 @@ export type StaticRateEntry = readonly [string, Currency, Currency, number];
 export class StaticExchangeRateProvider implements ExchangeRateProvider {
   private readonly rates: Map<string, number>;
   private readonly fallbackDays: number;
+  private readonly sourceName: string;
 
-  constructor(rates: Iterable<StaticRateEntry>, fallbackDays = 7) {
+  constructor(
+    rates: Iterable<StaticRateEntry>,
+    fallbackDays = 7,
+    sourceName = 'Static fallback',
+  ) {
     this.rates = new Map();
     for (const [date, from, to, rate] of rates) {
       this.rates.set(StaticExchangeRateProvider.key(date, from, to), rate);
     }
     this.fallbackDays = fallbackDays;
+    this.sourceName = sourceName;
   }
 
   private static key(date: string, from: string, to: string): string {
@@ -31,14 +55,37 @@ export class StaticExchangeRateProvider implements ExchangeRateProvider {
   }
 
   async getRate(date: Date, from: Currency, to: Currency): Promise<number> {
-    if (from === to) return 1;
+    return (await this.getRateWithMeta(date, from, to)).rate;
+  }
+
+  async getRateWithMeta(
+    date: Date,
+    from: Currency,
+    to: Currency,
+  ): Promise<RateResolution> {
+    if (from === to) {
+      return {
+        rate: 1,
+        sourceDate: toKSTDateStr(date),
+        source: 'static',
+        sourceName: 'Identity (KRW)',
+      };
+    }
 
     for (let i = 0; i <= this.fallbackDays; i++) {
       const d = new Date(date.getTime() - i * MS_PER_DAY);
+      const sourceDate = toKSTDateStr(d);
       const r = this.rates.get(
-        StaticExchangeRateProvider.key(toKSTDateStr(d), from, to),
+        StaticExchangeRateProvider.key(sourceDate, from, to),
       );
-      if (r !== undefined) return r;
+      if (r !== undefined) {
+        return {
+          rate: r,
+          sourceDate,
+          source: 'static',
+          sourceName: this.sourceName,
+        };
+      }
     }
 
     throw new Error(

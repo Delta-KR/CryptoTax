@@ -28,6 +28,15 @@ export interface ParsedTransaction {
   isSwap?: boolean;
 }
 
+// P1 #8: 거래별 환율 출처 audit trail.
+// quoteCurrency → KRW 변환에 사용된 환율 + 데이터 출처. quoteCurrency=KRW면 undefined.
+export interface RateMeta {
+  rateKRW: number;
+  sourceDate: string; // YYYY-MM-DD (KST) — 실제 데이터 기준일 (거래일과 다를 수 있음)
+  source: 'db' | 'static';
+  sourceName: string; // 'Upbit', 'Static fallback' 등
+}
+
 export interface UnifiedTransaction {
   id: string;
   date: Date;
@@ -39,6 +48,7 @@ export interface UnifiedTransaction {
   feeKRW: number;
   exchange: string;
   originalCurrency: Currency;
+  rateMeta?: RateMeta;
   swapToCoin?: string;
   swapToAmount?: number;
 }
@@ -61,6 +71,11 @@ export interface ConsumedLot {
   amount: number;
   pricePerUnitKRW: number;
   costKRW: number;
+  // FIFO: 항상 채움. MA: avg entry라 undefined (혼합 매수의 의미가 없으므로).
+  buyDate?: Date;
+  exchange?: string;
+  // FIFO: lot 그대로. MA: underlying lots 중 하나라도 의제면 true (OR).
+  isDeemedCost: boolean;
 }
 
 export interface RealizedGain {
@@ -86,6 +101,18 @@ export interface CoinSummary {
   transactionCount: number;
 }
 
+// P1 #9: 거래소 × 코인 매트릭스. 세무사 전달 시 거래소별 정리에 유용.
+// realizedPnLKRW는 매도가 일어난 거래소 기준 (`RealizedGain.exchange`).
+export interface ExchangeCoinSummary {
+  exchange: string;
+  coin: string;
+  totalBuyKRW: number;
+  totalSellKRW: number;
+  realizedPnLKRW: number;
+  totalFeeKRW: number;
+  transactionCount: number;
+}
+
 export interface TaxResult {
   year: number;
   totalGainKRW: number;
@@ -99,6 +126,7 @@ export interface TaxResult {
   realizedGains: RealizedGain[];
   holdingsAfter: Record<string, Lot[]>;
   summary: CoinSummary[];
+  summaryByExchange: ExchangeCoinSummary[];
   warnings: string[];
 }
 

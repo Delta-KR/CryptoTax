@@ -41,6 +41,10 @@ export class MAEngine implements TaxEngine {
     const costBasis = sellAmount * avgCost;
     const buyFee = sellAmount * avgFee;
 
+    // 의제취득가액 플래그는 underlying lots OR. 현재 보유 lots 중 하나라도 의제면 true.
+    // 비례 차감으로 lot 수량이 줄지만 의제 여부 자체는 변하지 않음.
+    const anyDeemed = s.lots.some((l) => l.isDeemedCost);
+
     // 비례 차감: running totals.
     const ratio = sellAmount / s.totalAmount;
     s.totalAmount = roundCoin(s.totalAmount - sellAmount);
@@ -67,6 +71,8 @@ export class MAEngine implements TaxEngine {
           amount: roundCoin(sellAmount),
           pricePerUnitKRW: roundKRW(avgCost),
           costKRW: roundKRW(costBasis),
+          // MA는 혼합 평균이라 buyDate/exchange는 의미 없음 — UI에서 안내문 처리.
+          isDeemedCost: anyDeemed,
         },
       ],
     };

@@ -430,3 +430,225 @@ describe('calculateTax — method: avg (이동평균법)', () => {
     );
   });
 });
+
+describe('holdingsAfter (P1 #10)', () => {
+  it('부분 매도 후 잔여 lot이 holdingsAfter에 매수 메타 그대로 유지', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          id: 'buy-1',
+          type: 'BUY',
+          coin: 'BTC',
+          exchange: 'Upbit',
+          date: new Date('2026-08-15T10:00:00+09:00'),
+          amount: 1,
+          pricePerUnitKRW: 50_000_000,
+          totalKRW: 50_000_000,
+        }),
+        tx({
+          id: 'sell-1',
+          type: 'SELL',
+          coin: 'BTC',
+          exchange: 'Upbit',
+          date: new Date('2027-06-01T10:00:00+09:00'),
+          amount: 0.3,
+          pricePerUnitKRW: 100_000_000,
+          totalKRW: 30_000_000,
+        }),
+      ],
+      year: 2027,
+      deemedCostPrices: new Map([['BTC', 70_000_000]]),
+    });
+
+    expect(result.holdingsAfter.BTC).toBeDefined();
+    expect(result.holdingsAfter.BTC).toHaveLength(1);
+    const lot = result.holdingsAfter.BTC[0];
+    // 잔량 = 1 - 0.3 = 0.7
+    expect(lot.amount).toBeCloseTo(0.7, 8);
+    // 의제 적용된 lot이 유지 (P1 #7 audit trail)
+    expect(lot.isDeemedCost).toBe(true);
+    expect(lot.pricePerUnitKRW).toBe(70_000_000);
+    expect(lot.exchange).toBe('Upbit');
+    // 원래 매수일 보존
+    expect(lot.date.getUTCFullYear()).toBe(2026);
+  });
+
+  it('완전 매도 후 holdingsAfter에서 해당 코인 제거', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'BUY',
+          coin: 'BTC',
+          amount: 1,
+          pricePerUnitKRW: 50_000_000,
+          totalKRW: 50_000_000,
+        }),
+        tx({
+          type: 'SELL',
+          coin: 'BTC',
+          amount: 1,
+          date: new Date('2027-06-01T10:00:00+09:00'),
+          pricePerUnitKRW: 60_000_000,
+          totalKRW: 60_000_000,
+        }),
+      ],
+      year: 2027,
+    });
+    expect(result.holdingsAfter.BTC).toBeUndefined();
+  });
+
+  it('MA: 비례 차감 후 underlying lots가 모두 (1-ratio) 비율로 축소', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'BUY',
+          coin: 'BTC',
+          exchange: 'Upbit',
+          amount: 1,
+          pricePerUnitKRW: 50_000_000,
+          totalKRW: 50_000_000,
+        }),
+        tx({
+          type: 'BUY',
+          coin: 'BTC',
+          exchange: 'Binance',
+          date: new Date('2027-02-01T10:00:00+09:00'),
+          amount: 1,
+          pricePerUnitKRW: 80_000_000,
+          totalKRW: 80_000_000,
+        }),
+        tx({
+          type: 'SELL',
+          coin: 'BTC',
+          date: new Date('2027-06-01T10:00:00+09:00'),
+          amount: 1, // 2 BTC 중 1 BTC 매도 = 50% 비례 차감
+          pricePerUnitKRW: 100_000_000,
+          totalKRW: 100_000_000,
+        }),
+      ],
+      year: 2027,
+      method: 'avg',
+    });
+
+    expect(result.holdingsAfter.BTC).toHaveLength(2);
+    // 각 underlying lot이 50% 축소됨
+    expect(result.holdingsAfter.BTC[0].amount).toBeCloseTo(0.5, 8);
+    expect(result.holdingsAfter.BTC[1].amount).toBeCloseTo(0.5, 8);
+    // 매수 거래소·날짜는 보존
+    expect(result.holdingsAfter.BTC[0].exchange).toBe('Upbit');
+    expect(result.holdingsAfter.BTC[1].exchange).toBe('Binance');
+  });
+});
+
+describe('summaryByExchange (P1 #9)', () => {
+  it('같은 코인을 두 거래소에서 매매 → 거래소별 행이 분리되고 합계는 코인 summary와 일치', () => {
+    const result = calculateTax({
+      transactions: [
+        // Upbit BTC: 매수 0.5 @ 80M, 매도 0.5 @ 100M → PnL = 10M
+        tx({
+          type: 'BUY',
+          exchange: 'Upbit',
+          date: new Date('2027-01-01T09:00:00+09:00'),
+          pricePerUnitKRW: 80_000_000,
+          amount: 0.5,
+          totalKRW: 40_000_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Upbit',
+          date: new Date('2027-06-01T09:00:00+09:00'),
+          pricePerUnitKRW: 100_000_000,
+          amount: 0.5,
+          totalKRW: 50_000_000,
+        }),
+        // Binance BTC: 매수 0.5 @ 90M, 매도 0.5 @ 110M → PnL = 10M
+        tx({
+          type: 'BUY',
+          exchange: 'Binance',
+          date: new Date('2027-02-01T09:00:00+09:00'),
+          pricePerUnitKRW: 90_000_000,
+          amount: 0.5,
+          totalKRW: 45_000_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2027-07-01T09:00:00+09:00'),
+          pricePerUnitKRW: 110_000_000,
+          amount: 0.5,
+          totalKRW: 55_000_000,
+        }),
+      ],
+      year: 2027,
+    });
+
+    // exchange ASC, coin ASC 정렬
+    expect(result.summaryByExchange).toHaveLength(2);
+    expect(result.summaryByExchange[0].exchange).toBe('Binance');
+    expect(result.summaryByExchange[1].exchange).toBe('Upbit');
+
+    // 각 거래소의 매수/매도/PnL
+    const upbit = result.summaryByExchange.find((s) => s.exchange === 'Upbit')!;
+    expect(upbit.totalBuyKRW).toBe(40_000_000);
+    expect(upbit.totalSellKRW).toBe(50_000_000);
+    expect(upbit.realizedPnLKRW).toBe(10_000_000);
+    expect(upbit.transactionCount).toBe(2);
+
+    const binance = result.summaryByExchange.find(
+      (s) => s.exchange === 'Binance',
+    )!;
+    expect(binance.realizedPnLKRW).toBe(10_000_000);
+
+    // 합산 검증: 거래소별 PnL 합 = 코인별 PnL 합 = 전체 netPnL
+    const exchangeSum = result.summaryByExchange.reduce(
+      (s, r) => s + r.realizedPnLKRW,
+      0,
+    );
+    const coinSum = result.summary.reduce(
+      (s, r) => s + r.realizedPnLKRW,
+      0,
+    );
+    expect(exchangeSum).toBe(coinSum);
+    expect(exchangeSum).toBe(result.netPnLKRW);
+  });
+
+  it('한 거래소에서만 매수, 다른 거래소에서 매도 → 각 거래소 행에 매수/매도 분리', () => {
+    const result = calculateTax({
+      transactions: [
+        // Upbit 매수 0.5 (PnL 0 — 매도 없음)
+        tx({
+          type: 'BUY',
+          exchange: 'Upbit',
+          date: new Date('2027-01-01T09:00:00+09:00'),
+          pricePerUnitKRW: 80_000_000,
+          amount: 0.5,
+          totalKRW: 40_000_000,
+        }),
+        // Binance 매도 0.5 (PnL 계산 — 매수 lot은 Upbit이지만 매도 거래소는 Binance)
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2027-06-01T09:00:00+09:00'),
+          pricePerUnitKRW: 100_000_000,
+          amount: 0.5,
+          totalKRW: 50_000_000,
+        }),
+      ],
+      year: 2027,
+    });
+
+    const upbit = result.summaryByExchange.find((s) => s.exchange === 'Upbit')!;
+    const binance = result.summaryByExchange.find(
+      (s) => s.exchange === 'Binance',
+    )!;
+
+    expect(upbit.totalBuyKRW).toBe(40_000_000);
+    expect(upbit.totalSellKRW).toBe(0);
+    expect(upbit.realizedPnLKRW).toBe(0); // 매도가 없으므로 PnL=0
+
+    expect(binance.totalBuyKRW).toBe(0);
+    expect(binance.totalSellKRW).toBe(50_000_000);
+    // RealizedGain.exchange는 매도 거래소(Binance) → PnL이 Binance에 귀속
+    expect(binance.realizedPnLKRW).toBe(10_000_000);
+  });
+});

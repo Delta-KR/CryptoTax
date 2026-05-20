@@ -2,6 +2,7 @@ import { v4 as uuid } from 'uuid';
 import type {
   CoinSummary,
   ConsumedLot,
+  ExchangeCoinSummary,
   Lot,
   RealizedGain,
   TaxResult,
@@ -104,6 +105,45 @@ function buildSummary(
   );
 }
 
+// P1 #9: 거래소 × 코인 매트릭스. summary와 동일한 합계 로직이지만 key가 `${exchange}|${coin}`.
+// realizedPnLKRW는 RealizedGain.exchange(=매도 거래소) 기준. 매수만 일어난 코인-거래소는 PnL=0.
+function buildSummaryByExchange(
+  gains: RealizedGain[],
+  txs: UnifiedTransaction[],
+  year: number,
+): ExchangeCoinSummary[] {
+  const map = new Map<string, ExchangeCoinSummary>();
+  const keyOf = (exchange: string, coin: string) => `${exchange}|${coin}`;
+
+  for (const tx of txs) {
+    if (kstYear(tx.date) !== year) continue;
+    const key = keyOf(tx.exchange, tx.coin);
+    const s = map.get(key) ?? {
+      exchange: tx.exchange,
+      coin: tx.coin,
+      totalBuyKRW: 0,
+      totalSellKRW: 0,
+      realizedPnLKRW: 0,
+      totalFeeKRW: 0,
+      transactionCount: 0,
+    };
+    if (tx.type === 'BUY') s.totalBuyKRW += tx.totalKRW;
+    if (tx.type === 'SELL') s.totalSellKRW += tx.totalKRW;
+    s.totalFeeKRW += tx.feeKRW;
+    s.transactionCount += 1;
+    map.set(key, s);
+  }
+  for (const g of gains) {
+    const key = keyOf(g.exchange, g.coin);
+    const s = map.get(key);
+    if (s) s.realizedPnLKRW += g.pnlKRW;
+  }
+  return Array.from(map.values()).sort((a, b) => {
+    const e = a.exchange.localeCompare(b.exchange);
+    return e !== 0 ? e : a.coin.localeCompare(b.coin);
+  });
+}
+
 export function calculateTax(input: TaxCalculatorInput): TaxResult {
   const method: TaxMethod = input.method ?? 'fifo';
   const engine: TaxEngine = method === 'avg' ? new MAEngine() : new FIFOEngine();
@@ -175,6 +215,11 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
     realizedGains,
     holdingsAfter: Object.fromEntries(engine.getHoldings()),
     summary: buildSummary(realizedGains, input.transactions, input.year),
+    summaryByExchange: buildSummaryByExchange(
+      realizedGains,
+      input.transactions,
+      input.year,
+    ),
     warnings,
   };
 }

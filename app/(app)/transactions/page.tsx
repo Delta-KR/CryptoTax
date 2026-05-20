@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -23,6 +23,60 @@ import {
   type ExchangeId,
 } from '@/lib/mock/transactions';
 
+// P1 #8: 거래별 환율 출처 표시. quoteCurrency=KRW면 직접거래로 표기.
+function TxRateDetail({ tx }: { tx: Transaction }) {
+  const isKRW = tx.originalCurrency === 'KRW';
+  return (
+    <div className="rounded-md border border-line bg-bg-soft px-4 py-3 text-[12px]">
+      <div className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.06em] text-muted-2">
+        환율 · 통화 출처
+      </div>
+      {isKRW ? (
+        <div className="flex items-center gap-2 text-muted">
+          <span className="rounded-full bg-card px-2 py-0.5 text-[10.5px] font-semibold text-ink-2 ring-1 ring-line">
+            원화 직접거래
+          </span>
+          <span>환율 변환 없음 (KRW 마켓)</span>
+        </div>
+      ) : tx.rateMeta ? (
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="num text-[13px] font-semibold text-ink">
+              1 {tx.originalCurrency} = ₩
+              {tx.rateMeta.rateKRW.toLocaleString('ko-KR', {
+                maximumFractionDigits: 2,
+              })}
+            </span>
+            <span className="text-[11.5px] text-muted">
+              · {tx.rateMeta.sourceDate} 기준
+            </span>
+            <span
+              className={
+                'rounded-full px-2 py-0.5 text-[10px] font-bold ' +
+                (tx.rateMeta.source === 'db'
+                  ? 'bg-good-soft text-good ring-1 ring-good/30'
+                  : 'bg-warn-soft text-warn ring-1 ring-warn/40')
+              }
+            >
+              {tx.rateMeta.source === 'db' ? '✓ DB' : '⚠ Fallback'}
+            </span>
+            <span className="text-[11.5px] text-muted-2">
+              · {tx.rateMeta.sourceName}
+            </span>
+          </div>
+          {tx.rateMeta.source === 'static' && (
+            <div className="mt-1.5 text-[11px] text-warn">
+              정적 분기별 환율 적용 — 일별 시세 갱신 후 재계산을 권장합니다.
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="text-muted">환율 메타데이터 없음 (구버전 세션)</div>
+      )}
+    </div>
+  );
+}
+
 const PAGE_SIZE = 10;
 
 export default function TransactionsPage() {
@@ -32,6 +86,17 @@ export default function TransactionsPage() {
   const [type, setType] = useState<'all' | 'buy' | 'sell'>('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  // P1 #8: 거래별 펼치기 — 환율 출처 audit trail
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  function toggleExpand(id: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => {
     setAll(getTransactions());
@@ -143,6 +208,7 @@ export default function TransactionsPage() {
           <Table>
             <TableHead>
               <TableRow>
+                <TableHeaderCell className="w-6"></TableHeaderCell>
                 <TableHeaderCell>날짜</TableHeaderCell>
                 <TableHeaderCell>거래소</TableHeaderCell>
                 <TableHeaderCell>코인</TableHeaderCell>
@@ -153,40 +219,88 @@ export default function TransactionsPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {pageItems.map((tx) => (
-                <TableRow key={tx.id}>
-                  <TableCell className="num text-[12px] text-muted">
-                    {new Date(tx.date).toLocaleString('ko-KR', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </TableCell>
-                  <TableCell>{exchangeLabel[tx.exchange]}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-2">
-                      <CoinIcon coin={tx.coin} size={22} />
-                      <span className="font-semibold">{tx.coin}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Pill tone={tx.type === 'buy' ? 'good' : 'bad'} size="sm">
-                      {tx.type === 'buy' ? '매수' : '매도'}
-                    </Pill>
-                  </TableCell>
-                  <TableCell className="num text-right text-[12px]">
-                    {tx.amount.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="num text-right text-[12px] text-muted">
-                    ₩{tx.pricePerCoin.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="num text-right text-[13px] font-semibold text-ink">
-                    ₩{tx.total.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {pageItems.map((tx) => {
+                const isOpen = expanded.has(tx.id);
+                const hasFallback = tx.rateMeta?.source === 'static';
+                return (
+                  <Fragment key={tx.id}>
+                    <TableRow
+                      onClick={() => toggleExpand(tx.id)}
+                      className="cursor-pointer transition-colors hover:bg-bg-soft"
+                    >
+                      <TableCell className="!pr-0">
+                        <svg
+                          className={
+                            'size-3 flex-shrink-0 text-muted transition-transform ' +
+                            (isOpen ? 'rotate-90' : '')
+                          }
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M4 2l4 4-4 4"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </TableCell>
+                      <TableCell className="num text-[12px] text-muted">
+                        {new Date(tx.date).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </TableCell>
+                      <TableCell>{exchangeLabel[tx.exchange]}</TableCell>
+                      <TableCell>
+                        <span className="inline-flex items-center gap-2">
+                          <CoinIcon coin={tx.coin} size={22} />
+                          <span className="font-semibold">{tx.coin}</span>
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="inline-flex items-center gap-1.5">
+                          <Pill
+                            tone={tx.type === 'buy' ? 'good' : 'bad'}
+                            size="sm"
+                          >
+                            {tx.type === 'buy' ? '매수' : '매도'}
+                          </Pill>
+                          {hasFallback && (
+                            <span
+                              className="rounded-full bg-warn-soft px-1.5 py-0.5 text-[9.5px] font-bold text-warn ring-1 ring-warn/40"
+                              title="정적 fallback 환율 적용"
+                            >
+                              ⚠ FB
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="num text-right text-[12px]">
+                        {tx.amount.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="num text-right text-[12px] text-muted">
+                        ₩{tx.pricePerCoin.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="num text-right text-[13px] font-semibold text-ink">
+                        ₩{tx.total.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                    {isOpen && (
+                      <TableRow className="bg-bg-tint hover:!bg-bg-tint">
+                        <TableCell colSpan={8} className="!py-3">
+                          <TxRateDetail tx={tx} />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                );
+              })}
             </TableBody>
           </Table>
 

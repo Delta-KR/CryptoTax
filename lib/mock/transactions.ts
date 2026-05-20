@@ -5,6 +5,13 @@ import type { UnifiedTransactionWire } from '@/app/actions/calculate.types';
 
 export type ExchangeId = 'upbit' | 'binance' | 'bybit';
 
+export interface RateMetaClient {
+  rateKRW: number;
+  sourceDate: string;
+  source: 'db' | 'static';
+  sourceName: string;
+}
+
 export interface Transaction {
   id: string;
   date: string;
@@ -15,6 +22,8 @@ export interface Transaction {
   pricePerCoin: number;
   total: number;
   fee: number;
+  originalCurrency: string;
+  rateMeta?: RateMetaClient;
 }
 
 export interface TransactionFilters {
@@ -45,6 +54,8 @@ function toTransaction(w: UnifiedTransactionWire): Transaction | null {
     pricePerCoin: w.pricePerUnitKRW,
     total: w.totalKRW,
     fee: w.feeKRW,
+    originalCurrency: w.originalCurrency,
+    rateMeta: w.rateMeta,
   };
 }
 
