@@ -144,12 +144,49 @@ function buildSummaryByExchange(
   });
 }
 
+// 매도된 코인의 매수 기록이 없는 경우(orphan) 모은 진단 정보. 안내 메시지에 활용.
+interface OrphanInfo {
+  count: number;
+  exchanges: Set<string>;
+  firstDate: Date;
+  lastDate: Date;
+  totalAmount: number;
+}
+
+function formatOrphanDate(d: Date): string {
+  // KST 기준 YYYY-MM-DD
+  const kst = new Date(d.getTime() + 9 * 3600 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
+
+function formatOrphanAmount(n: number): string {
+  return n.toLocaleString('ko-KR', { maximumFractionDigits: 8 });
+}
+
+function buildOrphanWarning(coin: string, info: OrphanInfo): string {
+  const exchanges = Array.from(info.exchanges).sort();
+  const exchangeStr =
+    exchanges.length === 1 ? exchanges[0] : exchanges.join(', ');
+  const firstStr = formatOrphanDate(info.firstDate);
+  const lastStr = formatOrphanDate(info.lastDate);
+  const rangeStr = firstStr === lastStr ? firstStr : `${firstStr} ~ ${lastStr}`;
+  const amountStr = formatOrphanAmount(info.totalAmount);
+
+  // 한 거래소면 "그 거래소의 다른 기간"이라 콕 짚어줄 수 있고, 여러 거래소면 일반 안내.
+  const actionHint =
+    exchanges.length === 1
+      ? `${exchanges[0]}의 다른 기간 거래내역을 추가 업로드하거나, 외부에서 받은 코인이면 의제취득가액 적용 대상인지 확인해주세요.`
+      : `각 거래소(${exchangeStr})의 매수 거래내역을 추가 업로드하거나, 외부에서 받은 코인이면 의제취득가액 적용 대상인지 확인해주세요.`;
+
+  return `${coin} 매도 ${info.count}건의 매수 기록이 없습니다 (${exchangeStr} · ${rangeStr}, 총 ${amountStr} ${coin}) — 손익 0원으로 처리. ${actionHint}`;
+}
+
 export function calculateTax(input: TaxCalculatorInput): TaxResult {
   const method: TaxMethod = input.method ?? 'fifo';
   const engine: TaxEngine = method === 'avg' ? new MAEngine() : new FIFOEngine();
   const realizedGains: RealizedGain[] = [];
   const warnings: string[] = [];
-  const orphanCounts = new Map<string, number>();
+  const orphans = new Map<string, OrphanInfo>();
 
   for (const tx of input.transactions) {
     if (tx.type === 'BUY') {
@@ -161,10 +198,26 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
       );
 
       if (outcome.orphan) {
-        orphanCounts.set(
-          tx.coin,
-          (orphanCounts.get(tx.coin) ?? 0) + 1,
-        );
+        const info = orphans.get(tx.coin);
+        if (info) {
+          info.count += 1;
+          info.exchanges.add(tx.exchange);
+          if (tx.date.getTime() < info.firstDate.getTime()) {
+            info.firstDate = tx.date;
+          }
+          if (tx.date.getTime() > info.lastDate.getTime()) {
+            info.lastDate = tx.date;
+          }
+          info.totalAmount += tx.amount;
+        } else {
+          orphans.set(tx.coin, {
+            count: 1,
+            exchanges: new Set([tx.exchange]),
+            firstDate: tx.date,
+            lastDate: tx.date,
+            totalAmount: tx.amount,
+          });
+        }
       }
 
       if (kstYear(tx.date) === input.year) {
@@ -185,10 +238,8 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
     }
   }
 
-  for (const [coin, count] of orphanCounts) {
-    warnings.push(
-      `${coin} 매도 ${count}건의 매수 기록이 없습니다 — 손익 0원으로 처리. 매수 거래소의 거래내역도 함께 업로드하면 정확한 세금이 계산됩니다.`,
-    );
+  for (const [coin, info] of orphans) {
+    warnings.push(buildOrphanWarning(coin, info));
   }
 
   let totalGain = 0;
