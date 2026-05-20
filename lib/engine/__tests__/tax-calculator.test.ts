@@ -272,6 +272,112 @@ describe('calculateTax', () => {
     expect(result.realizedGains[0].pnlKRW).toBe(0);
     expect(result.warnings.some((w) => w.includes('DUSK'))).toBe(true);
   });
+
+  it('orphan warning에 거래소·기간·총량 동적으로 포함 (한 거래소)', () => {
+    // 같은 거래소에서 4건 매도 — 거래소 콕 짚어서 action hint
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2024-07-05T12:07:20+09:00'),
+          coin: 'DUSK',
+          amount: 100,
+          totalKRW: 100_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2024-07-05T12:08:00+09:00'),
+          coin: 'DUSK',
+          amount: 50,
+          totalKRW: 50_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2024-08-10T10:00:00+09:00'),
+          coin: 'DUSK',
+          amount: 80,
+          totalKRW: 80_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2024-09-15T15:00:00+09:00'),
+          coin: 'DUSK',
+          amount: 17.95,
+          totalKRW: 18_000,
+        }),
+      ],
+      year: 2024,
+    });
+    const warn = result.warnings.find((w) => w.includes('DUSK'));
+    expect(warn).toBeDefined();
+    // 거래소 명시
+    expect(warn).toContain('Binance');
+    // 건수
+    expect(warn).toContain('4건');
+    // 기간 범위 (첫 매도 ~ 마지막 매도)
+    expect(warn).toContain('2024-07-05');
+    expect(warn).toContain('2024-09-15');
+    // 총량 (한국 숫자 포맷)
+    expect(warn).toContain('247.95');
+    // 거래소 단일이라 그 거래소를 콕 짚는 action hint
+    expect(warn).toContain('Binance의 다른 기간');
+  });
+
+  it('orphan warning에 여러 거래소 모두 나열', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'SELL',
+          exchange: 'Binance',
+          date: new Date('2027-06-01T10:00:00+09:00'),
+          coin: 'XYZ',
+          amount: 10,
+          totalKRW: 100_000,
+        }),
+        tx({
+          type: 'SELL',
+          exchange: 'Upbit',
+          date: new Date('2027-06-02T10:00:00+09:00'),
+          coin: 'XYZ',
+          amount: 5,
+          totalKRW: 50_000,
+        }),
+      ],
+      year: 2027,
+    });
+    const warn = result.warnings.find((w) => w.includes('XYZ'));
+    expect(warn).toBeDefined();
+    expect(warn).toContain('Binance');
+    expect(warn).toContain('Upbit');
+    expect(warn).toContain('15'); // 총량 10+5
+    // 여러 거래소면 각 거래소 안내 톤
+    expect(warn).toContain('각 거래소');
+  });
+
+  it('orphan warning — 한 건만 매도되면 firstDate==lastDate, 단일 날짜 표시', () => {
+    const result = calculateTax({
+      transactions: [
+        tx({
+          type: 'SELL',
+          exchange: 'Upbit',
+          date: new Date('2027-06-01T10:00:00+09:00'),
+          coin: 'ZZZ',
+          amount: 1,
+          totalKRW: 10_000,
+        }),
+      ],
+      year: 2027,
+    });
+    const warn = result.warnings.find((w) => w.includes('ZZZ'));
+    expect(warn).toBeDefined();
+    // 단일 날짜라 "~" 범위 표시 안 함
+    expect(warn).not.toContain('~');
+    expect(warn).toContain('2027-06-01');
+  });
 });
 
 describe('calculateTax — method: avg (이동평균법)', () => {
