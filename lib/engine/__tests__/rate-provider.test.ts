@@ -77,4 +77,33 @@ describe('DBExchangeRateProvider', () => {
     expect(provider.getSourceInfo().fallbackUsed).toBe(true);
     expect(provider.getSourceInfo().primary).toBe('(DB 미적재)'); // DB 모킹이 빈 결과 반환
   });
+
+  // P1 #8 회귀: getRateWithMeta가 거래별 출처 메타를 반환.
+  describe('getRateWithMeta (P1 #8)', () => {
+    it('DB 미스 + 정적 fallback hit → source="static" + fallback sourceName', async () => {
+      const provider = new DBExchangeRateProvider(7);
+      const meta = await provider.getRateWithMeta(
+        new Date('2027-01-01T00:00:00+09:00'),
+        'USDT',
+        'KRW',
+      );
+      expect(meta.source).toBe('static');
+      expect(meta.rate).toBe(1480);
+      expect(meta.sourceDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      // RATES_FALLBACK_SOURCE.name이 전달됐는지 (정확한 문자열은 모름 — 비어있지 않으면 됨)
+      expect(meta.sourceName.length).toBeGreaterThan(0);
+    });
+
+    it('from === to: source="static", sourceName="Identity (KRW)"', async () => {
+      const provider = new DBExchangeRateProvider(7);
+      const meta = await provider.getRateWithMeta(
+        new Date('2027-01-01T00:00:00+09:00'),
+        'KRW',
+        'KRW',
+      );
+      expect(meta.rate).toBe(1);
+      expect(meta.source).toBe('static');
+      expect(meta.sourceName).toBe('Identity (KRW)');
+    });
+  });
 });

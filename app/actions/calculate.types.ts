@@ -13,6 +13,14 @@ export interface ParsedTransactionWire {
   isSwap?: boolean;
 }
 
+// P1 #8: 거래별 환율 출처 audit trail. quoteCurrency=KRW면 undefined.
+export interface RateMetaWire {
+  rateKRW: number;
+  sourceDate: string; // YYYY-MM-DD (KST)
+  source: 'db' | 'static';
+  sourceName: string;
+}
+
 export interface UnifiedTransactionWire {
   id: string;
   date: string;
@@ -24,6 +32,7 @@ export interface UnifiedTransactionWire {
   feeKRW: number;
   exchange: string;
   originalCurrency: string;
+  rateMeta?: RateMetaWire;
 }
 
 export interface RealizedGainWire {
@@ -42,6 +51,10 @@ export interface RealizedGainWire {
     amount: number;
     pricePerUnitKRW: number;
     costKRW: number;
+    // FIFO에서만 채워짐. MA의 avg entry는 undefined.
+    buyDate?: string;
+    exchange?: string;
+    isDeemedCost: boolean;
   }>;
 }
 
@@ -59,6 +72,17 @@ export interface LotWire {
 }
 
 export interface CoinSummaryWire {
+  coin: string;
+  totalBuyKRW: number;
+  totalSellKRW: number;
+  realizedPnLKRW: number;
+  totalFeeKRW: number;
+  transactionCount: number;
+}
+
+// P1 #9: 거래소 × 코인 매트릭스.
+export interface ExchangeCoinSummaryWire {
+  exchange: string;
   coin: string;
   totalBuyKRW: number;
   totalSellKRW: number;
@@ -96,6 +120,7 @@ export interface TaxResultWire {
   realizedGains: RealizedGainWire[];
   holdingsAfter: Record<string, LotWire[]>;
   summary: CoinSummaryWire[];
+  summaryByExchange: ExchangeCoinSummaryWire[];
   warnings: string[];
   plan: 'free' | 'premium';
   masked: boolean;

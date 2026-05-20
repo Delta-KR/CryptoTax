@@ -165,6 +165,8 @@ describe('FIFOEngine', () => {
 
   it('11. ConsumedLot fields match expected lotId/amount/cost per slice', () => {
     const engine = new FIFOEngine();
+    const dateA = new Date('2025-06-15T00:00:00Z');
+    const dateB = new Date('2027-03-01T00:00:00Z');
     engine.addLot(
       'BTC',
       makeLot({
@@ -172,6 +174,9 @@ describe('FIFOEngine', () => {
         coin: 'BTC',
         amount: 0.5,
         pricePerUnitKRW: 80_000_000,
+        date: dateA,
+        exchange: 'Upbit',
+        isDeemedCost: true,
       }),
     );
     engine.addLot(
@@ -181,20 +186,30 @@ describe('FIFOEngine', () => {
         coin: 'BTC',
         amount: 0.5,
         pricePerUnitKRW: 100_000_000,
+        date: dateB,
+        exchange: 'Binance',
+        isDeemedCost: false,
       }),
     );
     const result = engine.consumeLots('BTC', 0.7);
+    // P1 #6/#7: FIFO는 lot의 매수일·거래소·의제 플래그를 그대로 노출.
     expect(result.consumedLots[0]).toEqual({
       lotId: 'lot-A',
       amount: 0.5,
       pricePerUnitKRW: 80_000_000,
       costKRW: 40_000_000,
+      buyDate: dateA,
+      exchange: 'Upbit',
+      isDeemedCost: true,
     });
     expect(result.consumedLots[1]).toEqual({
       lotId: 'lot-B',
       amount: 0.2,
       pricePerUnitKRW: 100_000_000,
       costKRW: 20_000_000,
+      buyDate: dateB,
+      exchange: 'Binance',
+      isDeemedCost: false,
     });
   });
 

@@ -206,4 +206,86 @@ describe('normalize', () => {
     const result = await normalize(parsed, rates);
     expect(result[0].feeKRW).toBe(roundKRW(0.01 * 800_000));
   });
+
+  // P1 #8 회귀: 거래별 환율 출처가 UnifiedTransaction.rateMeta로 흐름.
+  describe('rateMeta (P1 #8 audit trail)', () => {
+    it('KRW 거래는 rateMeta=undefined (환율 변환 없음)', async () => {
+      const rates = new StaticExchangeRateProvider([]);
+      const parsed = [
+        tx({
+          coin: 'BTC',
+          amount: 0.1,
+          pricePerUnit: 50_000_000,
+          total: 5_000_000,
+          quoteCurrency: 'KRW',
+          feeCurrency: 'KRW',
+          exchange: 'Upbit',
+        }),
+      ];
+      const result = await normalize(parsed, rates);
+      expect(result[0].rateMeta).toBeUndefined();
+    });
+
+    it('USDT 거래는 rateMeta가 채워짐 (rateKRW, sourceDate, source, sourceName)', async () => {
+      const rates = new StaticExchangeRateProvider(
+        [['2027-06-01', 'USDT', 'KRW', 1400]],
+        7,
+        'Test fallback',
+      );
+      const parsed = [
+        tx({
+          quoteCurrency: 'USDT',
+          feeCurrency: 'USDT',
+        }),
+      ];
+      const result = await normalize(parsed, rates);
+      expect(result[0].rateMeta).toEqual({
+        rateKRW: 1400,
+        sourceDate: '2027-06-01',
+        source: 'static',
+        sourceName: 'Test fallback',
+      });
+    });
+
+    it('Fallback 날짜 사용 시 rateMeta.sourceDate는 실제 데이터 기준일', async () => {
+      // 거래일 2027-06-05인데 USDT 환율은 2027-06-01에만 있음 → sourceDate=2027-06-01
+      const rates = new StaticExchangeRateProvider([
+        ['2027-06-01', 'USDT', 'KRW', 1400],
+      ]);
+      const parsed = [
+        tx({
+          date: new Date('2027-06-05T10:00:00+09:00'),
+        }),
+      ];
+      const result = await normalize(parsed, rates);
+      expect(result[0].rateMeta?.sourceDate).toBe('2027-06-01');
+      expect(result[0].rateMeta?.rateKRW).toBe(1400);
+    });
+
+    it('SWAP: split된 BUY/SELL 둘 다 같은 rateMeta', async () => {
+      // ETHBTC swap: 0.05 BTC → 1 ETH at quote=BTC
+      const rates = new StaticExchangeRateProvider([
+        ['2027-06-01', 'BTC', 'KRW', 80_000_000],
+      ]);
+      const parsed = [
+        tx({
+          type: 'BUY',
+          coin: 'ETH',
+          amount: 1,
+          pricePerUnit: 0.05,
+          total: 0.05,
+          fee: 0.001,
+          quoteCurrency: 'BTC',
+          feeCurrency: 'BTC',
+          isSwap: true,
+        }),
+      ];
+      const result = await normalize(parsed, rates);
+      expect(result).toHaveLength(2);
+      // 두 leg 모두 같은 환율 메타 가짐
+      expect(result[0].rateMeta?.rateKRW).toBe(80_000_000);
+      expect(result[1].rateMeta?.rateKRW).toBe(80_000_000);
+      expect(result[0].rateMeta?.source).toBe('static');
+    });
+  });
 });

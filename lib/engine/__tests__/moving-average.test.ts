@@ -195,5 +195,48 @@ describe('MAEngine', () => {
     // FIFO와 달리 MA는 항상 단일 ConsumedLot 반환 — 평균 단가 적용 의미.
     expect(result.consumedLots).toHaveLength(1);
     expect(result.consumedLots[0].lotId).toBe('avg:BTC');
+    // P1 #6: MA는 혼합 평균이라 매수일·거래소 단일값 불가능 → undefined.
+    expect(result.consumedLots[0].buyDate).toBeUndefined();
+    expect(result.consumedLots[0].exchange).toBeUndefined();
+  });
+
+  it('13. MA isDeemedCost = OR of underlying lots (any deemed → flag true)', () => {
+    // P1 #7: MA의 의제 플래그는 underlying lots 중 하나라도 의제면 true.
+    const engine = new MAEngine();
+    engine.addLot(
+      'BTC',
+      makeLot({
+        coin: 'BTC',
+        amount: 0.5,
+        pricePerUnitKRW: 50_000_000,
+        isDeemedCost: true, // pre-2027 매수 → 의제 시가 적용
+      }),
+    );
+    engine.addLot(
+      'BTC',
+      makeLot({
+        coin: 'BTC',
+        amount: 0.5,
+        pricePerUnitKRW: 100_000_000,
+        isDeemedCost: false,
+      }),
+    );
+    const result = engine.consumeLots('BTC', 0.3);
+    expect(result.consumedLots[0].isDeemedCost).toBe(true);
+  });
+
+  it('14. MA isDeemedCost = false when no underlying lot is deemed', () => {
+    const engine = new MAEngine();
+    engine.addLot(
+      'BTC',
+      makeLot({
+        coin: 'BTC',
+        amount: 1,
+        pricePerUnitKRW: 100_000_000,
+        isDeemedCost: false,
+      }),
+    );
+    const result = engine.consumeLots('BTC', 0.5);
+    expect(result.consumedLots[0].isDeemedCost).toBe(false);
   });
 });

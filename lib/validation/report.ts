@@ -31,6 +31,9 @@ const consumedLotSchema = z.object({
   amount: z.number().finite().min(0),
   pricePerUnitKRW: moneyKRW,
   costKRW: moneyKRW,
+  buyDate: isoDate.optional(),
+  exchange: exchangeName.optional(),
+  isDeemedCost: z.boolean(),
 });
 
 const realizedGainSchema = z.object({
@@ -48,6 +51,16 @@ const realizedGainSchema = z.object({
 });
 
 const coinSummarySchema = z.object({
+  coin: coinName,
+  totalBuyKRW: moneyKRW,
+  totalSellKRW: moneyKRW,
+  realizedPnLKRW: moneyKRW,
+  totalFeeKRW: moneyKRW,
+  transactionCount: z.number().int().min(0).max(100_000),
+});
+
+const exchangeCoinSummarySchema = z.object({
+  exchange: exchangeName,
   coin: coinName,
   totalBuyKRW: moneyKRW,
   totalSellKRW: moneyKRW,
@@ -93,12 +106,27 @@ const taxResultSchema = z.object({
       message: 'holdingsAfter exceeds 500 keys',
     }),
   summary: z.array(coinSummarySchema).max(500),
+  // 거래소 × 코인 매트릭스 — 거래소 20개 × 코인 500개 상한.
+  // 구버전 세션 호환: 누락 시 빈 배열 default.
+  summaryByExchange: z
+    .array(exchangeCoinSummarySchema)
+    .max(10_000)
+    .default([]),
   warnings: z.array(z.string().max(500)).max(50),
   plan: z.enum(['free', 'premium']),
   masked: z.boolean(),
   rateSource: rateSourceSchema,
   deemedCostSource: deemedCostSourceSchema,
 });
+
+const rateMetaSchema = z
+  .object({
+    rateKRW: z.number().finite().min(0).max(1e9),
+    sourceDate: z.string().max(16),
+    source: z.enum(['db', 'static']),
+    sourceName: z.string().min(1).max(128),
+  })
+  .optional();
 
 const unifiedTransactionSchema = z.object({
   id: z.string().min(1).max(64),
@@ -111,6 +139,7 @@ const unifiedTransactionSchema = z.object({
   feeKRW: moneyKRW,
   exchange: exchangeName,
   originalCurrency: z.string().min(1).max(16),
+  rateMeta: rateMetaSchema,
 });
 
 export const reportRequestSchema = z.object({
