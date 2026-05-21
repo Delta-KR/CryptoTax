@@ -22,14 +22,17 @@ import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import { loadSession, replaceCalculation } from '@/lib/storage/session';
 import { getTransactions, type Transaction } from '@/lib/mock/transactions';
 import {
+  calculateMATimeline,
   calculateTax,
   formatKrw,
   getTaxMethod,
   type ExchangeCoinPnL,
   type HoldingsByCoinClient,
+  type MATimelineCoin,
   type RealizedGainClient,
   type TaxMethod,
 } from '@/lib/mock/tax';
+import { LineChart, type LineSeries } from '@/components/ui/Chart/LineChart';
 
 function CalcRow({
   label,
@@ -113,6 +116,96 @@ function PremiumBanner() {
         </button>
       </Link>
     </div>
+  );
+}
+
+// v2 #2: MA 평균 단가 timeline. 코인별로 매수 시점마다 누적 평균이 어떻게 변화했는지 시각화.
+// MA(이동평균법)에서는 매수마다 평균이 갱신되고 매도 시 평균은 유지 (수량만 차감).
+// timeline은 평균이 변하는 시점(매수)에만 점을 찍어 평균 추이를 line chart로 보여줌.
+// FIFO일 때는 비표시 (MA 룰이라서 FIFO 사용자에겐 무관).
+const TIMELINE_COLORS = [
+  '#2563eb', // blue
+  '#16a34a', // green
+  '#dc2626', // red
+  '#ea580c', // orange
+  '#7c3aed', // violet
+  '#0891b2', // cyan
+  '#c026d3', // fuchsia
+];
+const TIMELINE_MAX_COINS = 6;
+
+function MATimelineCard({
+  timelines,
+  masked,
+}: {
+  timelines: MATimelineCoin[];
+  masked: boolean;
+}) {
+  if (timelines.length === 0) {
+    return null;
+  }
+  const top = timelines.slice(0, TIMELINE_MAX_COINS);
+  const hidden = timelines.length - top.length;
+
+  const series: LineSeries[] = top.map((t, i) => ({
+    name: t.coin,
+    color: TIMELINE_COLORS[i % TIMELINE_COLORS.length],
+    points: t.points.map((p) => ({
+      date: p.date,
+      value: p.avgPriceKRW,
+    })),
+  }));
+
+  return (
+    <Card padding="lg" className="mb-6">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h2 className="text-[16px] font-bold text-ink">
+            MA 평균 단가 timeline
+          </h2>
+          <p className="mt-0.5 text-[11.5px] text-muted">
+            매수 시점마다 평균 단가가 어떻게 변화했는지 (이동평균법)
+          </p>
+        </div>
+        <Pill tone="brand" size="sm">
+          PREMIUM
+        </Pill>
+      </div>
+      <BlurOverlay masked={masked}>
+        <LineChart series={series} height={280} />
+        {hidden > 0 && (
+          <div className="mt-3 text-[11.5px] text-muted">
+            · 상위 {TIMELINE_MAX_COINS}개 코인 표시 — 그 외 {hidden}개는 누적
+            취득가액 낮아 생략.
+          </div>
+        )}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {top.map((t, i) => (
+            <div
+              key={t.coin}
+              className="flex items-baseline justify-between gap-2 rounded border border-line bg-card-2 px-3 py-2 text-[12px]"
+            >
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="inline-block h-2 w-3 rounded-sm"
+                  style={{
+                    backgroundColor:
+                      TIMELINE_COLORS[i % TIMELINE_COLORS.length],
+                  }}
+                />
+                <span className="font-bold text-ink">{t.coin}</span>
+              </div>
+              <span className="text-muted">
+                평균{' '}
+                <span className="num font-semibold text-ink-2">
+                  ₩{Math.round(t.finalAvgPriceKRW).toLocaleString('ko-KR')}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </BlurOverlay>
+    </Card>
   );
 }
 
@@ -666,6 +759,12 @@ export default function TaxPage() {
 
   const masked = result.masked;
 
+  // v2 #2: MA 평균 단가 timeline. method='avg'일 때만 의미 있음 (FIFO는 lot별 매수가).
+  const maTimelines = useMemo(
+    () => (method === 'avg' ? calculateMATimeline() : []),
+    [method, refreshKey, txs],
+  );
+
   return (
     <>
       <PageHeader
@@ -740,6 +839,13 @@ export default function TaxPage() {
             selected={result.methodComparison.selected}
             masked={masked}
           />
+        </div>
+      )}
+
+      {/* v2 #2: MA 평균 단가 timeline — MA 사용 시에만 의미 있음 */}
+      {method === 'avg' && maTimelines.length > 0 && (
+        <div className="mt-6">
+          <MATimelineCard timelines={maTimelines} masked={masked} />
         </div>
       )}
 

@@ -224,6 +224,89 @@ export function calculateTax(
   };
 }
 
+// v2 #2: MA 평균 단가 timeline.
+// 진짜 MA 알고리즘: 매수 시 (totalCost, totalAmount) 누적, 매도 시 비율로 차감
+// (평균 자체는 유지). 평균이 변하는 시점(매수)에만 point 생성.
+export interface MATimelinePoint {
+  date: string; // ISO 8601
+  avgPriceKRW: number;
+  totalAmount: number; // 누적 보유량
+}
+
+export interface MATimelineCoin {
+  coin: string;
+  points: MATimelinePoint[];
+  finalAmount: number;
+  finalAvgPriceKRW: number;
+  totalCostKRW: number; // 정렬·중요도 점수용
+}
+
+export function calculateMATimeline(): MATimelineCoin[] {
+  const session = loadSession();
+  if (!session?.allUnified) return [];
+
+  // 코인별로 시간순 거래 모음 (BUY/SELL 모두 필요 — SELL이 누적량 차감)
+  const byCoin = new Map<
+    string,
+    Array<{ date: string; type: 'BUY' | 'SELL'; amount: number; totalKRW: number }>
+  >();
+  for (const tx of session.allUnified) {
+    if (tx.type === 'SWAP') continue; // SWAP은 split된 BUY/SELL로 이미 표현됨
+    const list = byCoin.get(tx.coin) ?? [];
+    list.push({
+      date: tx.date,
+      type: tx.type,
+      amount: tx.amount,
+      totalKRW: tx.totalKRW,
+    });
+    byCoin.set(tx.coin, list);
+  }
+
+  const result: MATimelineCoin[] = [];
+  for (const [coin, txs] of byCoin) {
+    txs.sort((a, b) => a.date.localeCompare(b.date));
+    let totalAmount = 0;
+    let totalCost = 0;
+    const points: MATimelinePoint[] = [];
+
+    for (const tx of txs) {
+      if (tx.type === 'BUY') {
+        totalAmount += tx.amount;
+        totalCost += tx.totalKRW;
+        if (totalAmount > 0) {
+          points.push({
+            date: tx.date,
+            avgPriceKRW: totalCost / totalAmount,
+            totalAmount,
+          });
+        }
+      } else {
+        // SELL: 보유량 비율로 cost 차감, 평균 단가는 유지.
+        if (totalAmount > 0) {
+          const sellAmount = Math.min(tx.amount, totalAmount);
+          const ratio = sellAmount / totalAmount;
+          totalCost -= totalCost * ratio;
+          totalAmount -= sellAmount;
+        }
+      }
+    }
+
+    if (points.length === 0) continue;
+    const last = points[points.length - 1];
+    result.push({
+      coin,
+      points,
+      finalAmount: totalAmount,
+      finalAvgPriceKRW: totalAmount > 0 ? totalCost / totalAmount : last.avgPriceKRW,
+      totalCostKRW: points.reduce((s, p) => s + p.avgPriceKRW * p.totalAmount, 0),
+    });
+  }
+
+  // 누적 cost 큰 순으로 정렬 (timeline에서 비중 큰 코인이 위로)
+  result.sort((a, b) => b.totalCostKRW - a.totalCostKRW);
+  return result;
+}
+
 const METHOD_KEY = 'kontaxt-method';
 
 export function getTaxMethod(): TaxMethod {
