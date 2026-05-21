@@ -656,7 +656,7 @@ export function TaxReport({
           ))}
 
           {result.realizedGains.length > 100 && (
-            <Text style={{ fontSize: 8, color: MUTED, marginTop: 6, fontStyle: 'italic' }}>
+            <Text style={{ fontSize: 8, color: MUTED, marginTop: 6 }}>
               · 상위 100건만 표시 — 전체 {result.realizedGains.length}건 중. 추가 매칭 데이터가 필요하면 문의해주세요.
             </Text>
           )}
@@ -789,7 +789,7 @@ export function TaxReport({
               );
             })}
 
-            <Text style={{ fontSize: 8, color: MUTED, marginTop: 6, fontStyle: 'italic' }}>
+            <Text style={{ fontSize: 8, color: MUTED, marginTop: 6 }}>
               · 표시된 취득가액은 단가 × 잔량 기준. 매도 시점 시가는 별도 확인 필요.
               {' '}· ⚖ 표시는 2026-12-31 의제취득가액이 적용된 매수 lot.
             </Text>
