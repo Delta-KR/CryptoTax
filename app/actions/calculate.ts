@@ -7,6 +7,7 @@ import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
 import { calculateTax, type TaxMethod } from '@/lib/engine/tax-calculator';
 import { DBExchangeRateProvider } from '@/lib/engine/rate-provider';
+import { toKSTDateStr } from '@/lib/engine/exchange-rate';
 import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
 import { dedupeParsedTransactions } from '@/lib/engine/dedupe';
 import type {
@@ -278,7 +279,13 @@ export async function calculateTaxFromFiles(
     const plan = await getUserPlan();
     const wire = resultToWire(result, plan);
     const sourceInfo = rates.getSourceInfo();
-    wire.rateSource = sourceInfo;
+    // fallbackDateRange는 server-only (warning 메시지 작성에만 사용). wire에는 제외.
+    wire.rateSource = {
+      primary: sourceInfo.primary,
+      fallbackUsed: sourceInfo.fallbackUsed,
+      lastFetchedAt: sourceInfo.lastFetchedAt,
+      fallbackName: sourceInfo.fallbackName,
+    };
     wire.deemedCostSource = {
       realCoins: deemedRes.realCoins,
       estimateCoins: deemedRes.estimateCoins,
@@ -295,12 +302,24 @@ export async function calculateTaxFromFiles(
       ];
     }
 
-    // 정적 fallback 사용 시 사용자에게 정확도 경고 추가.
+    // 정적 fallback 사용 시 컨텍스트에 맞는 안내. 미래 시점 거래는 갱신 불가하니
+    // 메시지를 다르게 표시 (오늘 KST 기준 비교).
     if (sourceInfo.fallbackUsed) {
-      wire.warnings = [
-        ...wire.warnings,
-        '일부 거래에 정적 분기별 환율이 사용되었습니다 (DB에 일별 시세 미적재). 정확한 신고를 위해 시세 갱신 후 재계산을 권장합니다.',
-      ];
+      const range = sourceInfo.fallbackDateRange;
+      const todayKst = toKSTDateStr(new Date());
+      const rangeStr = range
+        ? range.earliest === range.latest
+          ? range.earliest
+          : `${range.earliest} ~ ${range.latest}`
+        : null;
+      const isAllFuture = range !== null && range.earliest > todayKst;
+      const baseMsg = rangeStr
+        ? `일부 거래(${rangeStr})에 분기별 환율 추정치가 사용됐습니다.`
+        : '일부 거래에 분기별 환율 추정치가 사용됐습니다.';
+      const tailMsg = isAllFuture
+        ? ' 미래 시점 거래라 실 시세 미존재 — 거래일 도래 후 시세 적재 시 재계산을 권장합니다.'
+        : ' DB에 일별 시세 미적재. 정확한 신고를 위해 시세 갱신 후 재계산을 권장합니다.';
+      wire.warnings = [...wire.warnings, baseMsg + tailMsg];
     }
 
     // 의제취득가액 추정치 사용 시 경고. real로 갱신되기 전엔 모두 estimate.

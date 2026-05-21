@@ -15,6 +15,8 @@ export interface RateSourceInfo {
   fallbackUsed: boolean; // 정적 fallback이 한 번이라도 사용됐는지
   lastFetchedAt: string | null; // DB 최신 fetched_at (ISO)
   fallbackName: string;
+  // fallback이 사용된 거래일 범위 (KST YYYY-MM-DD). 메시지에 컨텍스트 제공.
+  fallbackDateRange: { earliest: string; latest: string } | null;
 }
 
 interface DBRow {
@@ -41,6 +43,8 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
   private fallbackUsed = false;
   private latestFetchedAt: string | null = null;
   private primarySource: string | null = null;
+  private fallbackEarliestDate: string | null = null;
+  private fallbackLatestDate: string | null = null;
 
   constructor(fallbackDays = 7) {
     this.fallbackDays = fallbackDays;
@@ -136,10 +140,17 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
       }
     }
 
-    // 2) 정적 fallback (분기별 — 정확도 낮음, 사용 시 flag)
+    // 2) 정적 fallback (분기별 — 정확도 낮음, 사용 시 flag + 거래일 범위 추적)
     try {
       const r = await this.staticFallback.getRateWithMeta(date, from, to);
       this.fallbackUsed = true;
+      const dStr = toKSTDateStr(date);
+      if (!this.fallbackEarliestDate || dStr < this.fallbackEarliestDate) {
+        this.fallbackEarliestDate = dStr;
+      }
+      if (!this.fallbackLatestDate || dStr > this.fallbackLatestDate) {
+        this.fallbackLatestDate = dStr;
+      }
       return r;
     } catch {
       throw new Error(
@@ -149,11 +160,19 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
   }
 
   getSourceInfo(): RateSourceInfo {
+    const fallbackDateRange =
+      this.fallbackEarliestDate && this.fallbackLatestDate
+        ? {
+            earliest: this.fallbackEarliestDate,
+            latest: this.fallbackLatestDate,
+          }
+        : null;
     return {
       primary: this.primarySource ?? '(DB 미적재)',
       fallbackUsed: this.fallbackUsed,
       lastFetchedAt: this.latestFetchedAt,
       fallbackName: RATES_FALLBACK_SOURCE.name,
+      fallbackDateRange,
     };
   }
 }
