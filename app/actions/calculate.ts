@@ -61,6 +61,14 @@ function maskForFree(wire: TaxResultWire): TaxResultWire {
       ...s,
       realizedPnLKRW: 0,
     })),
+    // v2 #1: 비교 카드도 premium 전용. 양쪽 모두 0으로 마스킹.
+    methodComparison: wire.methodComparison
+      ? {
+          fifo: { netPnLKRW: 0, taxableIncomeKRW: 0, taxAmountKRW: 0 },
+          ma: { netPnLKRW: 0, taxableIncomeKRW: 0, taxAmountKRW: 0 },
+          selected: wire.methodComparison.selected,
+        }
+      : undefined,
     masked: true,
   };
 }
@@ -269,15 +277,37 @@ export async function calculateTaxFromFiles(
     const deemedRes = await resolveDeemedCostPrices(preCoinsSet);
 
     const year = currentTargetYear();
-    const result = calculateTax({
+    // v2 백로그 #1: FIFO vs MA 자동 비교 — 양쪽 method 모두 계산.
+    // 메인 결과는 사용자가 선택한 method, 비교 카드용 alternative 결과는 핵심 지표만.
+    const fifoResult = calculateTax({
       transactions: unified,
       year,
       deemedCostPrices: deemedRes.prices,
-      method,
+      method: 'fifo',
     });
+    const maResult = calculateTax({
+      transactions: unified,
+      year,
+      deemedCostPrices: deemedRes.prices,
+      method: 'avg',
+    });
+    const result = method === 'avg' ? maResult : fifoResult;
 
     const plan = await getUserPlan();
     const wire = resultToWire(result, plan);
+    wire.methodComparison = {
+      fifo: {
+        netPnLKRW: fifoResult.netPnLKRW,
+        taxableIncomeKRW: fifoResult.taxableIncomeKRW,
+        taxAmountKRW: fifoResult.taxAmountKRW,
+      },
+      ma: {
+        netPnLKRW: maResult.netPnLKRW,
+        taxableIncomeKRW: maResult.taxableIncomeKRW,
+        taxAmountKRW: maResult.taxAmountKRW,
+      },
+      selected: method === 'avg' ? 'ma' : 'fifo',
+    };
     const sourceInfo = rates.getSourceInfo();
     // fallbackDateRange는 server-only (warning 메시지 작성에만 사용). wire에는 제외.
     wire.rateSource = {

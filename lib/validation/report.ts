@@ -88,6 +88,20 @@ const deemedCostSourceSchema = z
   })
   .optional();
 
+// v2 #1: FIFO vs MA 자동 비교. 양쪽 method 핵심 지표를 함께 보관.
+const comparisonResultSchema = z.object({
+  netPnLKRW: moneyKRW,
+  taxableIncomeKRW: moneyKRW,
+  taxAmountKRW: moneyKRW,
+});
+const methodComparisonSchema = z
+  .object({
+    fifo: comparisonResultSchema,
+    ma: comparisonResultSchema,
+    selected: z.enum(['fifo', 'ma']),
+  })
+  .optional();
+
 const taxResultSchema = z.object({
   year: z.number().int().min(2020).max(2030),
   totalGainKRW: moneyKRW,
@@ -117,6 +131,7 @@ const taxResultSchema = z.object({
   masked: z.boolean(),
   rateSource: rateSourceSchema,
   deemedCostSource: deemedCostSourceSchema,
+  methodComparison: methodComparisonSchema,
 });
 
 const rateMetaSchema = z

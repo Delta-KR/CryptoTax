@@ -116,6 +116,115 @@ function PremiumBanner() {
   );
 }
 
+// v2 #1: FIFO vs MA 자동 비교 카드. 마케팅 약속(components/sections/example.tsx "cheaper" 자동 비교)
+// 충족용. 양쪽 method 결과가 wire에 같이 와서 토글 없이도 자동 비교.
+// masked면 카드 전체에 BlurOverlay (premium 전용 카드).
+function MethodComparisonCard({
+  comparison,
+  selected,
+  masked,
+}: {
+  comparison: {
+    fifo: { netPnL: number; tax: number };
+    ma: { netPnL: number; tax: number };
+  };
+  selected: 'fifo' | 'ma';
+  masked: boolean;
+}) {
+  const fifoTax = comparison.fifo.tax;
+  const maTax = comparison.ma.tax;
+  // 세금 기준 비교 (납부세액 작은 쪽이 유리). 동률이면 cheaper=null.
+  const cheaper: 'fifo' | 'ma' | null =
+    fifoTax === maTax ? null : fifoTax < maTax ? 'fifo' : 'ma';
+  const diff = Math.abs(fifoTax - maTax);
+
+  // 양쪽 모두 세금 0이면 비교 의미 없음 (공제 이하 또는 손실).
+  const bothZero = fifoTax === 0 && maTax === 0;
+
+  return (
+    <Card padding="lg" className="mb-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-[16px] font-bold text-ink">
+          FIFO vs 이동평균법 자동 비교
+        </h2>
+        <Pill tone="brand" size="sm">
+          PREMIUM
+        </Pill>
+      </div>
+      <BlurOverlay masked={masked}>
+        <div className="grid grid-cols-2 gap-3">
+          {(['fifo', 'ma'] as const).map((m) => {
+            const data = comparison[m];
+            const isSelected = m === selected;
+            const isCheaper = m === cheaper;
+            return (
+              <div
+                key={m}
+                className={
+                  'rounded-lg border p-4 transition-colors ' +
+                  (isCheaper
+                    ? 'border-good/50 bg-good-soft'
+                    : 'border-line bg-card-2')
+                }
+              >
+                <div className="mb-1 flex items-center gap-1.5">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-2">
+                    {m === 'fifo' ? '선입선출법 (FIFO)' : '이동평균법 (MA)'}
+                  </div>
+                  {isSelected && (
+                    <Pill tone="brand" size="sm">
+                      현재
+                    </Pill>
+                  )}
+                  {isCheaper && !bothZero && (
+                    <Pill tone="good" size="sm">
+                      유리
+                    </Pill>
+                  )}
+                </div>
+                <div className="num mt-2 text-[20px] font-extrabold tracking-tighter3 text-ink">
+                  {formatKrw(data.tax)}
+                </div>
+                <div className="mt-1 text-[11px] text-muted">
+                  순손익 {formatKrw(data.netPnL)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 text-[12.5px] leading-[1.6] text-ink-2">
+          {bothZero ? (
+            <span className="text-muted">
+              두 방식 모두 과세표준이 0이라 납부세액이 같습니다 (공제 ₩2.5M
+              이내 또는 손실).
+            </span>
+          ) : cheaper === null ? (
+            <span className="text-muted">
+              두 방식의 납부세액이 동일합니다.
+            </span>
+          ) : (
+            <>
+              <strong className="text-good">
+                {cheaper === 'fifo' ? '선입선출법' : '이동평균법'}
+              </strong>
+              이 <strong className="text-good">{formatKrw(diff)}</strong> 더
+              유리합니다.{' '}
+              {cheaper !== selected && (
+                <Link
+                  href="/tax/settings"
+                  className="font-semibold text-brand hover:underline"
+                >
+                  방식 변경 →
+                </Link>
+              )}
+            </>
+          )}
+        </div>
+      </BlurOverlay>
+    </Card>
+  );
+}
+
 // P1 #10: 이월 보유 자산 — 신고 연도 종료 시점 잔여 lots.
 function HoldingsAfterTable({
   holdings,
@@ -613,6 +722,26 @@ export default function TaxPage() {
           />
         </BlurOverlay>
       </div>
+
+      {/* v2 #1: FIFO vs MA 자동 비교 카드 (마케팅 약속 충족) */}
+      {result.methodComparison && (
+        <div className="mt-6">
+          <MethodComparisonCard
+            comparison={{
+              fifo: {
+                netPnL: result.methodComparison.fifo.netPnL,
+                tax: result.methodComparison.fifo.tax,
+              },
+              ma: {
+                netPnL: result.methodComparison.ma.netPnL,
+                tax: result.methodComparison.ma.tax,
+              },
+            }}
+            selected={result.methodComparison.selected}
+            masked={masked}
+          />
+        </div>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
         {/* Calc flow */}
