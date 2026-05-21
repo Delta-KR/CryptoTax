@@ -1,19 +1,16 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Pill } from '@/components/ui/Pill';
 import { HoverCard } from '@/components/ui/HoverCard';
-import { plans, getCurrentPlan, type PlanId } from '@/lib/mock/billing';
+import { plans, type PlanId } from '@/lib/mock/billing';
+import { useCurrentUser } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 export default function BillingPage() {
-  const [current, setCurrent] = useState<PlanId>('free');
-
-  useEffect(() => {
-    setCurrent(getCurrentPlan());
-  }, []);
+  const { user, loading: userLoading } = useCurrentUser();
+  const current: PlanId = user?.plan ?? 'free';
 
   return (
     <>

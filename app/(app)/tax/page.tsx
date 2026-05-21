@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -17,6 +17,9 @@ import {
   TableHeaderCell,
 } from '@/components/ui/Table';
 import { useToast } from '@/components/ui/Toast';
+import { useCurrentUser } from '@/lib/auth';
+import { calculateTaxFromFiles } from '@/app/actions/calculate';
+import { loadSession, replaceCalculation } from '@/lib/storage/session';
 import { getTransactions, type Transaction } from '@/lib/mock/transactions';
 import {
   calculateTax,
@@ -512,9 +515,12 @@ function BlurOverlay({
 
 export default function TaxPage() {
   const toast = useToast();
+  const { user } = useCurrentUser();
   const [year, setYear] = useState(2027);
   const [method, setMethod] = useState<TaxMethod>('fifo');
   const [txs, setTxs] = useState<Transaction[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const recalcTriggered = useRef(false);
 
   useEffect(() => {
     setMethod(getTaxMethod());
@@ -523,8 +529,31 @@ export default function TaxPage() {
 
   const result = useMemo(
     () => calculateTax(txs, method, year),
-    [txs, method, year]
+    [txs, method, year, refreshKey]
   );
+
+  useEffect(() => {
+    if (recalcTriggered.current) return;
+    if (!user || user.plan !== 'premium') return;
+    if (!result.masked) return;
+
+    const session = loadSession();
+    if (!session?.allParsed?.length) return;
+
+    recalcTriggered.current = true;
+
+    const formData = new FormData();
+    formData.append('previousParsed', JSON.stringify(session.allParsed));
+    formData.append('method', method);
+
+    calculateTaxFromFiles(formData).then((res) => {
+      if (res.ok) {
+        replaceCalculation(res.payload);
+        setTxs(getTransactions());
+        setRefreshKey((k) => k + 1);
+      }
+    });
+  }, [user, result.masked, method]);
 
   const masked = result.masked;
 
