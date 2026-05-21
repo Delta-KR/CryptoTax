@@ -176,8 +176,13 @@ export async function calculateTaxFromFiles(
   try {
     const rawFiles = formData.getAll('files');
     const files = rawFiles.filter((f): f is File => f instanceof File);
+    const previousJson = formData.get('previousParsed');
+    const hasPrevious =
+      typeof previousJson === 'string' && previousJson.length > 0;
 
-    const filesCheck = validateFileList(files);
+    const filesCheck = validateFileList(files, {
+      allowEmpty: hasPrevious,
+    });
     if (!filesCheck.ok) {
       return {
         ok: false,
@@ -185,8 +190,6 @@ export async function calculateTaxFromFiles(
         errorType: 'unsupported',
       };
     }
-
-    const previousJson = formData.get('previousParsed');
     let previous: ParsedTransaction[] = [];
     if (typeof previousJson === 'string' && previousJson.length > 0) {
       if (previousJson.length > MAX_PREV_STRING) {

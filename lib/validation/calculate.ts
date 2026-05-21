@@ -23,8 +23,11 @@ export interface FileValidationResult {
   error?: string;
 }
 
-export function validateFileList(files: File[]): FileValidationResult {
-  if (files.length === 0) {
+export function validateFileList(
+  files: File[],
+  options?: { allowEmpty?: boolean },
+): FileValidationResult {
+  if (files.length === 0 && !options?.allowEmpty) {
     return { ok: false, error: '파일이 첨부되지 않았습니다.' };
   }
   if (files.length > MAX_FILES) {
