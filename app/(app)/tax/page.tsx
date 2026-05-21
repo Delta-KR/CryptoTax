@@ -1115,8 +1115,16 @@ export default function TaxPage() {
                 : 'border-line bg-card-2')
             }
           >
-            <div className="mb-1 font-semibold text-ink-2">
-              의제취득가액 시가 ({result.deemedCostSource.deemedDate} 기준)
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <span className="font-semibold text-ink-2">
+                의제취득가액 시가 ({result.deemedCostSource.deemedDate} 기준)
+              </span>
+              <Link
+                href="/tax/deemed-cost"
+                className="nowrap text-[11.5px] font-semibold text-brand hover:underline"
+              >
+                직접 입력 →
+              </Link>
             </div>
             {result.deemedCostSource.realCoins.length > 0 && (
               <div className="text-muted">
