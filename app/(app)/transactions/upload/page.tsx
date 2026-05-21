@@ -123,31 +123,29 @@ export default function UploadPage() {
         'success',
       );
 
-      // warnings는 전체 누적 세션의 진단 결과. 이번 업로드와 무관한 이전 데이터의
-      // warning이 첫 번째에 있으면 사용자는 "방금 올린 파일의 결과"로 오해할 수 있음.
-      // 이번 업로드에 등장한 코인의 warning을 우선 표시하고, 그게 없으면 이전 누적임을
-      // 명시한 prefix로 표시.
+      // warnings는 전체 누적 세션의 진단 결과. 종류별 처리:
+      //  - 환율 fallback / 중복 제거 / 의제취득가액 추정치: 항상 현재 계산 결과 → 그대로
+      //  - orphan warning ("COIN 매도 N건의 매수 기록이 없습니다..."): 누적 데이터의
+      //    상태. 이번 업로드 코인과 무관하면 이전 업로드 잔여임을 명시.
       const warnings = payload.result.warnings;
       if (warnings.length > 0) {
         const newCoins = new Set(
           payload.newParsed.map((t) => t.coin),
         );
-        // orphan warning은 "COIN 매도 N건..." 형태로 코인명 + 공백으로 시작.
-        // 의제취득가액 warning은 "의제취득가액 추정치 적용: BTC, USDT..." 형태.
-        const involvesNewCoin = (w: string) =>
-          Array.from(newCoins).some(
-            (coin) =>
-              w.startsWith(`${coin} `) || w.includes(`: ${coin}`) || w.includes(`, ${coin}`),
-          );
-        const fromThisUpload = warnings.find(involvesNewCoin);
-        if (fromThisUpload) {
-          toast.show(fromThisUpload, 'info');
-        } else {
-          toast.show(
-            `이전 업로드 누적 진단 — ${warnings[0]}`,
-            'info',
-          );
-        }
+        const ORPHAN_RE = /^([A-Z0-9]+) 매도 \d+건의 매수 기록이 없습니다/;
+        const labelWarning = (w: string): string => {
+          const m = w.match(ORPHAN_RE);
+          if (!m) return w; // orphan이 아니면 그대로
+          const coin = m[1];
+          return newCoins.has(coin) ? w : `이전 업로드 누적 진단 — ${w}`;
+        };
+
+        // 이번 업로드 코인 관련 warning을 우선 표시. 없으면 첫 번째 그대로 (라벨링 적용).
+        const fromThisUpload =
+          warnings.find(
+            (w) => !ORPHAN_RE.test(w) || newCoins.has(w.match(ORPHAN_RE)![1]),
+          ) ?? warnings[0];
+        toast.show(labelWarning(fromThisUpload), 'info');
       }
     } catch (err) {
       window.clearInterval(tick);
