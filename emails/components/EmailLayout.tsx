@@ -14,7 +14,8 @@ import {
 import { Fragment, type ReactNode } from 'react';
 import { colors, fontStack, layout } from './tokens';
 import {
-  KONTAXT_LOGO_DATA_URL,
+  KONTAXT_LOGO_LIGHT_URL,
+  KONTAXT_LOGO_DARK_URL,
   KONTAXT_LOGO_HEIGHT,
   KONTAXT_LOGO_WIDTH,
 } from './kontaxt-logo';
@@ -58,6 +59,10 @@ const headStyles = `
     overflow-wrap: normal;
   }
 
+  /* 라이트/다크 로고 분기 — Apple Mail 등 CSS filter 미지원 클라이언트 대응 */
+  .logo-light { display: block; }
+  .logo-dark { display: none; }
+
   @media (prefers-color-scheme: dark) {
     body, .page-bg { background-color: ${colors.darkBg} !important; }
     .card { background-color: ${colors.darkCardBg} !important; border-color: ${colors.darkCardBorder} !important; }
@@ -67,7 +72,8 @@ const headStyles = `
     .muted-2 { color: ${colors.darkMuted2} !important; }
     .fallback-link { color: ${colors.brandDark} !important; }
     .email-var { color: ${colors.darkInk} !important; }
-    .logo-dark-invert { filter: brightness(0) invert(1) !important; }
+    .logo-light { display: none !important; }
+    .logo-dark { display: block !important; }
   }
 
   @media only screen and (max-width: 560px) {
@@ -104,20 +110,36 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
             margin: '0 auto',
           }}
         >
-          {/* Logo */}
+          {/* Logo — 라이트/다크 두 PNG 를 미디어쿼리로 표시 분기.
+              CSS filter 가 일부 메일 클라이언트(특히 Apple Mail) 에서 작동
+              안 하는 이슈 우회. */}
           <Section style={{ padding: '48px 24px 24px 24px' }}>
             <Link
               href="https://kontaxt.kr"
               style={{ textDecoration: 'none', lineHeight: 0, display: 'inline-block' }}
             >
               <Img
-                src={KONTAXT_LOGO_DATA_URL}
+                src={KONTAXT_LOGO_LIGHT_URL}
                 alt="kontaxt."
                 width={KONTAXT_LOGO_WIDTH}
                 height={KONTAXT_LOGO_HEIGHT}
-                className="logo-dark-invert"
+                className="logo-light"
                 style={{
                   display: 'block',
+                  border: 0,
+                  outline: 'none',
+                  height: 'auto',
+                  width: `${KONTAXT_LOGO_WIDTH}px`,
+                }}
+              />
+              <Img
+                src={KONTAXT_LOGO_DARK_URL}
+                alt="kontaxt."
+                width={KONTAXT_LOGO_WIDTH}
+                height={KONTAXT_LOGO_HEIGHT}
+                className="logo-dark"
+                style={{
+                  display: 'none',
                   border: 0,
                   outline: 'none',
                   height: 'auto',
