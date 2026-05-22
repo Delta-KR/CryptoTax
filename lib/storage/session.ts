@@ -7,6 +7,7 @@ import type {
   TaxResultWire,
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
+import { saveSnapshot } from '@/app/actions/user-data';
 
 // 거래 데이터는 현재 localStorage 보관 (Phase 7 결제 출시 후 DB 이전 예정).
 // 같은 브라우저에서 계정 전환 시 데이터 섞임 방지를 위해 user_id 별로 키 분리.
@@ -62,7 +63,8 @@ export interface SessionData {
 
 // localStorage는 XSS 또는 사용자 손상 시 임의 데이터가 들어올 수 있음.
 // 서버 검증 스키마를 재사용해 corrupted/주입 데이터를 격리.
-const sessionSchema = z.object({
+// server action (app/actions/user-data.ts) 도 동일 schema 로 server-side validate.
+export const sessionSchema = z.object({
   allParsed: z.array(z.record(z.unknown())).max(50_000),
   allUnified: reportRequestSchema.shape.transactions,
   result: reportRequestSchema.shape.result,
@@ -106,12 +108,28 @@ export function loadSession(): SessionData | null {
   }
 }
 
-export function saveSession(data: SessionData): void {
+export interface SaveSessionOptions {
+  /** server 동기 skip. server snapshot 으로부터 saveSession 호출 시 사용.
+   * (그렇지 않으면 loadSnapshot → saveSession → saveSnapshot 사이클 발생) */
+  skipServerSync?: boolean;
+}
+
+export function saveSession(
+  data: SessionData,
+  options: SaveSessionOptions = {},
+): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(getKey(), JSON.stringify(data));
   } catch {
     // QuotaExceededError 등 — 무시.
+  }
+  // server-side 백업 — 로그인 사용자만, fire-and-forget.
+  // anonymous (비로그인) 키 사용 중이거나 skipServerSync 면 skip.
+  if (!options.skipServerSync && currentUserId) {
+    void saveSnapshot(data).catch((err) => {
+      console.warn('[session] server snapshot save failed:', err);
+    });
   }
 }
 
