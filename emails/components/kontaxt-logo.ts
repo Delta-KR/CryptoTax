@@ -1,26 +1,13 @@
-// Base64로 인라인 임베드된 Kontaxt 워드마크.
-// 외부 호스팅(`https://kontaxt.kr/logo.svg`)이 메일 클라이언트에서 잘 보이지 않는
-// 이슈를 피하기 위해 data URL로 직접 박아 어디서나 표시되도록 한다.
+// Kontaxt 워드마크 로고 — 메일 클라이언트 호환을 위해 외부 URL 호스팅.
 //
-// 다크모드는 `filter: brightness(0) invert(1)` 로 자동 반전 (검은 워드마크 → 흰색).
+// 이전엔 data URL base64 인라인 임베드였으나, Apple Mail 신버전(macOS Sonoma+)이
+// 보안상 `data:` URL 이미지를 차단하는 문제 발견 (2026-05-23 prod 발송 테스트).
+// 외부 URL 호스팅 (public/kontaxt-logo.png) 으로 전환하되, Apple Mail 외부
+// 이미지 자동 차단 시 사용자가 "사진 로드" 한 번 클릭 → 신뢰 발신자 등록 →
+// 이후 자동 표시되도록 둠. 트랜잭셔널 메일 표준 동작.
 //
-// 원본 자산: emails/assets/kontaxt-logo.b64.txt (PNG 워드마크)
-// 빌드/런타임: Node 환경에서 fs.readFileSync로 동기 로드. React Email render는
-// 항상 server context이므로 OK. 테스트 환경(vitest)에서도 fs 사용 가능.
+// 다크모드 자동 반전은 `filter: brightness(0) invert(1)` CSS 로 처리 (EmailLayout).
 
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-let _cache: string | null = null;
-
-function loadLogoBase64(): string {
-  if (_cache) return _cache;
-  const path = join(process.cwd(), 'emails/assets/kontaxt-logo.b64.txt');
-  const raw = readFileSync(path, 'utf-8').replace(/\s+/g, '');
-  _cache = `data:image/png;base64,${raw}`;
-  return _cache;
-}
-
-export const KONTAXT_LOGO_DATA_URL = loadLogoBase64();
+export const KONTAXT_LOGO_DATA_URL = 'https://kontaxt.kr/kontaxt-logo.png';
 export const KONTAXT_LOGO_WIDTH = 120;
 export const KONTAXT_LOGO_HEIGHT = 25;
