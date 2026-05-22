@@ -30,6 +30,9 @@ export interface TaxCalculatorInput {
   year: number;
   deemedCostPrices?: Map<string, number>;
   method?: TaxMethod;
+  // 시행령 §88④⑤ — 필요경비 의제 50% 적용 코인 (코인 단위 통째).
+  // 적용 코인은 모든 매도가액의 50%를 필요경비로 의제. 시가 의제·평균단가·부대비용 모두 무시.
+  imputedExpenseCoins?: Set<string>;
 }
 
 interface ConsumeOutcome {
@@ -166,6 +169,31 @@ function formatOrphanAmount(n: number): string {
   return n.toLocaleString('ko-KR', { maximumFractionDigits: 8 });
 }
 
+// 시행령 §88④⑤ — 필요경비 의제 50%. 적용 코인의 매도는 매도가액의 50%가 필요경비로 의제.
+// 별도 부대비용 인정 안 함 (§88⑤). lot 추적 없음, 평균단가 무시.
+export function buildImputedRealizedGain(tx: UnifiedTransaction): RealizedGain {
+  const half = roundKRW(tx.totalKRW * 0.5);
+  return {
+    id: uuid(),
+    coin: tx.coin,
+    sellDate: tx.date,
+    sellAmount: tx.amount,
+    proceedsKRW: tx.totalKRW,
+    costBasisKRW: half,
+    sellFeeKRW: 0, // 부대비용 불인정
+    buyFeeKRW: 0,
+    pnlKRW: half, // = totalKRW - costBasis (50%)
+    exchange: tx.exchange,
+    consumedLots: [],
+  };
+}
+
+export function buildImputedWarning(coins: string[]): string {
+  const sorted = [...coins].sort();
+  const list = sorted.length <= 3 ? sorted.join(', ') : `${sorted.slice(0, 3).join(', ')} 외 ${sorted.length - 3}개`;
+  return `필요경비 의제 50% 적용 (시행령 §88④⑤): ${list}. 적용 코인의 매도는 매도가액의 50%가 양도소득. 평균단가·부대비용 무시.`;
+}
+
 function buildOrphanWarning(coin: string, info: OrphanInfo): string {
   const exchanges = Array.from(info.exchanges).sort();
   const exchangeStr =
@@ -197,8 +225,19 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
   const realizedGains: RealizedGain[] = [];
   const warnings: string[] = [];
   const orphans = new Map<string, OrphanInfo>();
+  const imputed = input.imputedExpenseCoins ?? new Set<string>();
+  const imputedSeen = new Set<string>();
 
   for (const tx of input.transactions) {
+    // 시행령 §88④⑤ — 의제 코인은 매수 무시(lot 추적 X), 매도는 별도 처리
+    if (imputed.has(tx.coin)) {
+      imputedSeen.add(tx.coin);
+      if (tx.type === 'SELL' && kstYear(tx.date) === input.year) {
+        realizedGains.push(buildImputedRealizedGain(tx));
+      }
+      continue;
+    }
+
     if (tx.type === 'BUY') {
       engine.addLot(tx.coin, makeLot(tx, input.deemedCostPrices, warnings));
     } else if (tx.type === 'SELL') {
@@ -250,6 +289,10 @@ export function calculateTax(input: TaxCalculatorInput): TaxResult {
 
   for (const [coin, info] of orphans) {
     warnings.push(buildOrphanWarning(coin, info));
+  }
+
+  if (imputedSeen.size > 0) {
+    warnings.push(buildImputedWarning(Array.from(imputedSeen)));
   }
 
   let totalGain = 0;

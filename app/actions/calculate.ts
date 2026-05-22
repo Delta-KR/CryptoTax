@@ -167,6 +167,20 @@ async function resolveDeemedCostPrices(
   };
 }
 
+// 시행령 §88④⑤ — 사용자가 토글한 필요경비 의제 50% 적용 코인. RLS로 본인 row만 반환.
+// 테이블이 prod에 아직 없는 경우(마이그레이션 미적용) 빈 Set로 fallback.
+async function resolveImputedExpenseCoins(): Promise<Set<string>> {
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('user_imputed_expense_coins')
+    .select('coin');
+  if (error) {
+    console.error('[resolveImputedExpenseCoins] error:', error);
+    return new Set();
+  }
+  return new Set((data ?? []).map((r: { coin: string }) => r.coin));
+}
+
 function parsedToWire(tx: ParsedTransaction): ParsedTransactionWire {
   return { ...tx, date: tx.date.toISOString() };
 }
@@ -309,15 +323,18 @@ export async function calculateTaxFromFiles(
       }
     }
     const deemedRes = await resolveDeemedCostPrices(preCoinsSet);
+    const imputedExpenseCoins = await resolveImputedExpenseCoins();
 
     const year = currentTargetYear();
     // 거주자 단일 method 계산 (시행령 §88① 총평균법 디폴트). v2 #1 듀얼 계산은 법령 정립
     // 결과 폐기 — 거주자에게 FIFO/MA는 비표준이라 비교 무의미.
+    // imputedExpenseCoins(§88④⑤): 사용자가 토글한 코인은 매도가액의 50%가 필요경비로 의제.
     const result = calculateTax({
       transactions: unified,
       year,
       deemedCostPrices: deemedRes.prices,
       method,
+      imputedExpenseCoins,
     });
 
     const plan = await getUserPlan();

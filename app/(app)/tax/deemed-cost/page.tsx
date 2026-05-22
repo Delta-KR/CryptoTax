@@ -21,6 +21,10 @@ import {
   saveUserDeemedCostOverride,
   deleteUserDeemedCostOverride,
 } from '@/app/actions/deemed-cost';
+import {
+  saveImputedExpenseCoin,
+  deleteImputedExpenseCoin,
+} from '@/app/actions/imputed-expense';
 
 const DEEMED_DATE = '2026-12-31';
 
@@ -64,11 +68,28 @@ function extractPreDeemedCoins(): string[] {
   return Array.from(set).sort();
 }
 
+// 시행령 §88④⑤ — 필요경비 의제 토글 대상 코인 (사용자 거래내역의 모든 코인).
+// 의제 적용 여부는 사용자가 코인 단위로 결정 — "동종 가상자산 전체에 적용" (§88⑤).
+function extractAllTradedCoins(): string[] {
+  const session = loadSession();
+  if (!session?.allParsed) return [];
+  const set = new Set<string>();
+  for (const tx of session.allParsed) {
+    if (tx.type !== 'BUY' && tx.type !== 'SELL') continue;
+    set.add(tx.coin);
+  }
+  return Array.from(set).sort();
+}
+
 export default function DeemedCostPage() {
   const toast = useToast();
   const { user, loading: userLoading } = useCurrentUser();
   const [rows, setRows] = useState<CoinRowState[]>([]);
   const [loading, setLoading] = useState(true);
+  // 시행령 §88④⑤ — 필요경비 의제 50% 적용 코인 (사용자 토글)
+  const [imputedCoins, setImputedCoins] = useState<Set<string>>(new Set());
+  const [allTradedCoins, setAllTradedCoins] = useState<string[]>([]);
+  const [togglingImputed, setTogglingImputed] = useState<string | null>(null);
 
   const isFree = !userLoading && user?.plan !== 'premium';
 
@@ -77,12 +98,26 @@ export default function DeemedCostPage() {
     let cancelled = false;
     (async () => {
       const coins = extractPreDeemedCoins();
+      const tradedCoins = extractAllTradedCoins();
+      setAllTradedCoins(tradedCoins);
+
+      const supabase = createSupabaseBrowserClient();
+      // 필요경비 의제 코인 조회 — 거래내역과 무관하게 사용자가 적용 중인 코인 모두 가져옴.
+      const imputedRes = await supabase
+        .from('user_imputed_expense_coins')
+        .select('coin');
+      if (!cancelled) {
+        const set = new Set<string>(
+          (imputedRes.data ?? []).map((r: { coin: string }) => r.coin),
+        );
+        setImputedCoins(set);
+      }
+
       if (coins.length === 0) {
         setRows([]);
         setLoading(false);
         return;
       }
-      const supabase = createSupabaseBrowserClient();
       const [globalRes, overrideRes] = await Promise.all([
         supabase
           .from('deemed_cost_snapshots')
@@ -175,6 +210,31 @@ export default function DeemedCostPage() {
     );
     toast.show(
       `${coin} 의제취득가액 저장됨. 세금 계산 페이지에서 자동 재계산됩니다.`,
+      'success',
+    );
+  }
+
+  async function handleToggleImputed(coin: string, nextActive: boolean) {
+    setTogglingImputed(coin);
+    const res = nextActive
+      ? await saveImputedExpenseCoin(coin)
+      : await deleteImputedExpenseCoin(coin);
+    if (!res.ok) {
+      toast.show(res.error ?? '저장 실패', 'error');
+      setTogglingImputed(null);
+      return;
+    }
+    setImputedCoins((prev) => {
+      const next = new Set(prev);
+      if (nextActive) next.add(coin);
+      else next.delete(coin);
+      return next;
+    });
+    setTogglingImputed(null);
+    toast.show(
+      nextActive
+        ? `${coin} 필요경비 의제 50% 적용됨. 세금 계산 페이지에서 자동 재계산됩니다.`
+        : `${coin} 필요경비 의제 해제됨. 일반 계산으로 복귀합니다.`,
       'success',
     );
   }
@@ -330,6 +390,77 @@ export default function DeemedCostPage() {
                       </Button>
                     )}
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+
+      {/* 필요경비 의제 50% (시행령 §88④⑤) — 의제취득가액과는 별개의 fallback 영역 */}
+      <Card padding="lg" className="mt-6">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[16px] font-bold text-ink">필요경비 의제 50%</h2>
+            <p className="mt-0.5 text-[12.5px] text-muted">
+              취득가액 입증이 곤란한 코인은 양도가액의 50%를 필요경비로 의제합니다.
+            </p>
+          </div>
+          <Pill tone="warn" size="sm">
+            시행령 §88④⑤
+          </Pill>
+        </div>
+
+        <div className="mb-4 rounded-md border border-line bg-bg-soft px-4 py-3 text-[12.5px] leading-[1.65] text-ink-2">
+          <strong className="text-ink">적용 조건</strong> (시행령 §88④):
+          <ul className="ml-5 mt-1 list-disc space-y-0.5 text-muted">
+            <li>
+              가상자산사업자(거래소)를 통하지 않고 취득 + 장부·증명서류로 실제
+              취득가액 확인 불가
+            </li>
+            <li>그 밖에 국세청장이 정하여 고시하는 사유</li>
+          </ul>
+          <div className="mt-2 text-[11.5px] text-bad">
+            ⚠ 적용 시 그 코인 전체 매도가액의 50%가 양도소득. 평균단가·시가
+            의제·부대비용 모두 무시됩니다. 적용은 사용자 책임 하에 결정합니다.
+          </div>
+        </div>
+
+        {allTradedCoins.length === 0 ? (
+          <p className="px-2 py-8 text-center text-[13px] text-muted">
+            거래내역이 없습니다. 거래내역을 업로드하면 여기에 표시됩니다.
+          </p>
+        ) : (
+          <div className="flex flex-col divide-y divide-line-2">
+            {allTradedCoins.map((coin) => {
+              const active = imputedCoins.has(coin);
+              const isToggling = togglingImputed === coin;
+              return (
+                <div
+                  key={coin}
+                  className="grid grid-cols-[120px_1fr_auto] items-center gap-3 py-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-[14px] font-bold text-ink">{coin}</span>
+                    {active && (
+                      <Pill tone="warn" size="sm">
+                        의제 50%
+                      </Pill>
+                    )}
+                  </div>
+                  <span className="text-[12px] text-muted">
+                    {active
+                      ? '매도가액 × 50%로 손익 산정 (평균단가·시가 의제 무시)'
+                      : '일반 계산 적용 (총평균법 또는 선택된 방식)'}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant={active ? 'secondary' : 'primary'}
+                    onClick={() => handleToggleImputed(coin, !active)}
+                    disabled={isFree || isToggling}
+                  >
+                    {isToggling ? '저장 중…' : active ? '해제' : '의제 적용'}
+                  </Button>
                 </div>
               );
             })}
