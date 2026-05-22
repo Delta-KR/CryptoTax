@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kontaxt — Email Templates Preview</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css" />
+  <style>
+    :root {
+      --bg: #FAFBFD;
+      --card: #FFFFFF;
+      --line: #E6EAF0;
+      --line2: #EEF1F6;
+      --ink: #0B1220;
+      --ink2: #1F2937;
+      --muted: #5C6678;
+      --muted2: #8A93A4;
+      --brand: #2563EB;
+      --brand-soft: #EEF4FF;
+      --brand-faint: #F5F8FF;
+      --bg-tint: #F4F7FB;
+      --bad: #DC2626;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      padding: 40px 20px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .toc {
+      max-width: 600px;
+      margin: 0 auto 40px;
+      padding: 20px 24px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .toc h1 { margin: 0 0 12px; font-size: 18px; font-weight: 700; }
+    .toc p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .toc a {
+      display: inline-block;
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--ink2);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .toc a:hover { background: var(--bg-tint); }
+
+    .email-frame {
+      max-width: 600px;
+      margin: 0 auto 60px;
+      background: var(--bg);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .email-label {
+      max-width: 600px;
+      margin: 0 auto 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      color: var(--muted2);
+      text-transform: uppercase;
+    }
+
+    /* Email-internal styles (mirrors tokens.ts) */
+    .e-container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .e-logo {
+      display: block;
+      font-family: Pretendard, sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+      text-decoration: none;
+      padding-bottom: 24px;
+    }
+    .e-logo .dot { color: var(--brand); }
+    .e-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 32px 32px;
+    }
+    .e-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin: 0 0 12px 0;
+    }
+    .e-eyebrow.muted { color: var(--muted); font-size: 10px; letter-spacing: 0.14em; }
+    .e-eyebrow.bad { color: var(--bad); font-size: 10px; letter-spacing: 0.14em; }
+    .e-h1 {
+      font-size: 24px;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      color: var(--ink);
+      margin: 0;
+    }
+    .e-sub-en {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--muted);
+      margin: 6px 0 0 0;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    .e-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--ink2);
+      margin: 0;
+    }
+    .e-body-en {
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+      margin: 4px 0 0 0;
+    }
+    .e-btn {
+      display: inline-block;
+      background: var(--brand);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      line-height: 1;
+      letter-spacing: -0.005em;
+    }
+    .e-link {
+      font-size: 12px;
+      color: var(--brand);
+      word-break: break-all;
+      text-decoration: underline;
+    }
+    .e-small {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted2);
+      margin: 0;
+    }
+    .e-divider {
+      border-top: 1px solid var(--line2);
+      margin: 28px 0 20px 0;
+    }
+    .e-trust {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted2);
+      text-align: center;
+      margin: 20px 0 12px 0;
+    }
+    .e-trust-en { font-size: 11px; margin-top: 4px; }
+    .e-footer {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      margin: 0;
+    }
+    .e-footer-sub {
+      font-size: 11px;
+      color: var(--muted2);
+      text-align: center;
+      margin: 6px 0 0 0;
+    }
+    .e-footer a { color: var(--brand); text-decoration: none; }
+
+    /* Welcome-specific */
+    .e-dday {
+      background: var(--brand-faint);
+      border: 1px solid var(--brand-soft);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 8px 0 28px;
+    }
+    .e-dday-eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin: 0 0 6px;
+    }
+    .e-dday-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      margin: 0;
+    }
+    .e-dday-en {
+      font-size: 12px;
+      color: var(--muted);
+      margin: 2px 0 0 0;
+    }
+    .e-step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .e-step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 28px;
+      text-align: center;
+    }
+    .e-step-title { font-size: 15px; font-weight: 600; color: var(--ink); margin: 2px 0 2px 0; }
+    .e-step-sub { font-size: 13px; color: var(--muted); margin: 0; }
+    .e-step-en { font-size: 12px; color: var(--muted2); margin: 2px 0 0 0; }
+
+    /* Reset password — request info card */
+    .e-req-card {
+      background: var(--bg-tint);
+      border: 1px solid var(--line2);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 24px;
+    }
+    .e-req-card .row { font-size: 13px; line-height: 1.5; color: var(--ink2); margin: 0; }
+  </style>
+</head>
+<body>
+  <nav class="toc">
+    <h1>Kontaxt — Email Templates Preview</h1>
+    <p>Resend로 발송할 3종 트랜잭셔널 메일 정적 미리보기. 실제 발송 시에는 <code>emails/*.tsx</code> 컴포넌트가 사용됩니다.</p>
+    <a href="#verify">이메일 인증</a>
+    <a href="#reset">비밀번호 재설정</a>
+    <a href="#welcome">환영 메일</a>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- 1. VERIFY EMAIL                                              -->
+  <!-- ============================================================ -->
+  <div id="verify" class="email-label">1 · 이메일 인증 (verify-email.tsx)</div>
+  <div class="email-frame">
+    <div class="e-container">
+      <a href="#" class="e-logo">Kontaxt<span class="dot">.</span></a>
+      <div class="e-card">
+        <p class="e-eyebrow">EMAIL VERIFICATION</p>
+        <p class="e-h1">이메일 주소를 확인해 주세요.</p>
+        <p class="e-sub-en">Please verify your email.</p>
+
+        <div style="margin-top:24px;">
+          <p class="e-body">Kontaxt 가입을 시작하셨습니다. 아래 버튼을 눌러 이 이메일 주소가 본인 것인지 확인해 주세요.</p>
+          <p class="e-body-en">You started signing up for Kontaxt. Click the button below to confirm this email is yours.</p>
+        </div>
+
+        <div style="margin:24px 0;">
+          <a class="e-btn" href="#">이메일 인증하기 · Verify email</a>
+        </div>
+
+        <p class="e-small" style="color:var(--muted)">버튼이 작동하지 않으면 아래 주소를 브라우저에 직접 붙여넣어 주세요.</p>
+        <p class="e-small">If the button doesn&rsquo;t work, paste this URL into your browser.</p>
+        <p style="margin:8px 0 0 0;"><a class="e-link" href="#">https://kontaxt.app/auth/confirm?token=abc123...example</a></p>
+
+        <div class="e-divider"></div>
+
+        <p class="e-eyebrow muted">보안 안내 · SECURITY NOTE</p>
+        <p class="e-body">이 링크는 60분 후 만료됩니다. 만료된 후 다시 인증이 필요하다면 가입 화면에서 인증 메일을 다시 받을 수 있습니다.</p>
+        <p class="e-body-en">This link expires in 60 minutes. If it expires, request a new one from the signup screen.</p>
+        <p class="e-body" style="margin-top:12px;">본인이 Kontaxt에 가입한 적이 없다면 이 메일을 무시해 주세요. 누군가가 실수로 본인의 이메일 주소를 입력했을 가능성이 있습니다.</p>
+        <p class="e-body-en">If you didn&rsquo;t sign up for Kontaxt, you can safely ignore this email.</p>
+      </div>
+
+      <p class="e-trust">개인정보보호법(PIPA) 준수 · Cloudflare 보안 · 결제정보 비저장</p>
+      <p class="e-trust e-trust-en">PIPA compliant · Cloudflare security · No payment data stored</p>
+      <hr style="border:0;border-top:1px solid var(--line2);margin:16px 0;" />
+      <p class="e-footer"><strong style="color:var(--ink2)">Kontaxt</strong> · 가상자산 양도세 정산</p>
+      <p class="e-footer-sub">본 메일은 발신 전용입니다. 문의는 <a href="mailto:support@kontaxt.app">support@kontaxt.app</a></p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 2. RESET PASSWORD                                            -->
+  <!-- ============================================================ -->
+  <div id="reset" class="email-label">2 · 비밀번호 재설정 (reset-password.tsx)</div>
+  <div class="email-frame">
+    <div class="e-container">
+      <a href="#" class="e-logo">Kontaxt<span class="dot">.</span></a>
+      <div class="e-card">
+        <p class="e-eyebrow">PASSWORD RESET</p>
+        <p class="e-h1">비밀번호 재설정 요청을 받았습니다.</p>
+        <p class="e-sub-en">We received a password reset request.</p>
+
+        <div style="margin-top:24px;">
+          <p class="e-body">아래 버튼을 눌러 새 비밀번호를 설정해 주세요. 본인이 요청한 게 맞다면 이 한 단계로 끝납니다.</p>
+          <p class="e-body-en">Click the button below to set a new password. If you requested this, you&rsquo;re one step away.</p>
+        </div>
+
+        <div style="margin:24px 0;">
+          <a class="e-btn" href="#">비밀번호 재설정 · Reset password</a>
+        </div>
+
+        <p class="e-small" style="color:var(--muted)">버튼이 작동하지 않으면 아래 주소를 브라우저에 직접 붙여넣어 주세요.</p>
+        <p class="e-small">If the button doesn&rsquo;t work, paste this URL into your browser.</p>
+        <p style="margin:8px 0 0 0;"><a class="e-link" href="#">https://kontaxt.app/auth/reset?token=def456...example</a></p>
+
+        <div class="e-req-card">
+          <p class="e-eyebrow muted" style="margin-bottom:6px;">요청 정보 · REQUEST DETAILS</p>
+          <p class="row">IP: 211.234.56.78</p>
+          <p class="row">위치 · Location: Seoul, KR</p>
+        </div>
+
+        <div class="e-divider"></div>
+
+        <p class="e-eyebrow bad">본인이 요청하지 않았다면 · NOT YOU?</p>
+        <p class="e-body">이 요청을 본인이 한 게 아니라면 비밀번호를 변경하지 마시고, 이 메일을 무시해 주세요. 현재 비밀번호는 그대로 유효합니다.</p>
+        <p class="e-body-en">If you didn&rsquo;t request this, ignore this email — your current password stays unchanged.</p>
+        <p class="e-body" style="margin-top:12px;">다만 같은 요청이 반복되거나 모르는 기기에서 로그인이 의심된다면, 비밀번호를 즉시 변경하고 <a href="mailto:support@kontaxt.app" style="color:var(--brand);text-decoration:none;">support@kontaxt.app</a>으로 알려주세요.</p>
+        <p class="e-body-en">If these requests keep happening, change your password and email support@kontaxt.app.</p>
+        <p class="e-small" style="margin-top:16px;">이 링크는 30분 후 만료됩니다. · This link expires in 30 minutes.</p>
+      </div>
+
+      <p class="e-trust">개인정보보호법(PIPA) 준수 · Cloudflare 보안 · 결제정보 비저장</p>
+      <p class="e-trust e-trust-en">PIPA compliant · Cloudflare security · No payment data stored</p>
+      <hr style="border:0;border-top:1px solid var(--line2);margin:16px 0;" />
+      <p class="e-footer"><strong style="color:var(--ink2)">Kontaxt</strong> · 가상자산 양도세 정산</p>
+      <p class="e-footer-sub">본 메일은 발신 전용입니다. 문의는 <a href="mailto:support@kontaxt.app">support@kontaxt.app</a></p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- 3. WELCOME                                                   -->
+  <!-- ============================================================ -->
+  <div id="welcome" class="email-label">3 · 환영 메일 (welcome.tsx)</div>
+  <div class="email-frame">
+    <div class="e-container">
+      <a href="#" class="e-logo">Kontaxt<span class="dot">.</span></a>
+      <div class="e-card">
+        <p class="e-eyebrow">WELCOME TO KONTAXT</p>
+        <p class="e-h1">Kontaxt에 오신 것을 환영합니다.</p>
+        <p class="e-sub-en">Welcome to Kontaxt.</p>
+
+        <div style="margin-top:24px;">
+          <p class="e-body">복잡한 한국 가상자산 양도세를 정확히 계산해 드립니다. 거래소 파일을 올리면 손익 통산과 납부세액까지 한 번에.</p>
+          <p class="e-body-en">Kontaxt calculates Korean crypto capital-gains tax accurately. Upload your exchange files and get realized P&L and tax owed in one pass.</p>
+        </div>
+
+        <div class="e-dday">
+          <p class="e-dday-eyebrow">2027.01.01 시행</p>
+          <p class="e-dday-text">가상자산 양도소득 과세까지 D-237</p>
+          <p class="e-dday-en">D-237 until Korea&rsquo;s crypto capital-gains tax takes effect.</p>
+        </div>
+
+        <p class="e-eyebrow muted">시작하기 · GET STARTED</p>
+
+        <div class="e-step">
+          <div class="e-step-num">1</div>
+          <div>
+            <p class="e-step-title">거래소 파일 업로드</p>
+            <p class="e-step-sub">Upbit, Bithumb, Binance — PDF·XLS·CSV 그대로.</p>
+            <p class="e-step-en">Upload exchange files (Upbit, Bithumb, Binance) — PDF, XLS, CSV as-is.</p>
+          </div>
+        </div>
+        <div class="e-step">
+          <div class="e-step-num">2</div>
+          <div>
+            <p class="e-step-title">자동 정규화 + FIFO 계산</p>
+            <p class="e-step-sub">환율·SWAP·수수료를 한국 세법에 맞춰 처리합니다.</p>
+            <p class="e-step-en">Auto-normalize FX, swaps, fees per Korean tax code. FIFO cost basis.</p>
+          </div>
+        </div>
+        <div class="e-step">
+          <div class="e-step-num">3</div>
+          <div>
+            <p class="e-step-title">손익 대시보드 + 세무사용 PDF</p>
+            <p class="e-step-sub">250만원 공제·22% 세율 적용. 그대로 세무사에게 전달.</p>
+            <p class="e-step-en">Tax dashboard plus accountant-ready PDF. 2.5M KRW deduction · 22% rate.</p>
+          </div>
+        </div>
+
+        <div style="margin:32px 0 8px;">
+          <a class="e-btn" href="#">대시보드 열기 · Open dashboard</a>
+        </div>
+        <p class="e-small">신용카드 등록 없이 결제 전 미리보기 무료. · Free preview before any charge.</p>
+
+        <div class="e-divider"></div>
+
+        <p class="e-eyebrow muted">도움이 필요하면 · NEED HELP?</p>
+        <p class="e-body" style="font-size:14px;">
+          <a href="#" style="color:var(--brand);text-decoration:none;font-weight:500;">사용 가이드</a>
+          <span style="color:var(--muted2)"> · </span>
+          <a href="#" style="color:var(--brand);text-decoration:none;font-weight:500;">자주 묻는 질문</a>
+          <span style="color:var(--muted2)"> · </span>
+          <a href="mailto:support@kontaxt.app" style="color:var(--brand);text-decoration:none;font-weight:500;">support@kontaxt.app</a>
+        </p>
+        <p class="e-small" style="margin-top:4px;">User guide · FAQ · Direct support</p>
+      </div>
+
+      <p class="e-trust">개인정보보호법(PIPA) 준수 · Cloudflare 보안 · 결제정보 비저장</p>
+      <p class="e-trust e-trust-en">PIPA compliant · Cloudflare security · No payment data stored</p>
+      <hr style="border:0;border-top:1px solid var(--line2);margin:16px 0;" />
+      <p class="e-footer"><strong style="color:var(--ink2)">Kontaxt</strong> · 가상자산 양도세 정산</p>
+      <p class="e-footer-sub">본 메일은 발신 전용입니다. 문의는 <a href="mailto:support@kontaxt.app">support@kontaxt.app</a></p>
+    </div>
+  </div>
+</body>
+</html>

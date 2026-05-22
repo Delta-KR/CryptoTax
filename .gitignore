@@ -7,3 +7,9 @@ node_modules
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+
+# Email build output — regenerated via `npm run email:build`
+/emails/dist
+
+# Secrets / personal — never commit
+recovery-codes.txt
