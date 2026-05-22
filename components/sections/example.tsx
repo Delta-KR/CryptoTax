@@ -1,25 +1,18 @@
-'use client';
-import { useState } from 'react';
 import { SectionEyebrow } from '@/components/ui/section-heading';
 import { CoinIcon } from '@/components/ui/CoinIcon';
-
-type Method = 'fifo' | 'avg';
 
 interface Item {
   coin: string;
   name: string;
-  // FIFO와 이동평균은 분할매수 lot이 있을 때 차익이 달라짐.
-  // 데모용으로 BTC만 분할매수(저가→고가) 가정 → FIFO 차익 > 이동평균.
-  // ETH·SOL은 단일 lot이라 양쪽 결과 동일.
-  buyFifo: number;
-  buyAvg: number;
+  // 거주자 법정 — 총평균법(시행령 §88①·§92②4호)으로 산출한 평균 매수가 기준.
+  buy: number;
   sell: number;
 }
 
 const items: readonly Item[] = [
-  { coin: 'BTC', name: '비트코인', buyFifo: 3000, buyAvg: 3500, sell: 5000 },
-  { coin: 'ETH', name: '이더리움', buyFifo: 1000, buyAvg: 1000, sell: 700 },
-  { coin: 'SOL', name: '솔라나', buyFifo: 500, buyAvg: 500, sell: 800 },
+  { coin: 'BTC', name: '비트코인', buy: 3500, sell: 5000 },
+  { coin: 'ETH', name: '이더리움', buy: 1000, sell: 700 },
+  { coin: 'SOL', name: '솔라나', buy: 500, sell: 800 },
 ];
 
 interface CalcRowProps {
@@ -68,50 +61,7 @@ function Divider({ thick }: { thick?: boolean }) {
   );
 }
 
-function ToggleSegment({
-  current,
-  onChange,
-}: {
-  current: Method;
-  onChange: (m: Method) => void;
-}) {
-  const options: ReadonlyArray<readonly [Method, string]> = [
-    ['fifo', '선입선출'],
-    ['avg', '이동평균'],
-  ];
-  return (
-    <div
-      role="group"
-      aria-label="계산 방식 선택"
-      className="flex gap-1 rounded-sm bg-bg-tint p-1"
-    >
-      {options.map(([k, lbl]) => (
-        <button
-          key={k}
-          type="button"
-          onClick={() => onChange(k)}
-          aria-pressed={current === k}
-          className={
-            'rounded-[6px] px-3 py-1.5 text-xs font-semibold transition-colors ' +
-            (current === k
-              ? 'bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-              : 'bg-transparent text-muted hover:text-ink-2')
-          }
-        >
-          {lbl}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function TradesCard({
-  method,
-  setMethod,
-}: {
-  method: Method;
-  setMethod: (m: Method) => void;
-}) {
+function TradesCard() {
   return (
     <div className="overflow-hidden rounded-lg border border-line bg-card shadow-sm">
       <div className="flex items-center justify-between border-b border-line-2 px-6 py-[18px]">
@@ -120,16 +70,17 @@ function TradesCard({
             거래 내역 손익
           </div>
           <div className="nowrap text-[15px] font-bold text-ink">
-            {method === 'fifo' ? '선입선출법(FIFO) 기준' : '이동평균법(MA) 기준'}
+            총평균법 기준 (시행령 §88①)
           </div>
         </div>
-        <ToggleSegment current={method} onChange={setMethod} />
+        <div className="nowrap rounded-[6px] bg-brand-soft px-3 py-1.5 text-xs font-semibold text-brand-2">
+          거주자 법정
+        </div>
       </div>
 
       <div className="px-6 pb-4 pt-2">
         {items.map((it, i) => {
-          const buy = method === 'fifo' ? it.buyFifo : it.buyAvg;
-          const diff = it.sell - buy;
+          const diff = it.sell - it.buy;
           const isGain = diff >= 0;
           return (
             <div
@@ -144,7 +95,7 @@ function TradesCard({
                 <div>
                   <div className="text-sm font-semibold text-ink">{it.name}</div>
                   <div className="num font-mono text-[11.5px] text-muted">
-                    매수 {buy.toLocaleString()}만 → 매도 {it.sell.toLocaleString()}만
+                    매수 {it.buy.toLocaleString()}만 → 매도 {it.sell.toLocaleString()}만
                   </div>
                 </div>
               </div>
@@ -203,25 +154,10 @@ function CalculationCard({
 }
 
 export function Example() {
-  const [method, setMethod] = useState<Method>('fifo');
-
-  const totalGain = items.reduce(
-    (s, i) => s + (i.sell - (method === 'fifo' ? i.buyFifo : i.buyAvg)),
-    0,
-  );
+  const totalGain = items.reduce((s, i) => s + (i.sell - i.buy), 0);
   const taxable = Math.max(0, totalGain - 250);
   // 소득세 20% + 지방세 2% (별도 신고이지만 사용자 체감 부담은 합산)
   const tax = Math.round(taxable * 0.20) + Math.round(taxable * 0.02);
-
-  // 양쪽 방식 차이 — 사용자에게 토글 효과를 명시적으로 보여주기 위한 보조 수치
-  const fifoTotal = items.reduce((s, i) => s + (i.sell - i.buyFifo), 0);
-  const avgTotal = items.reduce((s, i) => s + (i.sell - i.buyAvg), 0);
-  const fifoTaxable = Math.max(0, fifoTotal - 250);
-  const avgTaxable = Math.max(0, avgTotal - 250);
-  const fifoTax = Math.round(fifoTaxable * 0.20) + Math.round(fifoTaxable * 0.02);
-  const avgTax = Math.round(avgTaxable * 0.20) + Math.round(avgTaxable * 0.02);
-  const diffTax = Math.abs(fifoTax - avgTax);
-  const cheaper: Method = fifoTax <= avgTax ? 'fifo' : 'avg';
 
   return (
     <section className="section-pad bg-bg-soft">
@@ -237,24 +173,16 @@ export function Example() {
         </div>
 
         <div className="mx-auto grid max-w-[1080px] gap-6 lg:grid-cols-[1.2fr_1fr]">
-          <TradesCard method={method} setMethod={setMethod} />
+          <TradesCard />
           <CalculationCard totalGain={totalGain} taxable={taxable} tax={tax} />
         </div>
 
         <div className="mx-auto mt-6 max-w-[1080px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-[13px] leading-[1.65] text-muted">
-          <strong className="font-semibold text-ink-2">방식에 따른 세액 차이</strong>{' '}
-          이 예시에서 선입선출법은{' '}
-          <span className="num font-semibold text-ink">{fifoTax.toLocaleString()}만원</span>,
-          이동평균법은{' '}
-          <span className="num font-semibold text-ink">{avgTax.toLocaleString()}만원</span>으로
-          약{' '}
-          <span className="num font-semibold text-ink">{diffTax.toLocaleString()}만원</span>{' '}
-          차이가 납니다. 같은 거래·같은 세법인데 분할매수 lot 평가 방식이 달라 결과가
-          바뀝니다. Kontaxt는{' '}
-          <strong className="font-semibold text-ink-2">
-            {cheaper === 'fifo' ? '선입선출법' : '이동평균법'}
-          </strong>
-          이 유리한 case를 자동으로 비교해드립니다.
+          <strong className="font-semibold text-ink-2">계산 방식</strong>{' '}
+          소득세법 시행령 §88①·§92②4호에 따라 거주자 가상자산 양도소득은{' '}
+          <strong className="font-semibold text-ink-2">총평균법</strong>(과세기간 개시일 보유분 +
+          연내 매수분 합산 ÷ 총수량)으로 산출합니다. Kontaxt는 거래소·지갑을 통합해 거주자별로
+          자동 계산합니다.
         </div>
       </div>
     </section>
