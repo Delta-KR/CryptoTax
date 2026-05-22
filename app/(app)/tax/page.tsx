@@ -609,7 +609,7 @@ export default function TaxPage() {
             label="납부세액"
             value={formatKrw(result.tax)}
             tone="brand"
-            sub="과세표준 × 20% (지방세 2% 별도)"
+            sub="과세표준 × 22% (소득세 20% + 지방세 2%)"
           />
         </BlurOverlay>
       </div>
@@ -654,8 +654,8 @@ export default function TaxPage() {
           />
           <CalcRow
             label="× 세율"
-            value="20%"
-            sub="지방세 2% 별도 신고"
+            value="22%"
+            sub="소득세 20% + 지방세 2%"
           />
           <Divider thick />
           <div className="relative mt-2">

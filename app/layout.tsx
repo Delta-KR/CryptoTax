@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     '빗썸 세금',
     '바이낸스 세금',
     '2027년 가상자산 과세',
-    'FIFO 이동평균',
+    '총평균법',
     '의제취득가액',
   ],
   authors: [{ name: SITE_NAME }],

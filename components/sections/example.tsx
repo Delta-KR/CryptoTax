@@ -136,7 +136,7 @@ function CalculationCard({
       <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
       <Divider />
       <CalcRow label="과세표준" value={`${taxable.toLocaleString()}만원`} bold />
-      <CalcRow label="× 세율" value="20%" sub="지방세 2% 별도 신고" />
+      <CalcRow label="× 세율" value="22%" sub="소득세 20% + 지방세 2%" />
       <Divider thick />
 
       {/* Brand-filled result box */}

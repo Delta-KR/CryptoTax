@@ -76,7 +76,7 @@ export default function SamplePage() {
             label="납부세액"
             value={formatKrw(sampleData.tax)}
             tone="brand"
-            sub="과세표준 × 20% (지방세 2% 별도)"
+            sub="과세표준 × 22% (소득세 20% + 지방세 2%)"
           />
         </div>
 
@@ -93,7 +93,7 @@ export default function SamplePage() {
             />
             <div className="mt-5 border-t border-line-2 pt-3">
               <Pill tone="brand" size="sm">
-                선입선출법(FIFO) 기준
+                총평균법 (시행령 §88①) 기준
               </Pill>
             </div>
           </Card>

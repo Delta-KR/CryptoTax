@@ -35,7 +35,7 @@ const steps: readonly Step[] = [
   {
     n: 2,
     title: '한국 세법 기준 자동 계산',
-    desc: '선입선출법·이동평균법 선택, 의제취득가액 자동 적용, 코인 간 교환 처리, 환율 변환까지 한 번에.',
+    desc: '총평균법 (시행령 §88①) 자동 적용, 의제취득가액 자동 비교, 코인 간 교환 처리, 환율 변환까지 한 번에.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
