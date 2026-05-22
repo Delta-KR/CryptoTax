@@ -196,7 +196,7 @@ interface TaxReportProps {
   year: number;
   result: TaxResultWire;
   transactions: UnifiedTransactionWire[];
-  method?: 'fifo' | 'avg';
+  method?: 'totalAverage' | 'fifo' | 'avg';
 }
 
 function formatFetchedAt(iso: string | null | undefined): string {
@@ -213,7 +213,7 @@ export function TaxReport({
   year,
   result,
   transactions,
-  method = 'fifo',
+  method = 'totalAverage',
 }: TaxReportProps) {
   const generatedAt = new Date().toLocaleDateString('ko-KR', {
     year: 'numeric',
@@ -236,7 +236,7 @@ export function TaxReport({
           <View style={styles.metaRow}>
             <Text style={styles.metaText}>사용자: {userName}</Text>
             <Text style={styles.metaText}>
-              계산 방식: {method === 'fifo' ? '선입선출법 (FIFO)' : '이동평균법 (MA)'}
+              계산 방식: {method === 'totalAverage' ? '총평균법 (시행령 §88①)' : method === 'fifo' ? '선입선출법 (FIFO)' : '이동평균법 (MA)'}
             </Text>
             <Text style={styles.metaText}>발행일: {generatedAt}</Text>
           </View>
@@ -510,10 +510,12 @@ export function TaxReport({
       {result.realizedGains.length > 0 && (
         <Page size="A4" style={styles.page}>
           <Text style={styles.sectionTitle}>
-            매도-매수 매칭 ({method === 'fifo' ? '선입선출법 FIFO' : '이동평균법 MA'})
+            매도 손익 명세 ({method === 'totalAverage' ? '총평균법' : method === 'fifo' ? '선입선출법 FIFO' : '이동평균법 MA'})
           </Text>
           <Text style={{ fontSize: 9, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>
-            {method === 'fifo'
+            {method === 'totalAverage'
+              ? '각 매도에 적용된 연 단위 총평균 단가입니다. 시행령 §88①·§92②4호에 따라 과세기간(1.1~12.31) 개시일 보유분 + 연내 매수분의 총가액 ÷ 총수량으로 평균단가를 산출합니다. lot 단위 추적이 없어 별도 매칭 정보는 표시되지 않습니다.'
+              : method === 'fifo'
               ? '각 매도가 어떤 매수 lot과 페어됐는지 (선입선출 순). lot 단위로 매수일·거래소·의제 여부를 표시합니다.'
               : '각 매도에 적용된 평균 단가입니다. 의제 여부는 underlying 매수 중 하나라도 의제면 "의제 포함"으로 표시.'}
           </Text>
@@ -570,8 +572,8 @@ export function TaxReport({
                 </Text>
               </View>
 
-              {/* consumedLots 표 */}
-              {method === 'avg' ? (
+              {/* consumedLots 표 — totalAverage는 lot 없음 (avg와 동일 렌더링) */}
+              {method !== 'fifo' ? (
                 <View
                   style={{
                     paddingVertical: 6,

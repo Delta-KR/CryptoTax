@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
         year: body.year,
         result: body.result,
         transactions: body.transactions,
-        method: body.method ?? 'fifo',
+        method: body.method ?? 'totalAverage',
       }),
     );
 

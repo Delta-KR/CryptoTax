@@ -13,8 +13,11 @@ import { MAEngine } from './moving-average';
 import type { TaxEngine } from './tax-engine';
 import { applyDeemedCost } from './deemed-cost';
 import { TAX_CONSTANTS, roundKRW } from './constants';
+import { calculateTaxTotalAverage } from './total-average';
 
-export type TaxMethod = 'fifo' | 'avg';
+// 시행령 §88①(2025-02-28 개정)이 거주자에게 강제하는 총평균법. 기본 method.
+// 'fifo'·'avg'(이동평균)는 비거주자 모드(§183⑥) 또는 참고 시나리오용 — 거주자 신고에는 부적합.
+export type TaxMethod = 'totalAverage' | 'fifo' | 'avg';
 
 const KST_OFFSET_MS = 9 * 3600 * 1000;
 
@@ -74,7 +77,7 @@ function consumeWithFallback(
   }
 }
 
-function buildSummary(
+export function buildSummary(
   gains: RealizedGain[],
   txs: UnifiedTransaction[],
   year: number,
@@ -107,7 +110,7 @@ function buildSummary(
 
 // P1 #9: 거래소 × 코인 매트릭스. summary와 동일한 합계 로직이지만 key가 `${exchange}|${coin}`.
 // realizedPnLKRW는 RealizedGain.exchange(=매도 거래소) 기준. 매수만 일어난 코인-거래소는 PnL=0.
-function buildSummaryByExchange(
+export function buildSummaryByExchange(
   gains: RealizedGain[],
   txs: UnifiedTransaction[],
   year: number,
@@ -182,7 +185,14 @@ function buildOrphanWarning(coin: string, info: OrphanInfo): string {
 }
 
 export function calculateTax(input: TaxCalculatorInput): TaxResult {
-  const method: TaxMethod = input.method ?? 'fifo';
+  const method: TaxMethod = input.method ?? 'totalAverage';
+
+  // 시행령 §88① 거주자 총평균법 — 메인 경로. lot 추적 없이 연 단위 평균.
+  if (method === 'totalAverage') {
+    return calculateTaxTotalAverage(input);
+  }
+
+  // 비거주자 모드(§183⑥ 이동평균) 또는 참고용 FIFO 시나리오 — 거주자 신고에는 부적합.
   const engine: TaxEngine = method === 'avg' ? new MAEngine() : new FIFOEngine();
   const realizedGains: RealizedGain[] = [];
   const warnings: string[] = [];

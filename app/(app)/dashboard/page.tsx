@@ -91,7 +91,7 @@ const quickActions = [
 
 export default function DashboardPage() {
   const [year, setYear] = useState(2027);
-  const [method, setMethod] = useState<TaxMethod>('fifo');
+  const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
@@ -126,7 +126,7 @@ export default function DashboardPage() {
     <>
       <PageHeader
         title="대시보드"
-        description={`${year}년 양도소득 현황 · ${method === 'fifo' ? '선입선출법' : '이동평균법'}`}
+        description={`${year}년 양도소득 현황 · ${method === 'totalAverage' ? '총평균법' : method === 'fifo' ? '선입선출법' : '이동평균법'}`}
         right={
           <Select
             value={year}

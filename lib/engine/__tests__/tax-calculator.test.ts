@@ -132,6 +132,7 @@ describe('calculateTax', () => {
         }),
       ],
       year: 2027,
+      method: 'fifo',
     });
     expect(result.realizedGains[0].costBasisKRW).toBe(60_000_000);
     expect(result.realizedGains[0].pnlKRW).toBe(3_000_000);
@@ -266,6 +267,7 @@ describe('calculateTax', () => {
         }),
       ],
       year: 2027,
+      method: 'fifo',
     });
     expect(result.realizedGains).toHaveLength(1);
     expect(result.realizedGains[0].costBasisKRW).toBe(1_000_000);
@@ -311,6 +313,7 @@ describe('calculateTax', () => {
         }),
       ],
       year: 2024,
+      method: 'fifo',
     });
     const warn = result.warnings.find((w) => w.includes('DUSK'));
     expect(warn).toBeDefined();
@@ -348,6 +351,7 @@ describe('calculateTax', () => {
         }),
       ],
       year: 2027,
+      method: 'fifo',
     });
     const warn = result.warnings.find((w) => w.includes('XYZ'));
     expect(warn).toBeDefined();
@@ -505,7 +509,7 @@ describe('calculateTax — method: avg (이동평균법)', () => {
     expect(result.warnings.some((w) => w.includes('DUSK'))).toBe(true);
   });
 
-  it('method 미지정 시 기본값은 fifo', () => {
+  it('method 미지정 시 기본값은 totalAverage (시행령 §88①)', () => {
     const transactions = [
       tx({
         type: 'BUY',
@@ -530,10 +534,16 @@ describe('calculateTax — method: avg (이동평균법)', () => {
       }),
     ];
     const defaultResult = calculateTax({ transactions, year: 2027 });
-    const fifoResult = calculateTax({ transactions, year: 2027, method: 'fifo' });
+    const totalAverageResult = calculateTax({
+      transactions,
+      year: 2027,
+      method: 'totalAverage',
+    });
     expect(defaultResult.realizedGains[0].pnlKRW).toBe(
-      fifoResult.realizedGains[0].pnlKRW,
+      totalAverageResult.realizedGains[0].pnlKRW,
     );
+    // 총평균법은 평균단가 6,000만 적용 → 손익 0 (매수 평균과 매도가 동일)
+    expect(defaultResult.realizedGains[0].pnlKRW).toBe(0);
   });
 });
 
@@ -564,6 +574,7 @@ describe('holdingsAfter (P1 #10)', () => {
       ],
       year: 2027,
       deemedCostPrices: new Map([['BTC', 70_000_000]]),
+      method: 'fifo',
     });
 
     expect(result.holdingsAfter.BTC).toBeDefined();
@@ -686,6 +697,7 @@ describe('summaryByExchange (P1 #9)', () => {
         }),
       ],
       year: 2027,
+      method: 'fifo',
     });
 
     // exchange ASC, coin ASC 정렬

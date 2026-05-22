@@ -98,24 +98,6 @@ export interface RateSourceInfoWire {
   fallbackName: string;
 }
 
-// v2 백로그 #1: FIFO vs MA 자동 비교 카드용. 양쪽 method 모두 계산해서 wire에 함께 전달.
-// 메인 결과(TaxResultWire 최상위 필드들)는 사용자가 선택한 method 결과. 비교 카드는 alternative
-// method의 핵심 지표만 노출 (전체 데이터는 main 결과로 표시되므로 중복 제거).
-// free plan에서는 masked: true일 때 두 값 모두 0으로 노출 (premium 전용).
-export interface ComparisonResultWire {
-  netPnLKRW: number;
-  taxableIncomeKRW: number;
-  taxAmountKRW: number;
-}
-
-export interface MethodComparisonWire {
-  fifo: ComparisonResultWire;
-  ma: ComparisonResultWire;
-  // selectedMethod와 alternative의 세금 차이 (alt - selected). 음수면 alt가 유리.
-  // 클라이언트가 직접 계산해도 되지만 wire에 미리 담아두면 UI가 단순해짐.
-  selected: 'fifo' | 'ma';
-}
-
 // 의제취득가액 시가 source 분포 (DB 조회 결과 요약).
 export interface DeemedCostSourceWire {
   realCoins: string[]; // 2026-12-31 실측 (source_type='real')
@@ -144,11 +126,9 @@ export interface TaxResultWire {
   masked: boolean;
   rateSource?: RateSourceInfoWire;
   deemedCostSource?: DeemedCostSourceWire;
-  // v2 백로그 #1: 마케팅 약속 충족. method 토글 없이도 두 방식 결과를 비교 카드로 노출.
-  methodComparison?: MethodComparisonWire;
 }
 
-export type TaxMethodWire = 'fifo' | 'avg';
+export type TaxMethodWire = 'totalAverage' | 'fifo' | 'avg';
 
 export interface CalculatePayload {
   newParsed: ParsedTransactionWire[];

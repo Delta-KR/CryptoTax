@@ -29,7 +29,7 @@ export default function ReportPage() {
   const toast = useToast();
   const { user, loading: userLoading } = useCurrentUser();
   const [year, setYear] = useState(2027);
-  const [method, setMethod] = useState<TaxMethod>('fifo');
+  const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [include, setInclude] = useState<IncludeOpts>({
     trades: true,
     basis: true,
@@ -128,8 +128,9 @@ export default function ReportPage() {
                 value={method}
                 onChange={(e) => setMethod(e.target.value as TaxMethod)}
               >
-                <option value="fifo">선입선출법 (FIFO)</option>
-                <option value="avg">이동평균법 (MA)</option>
+                <option value="totalAverage">총평균법 (거주자 · 시행령 §88①)</option>
+                <option value="fifo">선입선출법 (FIFO) — 참고용</option>
+                <option value="avg">이동평균법 (MA) — 비거주자 §183⑥</option>
               </Select>
             </div>
           </div>
@@ -221,7 +222,7 @@ export default function ReportPage() {
                 </p>
               </div>
               <Pill tone="brand" size="sm">
-                {method === 'fifo' ? 'FIFO' : 'MA'}
+                {method === 'totalAverage' ? '총평균법' : method === 'fifo' ? 'FIFO' : 'MA'}
               </Pill>
             </div>
 

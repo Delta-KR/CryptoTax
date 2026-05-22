@@ -54,7 +54,7 @@ describe('E2E Scenario A — Single exchange (Upbit, KRW market)', () => {
     const unified = await normalize(parsed, rates);
     expect(unified).toHaveLength(2);
 
-    const result = calculateTax({ transactions: unified, year: 2027 });
+    const result = calculateTax({ transactions: unified, year: 2027, method: 'fifo' });
 
     // hand calc:
     //   cost basis  = 14,000,000
@@ -529,7 +529,7 @@ describe('E2E Full pipeline — Binance CSV → ParsedTransaction → UnifiedTra
     ]);
 
     const unified = await normalize(parsed, rates);
-    const result = calculateTax({ transactions: unified, year: 2027 });
+    const result = calculateTax({ transactions: unified, year: 2027, method: 'fifo' });
 
     // hand calc:
     //   BUY  : cost = 25,000 × 1,400 = 35,000,000 KRW
