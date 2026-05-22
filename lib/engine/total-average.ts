@@ -8,6 +8,8 @@ import type {
 import { applyDeemedCost, isPreDeemedDate } from './deemed-cost';
 import { TAX_CONSTANTS, roundKRW } from './constants';
 import {
+  buildImputedRealizedGain,
+  buildImputedWarning,
   buildSummary,
   buildSummaryByExchange,
   kstYear,
@@ -65,13 +67,30 @@ export function calculateTaxTotalAverage(
   const { transactions, year, deemedCostPrices } = input;
   const warnings: string[] = [];
   const orphans = new Map<string, TAOrphanInfo>();
+  const imputed = input.imputedExpenseCoins ?? new Set<string>();
+  const imputedSeen = new Set<string>();
+  const realizedGains: RealizedGain[] = [];
 
   const sorted = [...transactions].sort(
     (a, b) => a.date.getTime() - b.date.getTime(),
   );
+
+  // 시행령 §88④⑤ — 의제 코인 매도를 별도 처리, lot 추적·평균단가 무시
+  const nonImputed: UnifiedTransaction[] = [];
+  for (const tx of sorted) {
+    if (imputed.has(tx.coin)) {
+      imputedSeen.add(tx.coin);
+      if (tx.type === 'SELL' && kstYear(tx.date) === year) {
+        realizedGains.push(buildImputedRealizedGain(tx));
+      }
+      continue;
+    }
+    nonImputed.push(tx);
+  }
+
   const preLaunch: UnifiedTransaction[] = [];
   const postLaunch: UnifiedTransaction[] = [];
-  for (const tx of sorted) {
+  for (const tx of nonImputed) {
     if (isPreDeemedDate(tx.date)) preLaunch.push(tx);
     else postLaunch.push(tx);
   }
@@ -106,7 +125,6 @@ export function calculateTaxTotalAverage(
   }
   if (year >= 2027 && !byYear.has(year)) byYear.set(year, []);
 
-  const realizedGains: RealizedGain[] = [];
   const sortedYears = [...byYear.keys()].sort((a, b) => a - b);
   let yearEndCarry: Map<string, CarryBalance> | null = null;
 
@@ -210,6 +228,10 @@ export function calculateTaxTotalAverage(
 
   for (const [coin, info] of orphans) {
     warnings.push(buildTAOrphanWarning(coin, info));
+  }
+
+  if (imputedSeen.size > 0) {
+    warnings.push(buildImputedWarning(Array.from(imputedSeen)));
   }
 
   // 세액 계산
