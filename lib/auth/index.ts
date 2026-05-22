@@ -4,8 +4,10 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/auth/safe-next';
 import {
   clearAllSessions,
+  saveSession,
   setSessionUser,
 } from '@/lib/storage/session';
+import { loadSnapshot } from '@/app/actions/user-data';
 
 export type Plan = 'free' | 'premium';
 
@@ -70,6 +72,21 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
         }
         return;
       }
+
+      // server-side snapshot 동기 — fire-and-forget. 다른 디바이스에서
+      // 변경됐을 수 있으므로 로그인 직후 server payload 를 localStorage 에
+      // 덮어쓴다. skipServerSync 로 saveSnapshot 재호출 cycle 방지.
+      void loadSnapshot()
+        .then((result) => {
+          if (cancelled) return;
+          if (result.ok && result.payload) {
+            saveSession(result.payload, { skipServerSync: true });
+          }
+        })
+        .catch((err) => {
+          console.warn('[useCurrentUser] snapshot load failed:', err);
+        });
+
       const next = await buildUser(sessionUser);
       if (!cancelled) {
         setUser(next);
