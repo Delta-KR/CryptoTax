@@ -6,11 +6,23 @@ import { ensureFontRegistered } from '@/lib/report/font-config';
 import { TaxReport } from '@/lib/report/tax-report';
 import { reportRequestSchema } from '@/lib/validation/report';
 import { SITE_URL } from '@/lib/site';
+import { checkRateLimit, getReportRateLimit } from '@/lib/rate-limit';
 
 export const maxDuration = 60;
 
-// TODO(Phase 7): Add IP-based rate limit (Upstash Redis or Vercel KV).
-// /api/report — 1 req / 10s per user.
+// Rate limit (P4-R1): Upstash Redis sliding window, IP 기반 분당 10회.
+// 무거운 PDF 생성 작업 보호 + DoS 방어. fail-closed.
+
+function getClientIp(request: NextRequest): string {
+  // Vercel/Cloudflare 등 proxy 환경에서는 x-forwarded-for 첫 항목이 client IP.
+  // 로컬 dev나 proxy 없는 환경에서는 fallback.
+  const fwd = request.headers.get('x-forwarded-for');
+  if (fwd) {
+    const first = fwd.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  return request.headers.get('x-real-ip') ?? 'unknown';
+}
 
 function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
@@ -44,6 +56,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Cross-origin request blocked' },
         { status: 403 },
+      );
+    }
+
+    // Rate limit (P4-R1): IP 기반 분당 10회. PDF 생성 비용이 크므로 무거운 보호.
+    // Auth 전에 체크하여 무차별 호출을 빠르게 차단.
+    const ip = getClientIp(request);
+    const { ok: rateLimitOk, limit, remaining, reset } = await checkRateLimit(
+      ip,
+      getReportRateLimit(),
+    );
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': String(limit),
+            'X-RateLimit-Remaining': String(remaining),
+            'X-RateLimit-Reset': String(reset),
+            'Retry-After': String(
+              Math.max(1, Math.ceil((reset - Date.now()) / 1000)),
+            ),
+          },
+        },
       );
     }
 

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     'Kontaxt가 처리하는 개인정보 항목, 처리 목적, 보유 기간, 제3자 제공·위탁, 정보주체의 권리 등을 안내합니다.',
 };
 
-const EFFECTIVE_DATE = '2026년 5월 12일';
+const EFFECTIVE_DATE = '2026년 5월 22일';
 
 function Article({
   num,
@@ -75,8 +75,8 @@ export default function PrivacyPage() {
             <div className="rounded-md border border-line bg-bg-soft px-5 py-4">
               <p className="mb-2 text-[14.5px] font-bold text-ink">나. 소셜 로그인 이용 시</p>
               <p className="text-[14px] leading-[1.7]">
-                Google·Kakao 등 소셜 인증 제공자로부터 수신: 이메일 주소, 프로필 이름, 소셜 계정
-                고유 식별자
+                Google·Kakao·Naver 등 소셜 인증 제공자로부터 수신: 이메일 주소, 프로필 이름, 소셜
+                계정 고유 식별자
               </p>
             </div>
             <div className="rounded-md border border-line bg-bg-soft px-5 py-4">
@@ -185,7 +185,13 @@ export default function PrivacyPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="px-4 py-2.5">Google LLC / Kakao Corp.</td>
+                    <td className="border-b border-line px-4 py-2.5">Google LLC / Kakao Corp.</td>
+                    <td className="border-b border-line px-4 py-2.5">
+                      소셜 로그인 인증 (회원이 해당 기능을 이용하는 경우)
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2.5">Naver Corp (네이버 주식회사)</td>
                     <td className="px-4 py-2.5">
                       소셜 로그인 인증 (회원이 해당 기능을 이용하는 경우)
                     </td>

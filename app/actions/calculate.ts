@@ -1,8 +1,9 @@
 'use server';
 
-// TODO(Phase 7): Add IP-based rate limit (Upstash Redis or Vercel KV).
-// calculate — 5 reqs / min per IP.
+// Rate limit (P4-R1): user.id 기반 분당 20회 (lib/rate-limit.ts).
+// 익명 사용자는 IP fallback. headers()로 x-forwarded-for 추출.
 
+import { headers } from 'next/headers';
 import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
 import { calculateTax, type TaxMethod } from '@/lib/engine/tax-calculator';
@@ -17,6 +18,7 @@ import type {
 } from '@/lib/engine/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getEffectivePlan } from '@/lib/auth/server';
+import { checkRateLimit, getCalculateRateLimit } from '@/lib/rate-limit';
 import {
   MAX_PREV_STRING,
   previousParsedSchema,
@@ -206,10 +208,44 @@ function currentTargetYear(): number {
   return kstYear < 2027 ? 2027 : kstYear;
 }
 
+async function getRateLimitIdentifier(): Promise<string> {
+  try {
+    const supabase = createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) return `user:${user.id}`;
+  } catch (e) {
+    console.error('[getRateLimitIdentifier] auth lookup failed:', e);
+  }
+  // 익명 fallback — server action에서는 NextRequest 객체가 없어 next/headers의
+  // x-forwarded-for를 사용.
+  const h = headers();
+  const fwd = h.get('x-forwarded-for');
+  if (fwd) {
+    const first = fwd.split(',')[0]?.trim();
+    if (first) return `ip:${first}`;
+  }
+  const real = h.get('x-real-ip');
+  if (real) return `ip:${real}`;
+  return 'ip:unknown';
+}
+
 export async function calculateTaxFromFiles(
   formData: FormData,
 ): Promise<CalculateResult> {
   try {
+    // Rate limit (P4-R1): user.id 우선, 익명은 IP. 분당 20회.
+    const identifier = await getRateLimitIdentifier();
+    const { ok: rlOk } = await checkRateLimit(identifier, getCalculateRateLimit());
+    if (!rlOk) {
+      return {
+        ok: false,
+        error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
+        errorType: 'unknown',
+      };
+    }
+
     const rawFiles = formData.getAll('files');
     const files = rawFiles.filter((f): f is File => f instanceof File);
     const previousJson = formData.get('previousParsed');
