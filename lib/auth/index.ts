@@ -4,10 +4,11 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/auth/safe-next';
 import {
   clearAllSessions,
+  loadSession,
   saveSession,
   setSessionUser,
 } from '@/lib/storage/session';
-import { loadSnapshot } from '@/app/actions/user-data';
+import { loadSnapshot, saveSnapshot } from '@/app/actions/user-data';
 
 export type Plan = 'free' | 'premium';
 
@@ -73,14 +74,24 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
         return;
       }
 
-      // server-side snapshot 동기 — fire-and-forget. 다른 디바이스에서
-      // 변경됐을 수 있으므로 로그인 직후 server payload 를 localStorage 에
-      // 덮어쓴다. skipServerSync 로 saveSnapshot 재호출 cycle 방지.
+      // server-side snapshot 동기 — fire-and-forget.
+      // - server payload 있으면 → localStorage 덮어쓰기 (다른 디바이스 변경 반영)
+      // - server 비어있고 localStorage 있으면 → server 로 자동 백업
+      //   (첫 로그인 마이그레이션 — server-side backup 도입 전 데이터 보존)
       void loadSnapshot()
         .then((result) => {
           if (cancelled) return;
-          if (result.ok && result.payload) {
+          if (!result.ok) return;
+          if (result.payload) {
             saveSession(result.payload, { skipServerSync: true });
+          } else {
+            // server 비어있음. localStorage 에 데이터 있으면 자동 백업.
+            const local = loadSession();
+            if (local && local.allUnified.length > 0) {
+              void saveSnapshot(local).catch((err) => {
+                console.warn('[useCurrentUser] initial backup failed:', err);
+              });
+            }
           }
         })
         .catch((err) => {
