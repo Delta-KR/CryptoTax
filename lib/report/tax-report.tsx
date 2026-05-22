@@ -283,7 +283,7 @@ export function TaxReport({
           </View>
           <View style={styles.summaryCell}>
             <Text style={styles.summaryLabel}>세율</Text>
-            <Text style={styles.summaryValue}>22% (20%+2%)</Text>
+            <Text style={styles.summaryValue}>소득세 20% + 지방세 2%</Text>
           </View>
         </View>
 

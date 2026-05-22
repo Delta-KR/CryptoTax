@@ -198,7 +198,7 @@ Step accent colors: `#2563EB` / `#7C3AED` / `#16A34A`.
 ### 5. Example (`parts/example.jsx`)
 Two-column glass grid (`1.2fr 1fr`):
 - **Left card** — title row with FIFO/이동평균 segmented toggle (active segment gets a `--card` background + small shadow). List of 3 trades (BTC +2000만, ETH −300만, SOL +300만). Each row: round colored coin badge in `${coinColor}18` background + name + mono buy/sell text + signed amount in good/bad color.
-- **Right card** — calculation flow with `CalcRow`s: 총 양도차익 → 기본공제 (−250만원) → divider → 과세표준 (bold) → × 세율 (22%) → thick divider → final 납부세액 result in a brand-filled card with `36px / 800` figure and brand-glow shadow.
+- **Right card** — calculation flow with `CalcRow`s: 총 양도차익 → 기본공제 (−250만원) → divider → 과세표준 (bold) → × 세율 (20%, 지방세 2% 별도) → thick divider → final 납부세액 result in a brand-filled card with `36px / 800` figure and brand-glow shadow.
 
 Toggle state is client-side; values shown don't actually change but the visual contract is that they would.
 
@@ -229,7 +229,7 @@ Annual price ₩19,900 (월 ₩1,650) with green ✓ savings line; monthly ₩4,
 Strong glass card centered on layered blobs (3 additional blobs in brand/violet/cyan) plus the notebook grid. Card padding `64px 56px`, `border-radius: 28px`, heavy backdrop-blur. Contents:
 - Brand pill: "첫 신고까지 D-237"
 - Headline 56/800 with gradient-clipped "시작하세요" using `linear-gradient(120deg, var(--brand), #7C3AED)`
-- Lead, two buttons (primary brand + ghost), and a **stats strip**: 1,550만 한국 가상자산 투자자 / 22% 양도소득세율 / 250만원 기본공제 — middle stat has vertical dividers.
+- Lead, two buttons (primary brand + ghost), and a **stats strip**: 1,550만 한국 가상자산 투자자 / 20% 양도소득세율 (지방세 별도) / 250만원 기본공제 — middle stat has vertical dividers.
 
 ### 10. Footer (`parts/chrome.jsx` → `Footer`)
 `--bg-soft` background, 4-column grid (`1.4fr 1fr 1fr 1fr`):

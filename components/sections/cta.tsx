@@ -87,9 +87,9 @@ export function CTA() {
         <div className="mt-14 grid grid-cols-1 gap-4 border-t border-line pt-8 lg:grid-cols-3 lg:gap-0">
           <Stat2 num="1,550만" label="한국 가상자산 투자자" />
           <Stat2
-            num="22%"
+            num="20%"
             label="양도소득세율"
-            sub="소득세 20% + 지방세 2%"
+            sub="지방세 2% 별도 신고"
             border
           />
           <Stat2 num="250만원" label="기본공제" sub="연 1회 자동 적용" />

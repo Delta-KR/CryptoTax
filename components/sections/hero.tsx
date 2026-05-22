@@ -231,7 +231,7 @@ function DashboardMock() {
           <div className="mb-4 rounded-md border border-line-2 bg-bg-soft px-[18px] py-4">
             <div className="mb-3.5 flex items-baseline justify-between gap-2">
               <div className="nowrap text-[13px] font-semibold text-ink">코인별 손익</div>
-              <div className="nowrap text-[11px] text-muted-2">22% 세율 적용</div>
+              <div className="nowrap text-[11px] text-muted-2">세율 20% + 2%</div>
             </div>
             <div className="flex flex-col gap-2.5">
               {bars.map((b) => (

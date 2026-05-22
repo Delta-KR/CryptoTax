@@ -185,7 +185,7 @@ function CalculationCard({
       <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
       <Divider />
       <CalcRow label="과세표준" value={`${taxable.toLocaleString()}만원`} bold />
-      <CalcRow label="× 세율" value="22%" sub="소득세 20% + 지방세 2%" />
+      <CalcRow label="× 세율" value="20%" sub="지방세 2% 별도 신고" />
       <Divider thick />
 
       {/* Brand-filled result box */}
@@ -210,13 +210,16 @@ export function Example() {
     0,
   );
   const taxable = Math.max(0, totalGain - 250);
-  const tax = Math.round(taxable * 0.22);
+  // 소득세 20% + 지방세 2% (별도 신고이지만 사용자 체감 부담은 합산)
+  const tax = Math.round(taxable * 0.20) + Math.round(taxable * 0.02);
 
   // 양쪽 방식 차이 — 사용자에게 토글 효과를 명시적으로 보여주기 위한 보조 수치
   const fifoTotal = items.reduce((s, i) => s + (i.sell - i.buyFifo), 0);
   const avgTotal = items.reduce((s, i) => s + (i.sell - i.buyAvg), 0);
-  const fifoTax = Math.round(Math.max(0, fifoTotal - 250) * 0.22);
-  const avgTax = Math.round(Math.max(0, avgTotal - 250) * 0.22);
+  const fifoTaxable = Math.max(0, fifoTotal - 250);
+  const avgTaxable = Math.max(0, avgTotal - 250);
+  const fifoTax = Math.round(fifoTaxable * 0.20) + Math.round(fifoTaxable * 0.02);
+  const avgTax = Math.round(avgTaxable * 0.20) + Math.round(avgTaxable * 0.02);
   const diffTax = Math.abs(fifoTax - avgTax);
   const cheaper: Method = fifoTax <= avgTax ? 'fifo' : 'avg';
 
