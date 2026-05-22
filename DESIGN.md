@@ -242,7 +242,7 @@ Hero          → 단문 헤드라인 + dashboard mock
 TrustStrip    → PIPA · Cloudflare · RLS · 결제 비저장 (1줄)
 Problem       → 거래소 3개 형식 비교 (3 cards)
 HowItWorks    → 3-step 흐름
-Example       → FIFO / 이동평균 토글 인터랙티브
+Example       → 총평균법 단일 시연 (시행령 §88①, 거주자 법정)
 Exchanges     → LIVE 2개 + COMING SOON 7개 (중앙정렬)
 Features      → Bento grid (1 big + 4 small)
 Security      → 3 보안 가치 카드 (Mercury 식)
@@ -256,9 +256,13 @@ Footer        → 4 컬럼 (브랜드·서비스·보안·고객지원)
 
 ## 12. 변경 이력
 
-- **2026-05-22** — 세법 정립에 따른 기획 변경 사항 기록 (코드 반영은 P1~P2에서 진행).
-  - **FIFO/이동평균 토글 폐기 결정** (위 §11 페이지 구조의 Example 토글 포함): 현행 시행령 §88①이 거주자에게 **총평균법 단일**을 강제하므로 사용자 선택권 모델 자체가 법령과 충돌. 자세한 근거·변경 범위는 [docs/tax-law-compliance.md](docs/tax-law-compliance.md) v1.0 참조.
-  - **세율 표기 22% 단일 → 20%/2% 분리**: 법문(소득세법 §64의3②)은 세율 20%만 명시. 지방세 2%는 별도 신고·납부 대상. UI/리포트 8군데 일관 정리.
+- **2026-05-22 (P2-a)** — 마케팅·UI 정리 (PR 후속).
+  - Example 섹션의 FIFO/이동평균 토글 코드 제거. 총평균법 단일 시연으로 변경 (위 §11 페이지 구조 갱신).
+  - v2 #2 MA 평균 단가 timeline 제거 (총평균법은 연 1점이라 timeline 의미 약함).
+- **2026-05-22 (P1)** — TotalAverageEngine 도입 + v2 #1 FIFO vs MA 비교 카드 제거 ([PR #12](https://github.com/Delta-KR/kontaxt/pull/12)). 거주자 default `'totalAverage'`. FIFO/MA 엔진은 비거주자 모드(§183⑥)용 보존. settings 3카드 + badge.
+- **2026-05-22 (P0)** — 세법 정립 기획 변경 사항 기록 ([PR #11](https://github.com/Delta-KR/kontaxt/pull/11)).
+  - **FIFO/이동평균 토글 폐기 결정**: 현행 시행령 §88①이 거주자에게 **총평균법 단일**을 강제하므로 사용자 선택권 모델 자체가 법령과 충돌. 자세한 근거·변경 범위는 [docs/tax-law-compliance.md](docs/tax-law-compliance.md) v1.0 참조.
+  - **세율 표기 22% 단일 → 20%/2% 분리**: 법문(소득세법 §64의3②)은 세율 20%만 명시. 지방세 2%는 별도 신고·납부 대상. UI/리포트 9군데 일관 정리.
 - **2026-05-15** — 초안 작성. 5개 batch 리팩터링 직후 정리.
   - AI 티 6대 시그니처 제거 (atmosphere blob, pointer spotlight, gradient text, heavy glass, notebook grid, rainbow palette)
   - Hero 단문 헤드라인 도입

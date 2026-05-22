@@ -197,10 +197,10 @@ Step accent colors: `#2563EB` / `#7C3AED` / `#16A34A`.
 
 ### 5. Example (`parts/example.jsx`)
 Two-column glass grid (`1.2fr 1fr`):
-- **Left card** — title row with FIFO/이동평균 segmented toggle (active segment gets a `--card` background + small shadow). List of 3 trades (BTC +2000만, ETH −300만, SOL +300만). Each row: round colored coin badge in `${coinColor}18` background + name + mono buy/sell text + signed amount in good/bad color.
+- **Left card** — title row "총평균법 기준 (시행령 §88①)" with a `거주자 법정` badge. List of 3 trades (BTC +1500만, ETH −300만, SOL +300만). Each row: round colored coin badge in `${coinColor}18` background + name + mono buy/sell text + signed amount in good/bad color.
 - **Right card** — calculation flow with `CalcRow`s: 총 양도차익 → 기본공제 (−250만원) → divider → 과세표준 (bold) → × 세율 (20%, 지방세 2% 별도) → thick divider → final 납부세액 result in a brand-filled card with `36px / 800` figure and brand-glow shadow.
 
-Toggle state is client-side; values shown don't actually change but the visual contract is that they would.
+거주자 가상자산 양도소득은 시행령 §88①·§92②4호에 따라 총평균법 단일 적용 — FIFO/이동평균 사용자 토글 모델은 폐기됨 (P1 PR #12).
 
 ### 6. Exchanges (`parts/exchanges.jsx`)
 Two groups:
