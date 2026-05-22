@@ -180,3 +180,63 @@ export function replaceCalculation(
   saveSession(next);
   return next;
 }
+
+// ---------------------------------------------------------------------------
+// JSON Export / Import — 디바이스 간 거래 데이터 이동 (Phase 7 launch 전 임시).
+// server-side backup (PR-B) 까지 도입되면 자동 동기로 대체됨.
+// ---------------------------------------------------------------------------
+
+export function exportToJSON(): string | null {
+  const data = loadSession();
+  if (!data) return null;
+  return JSON.stringify(data, null, 2);
+}
+
+export interface ImportResult {
+  ok: boolean;
+  error?: string;
+  transactionCount?: number;
+}
+
+export function importFromJSON(jsonText: string): ImportResult {
+  if (typeof window === 'undefined') {
+    return { ok: false, error: 'client-only' };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    return { ok: false, error: 'JSON 파싱 실패 — 올바른 백업 파일이 아닙니다.' };
+  }
+  const validated = sessionSchema.safeParse(parsed);
+  if (!validated.success) {
+    return {
+      ok: false,
+      error: '파일 형식이 올바르지 않습니다 (스키마 불일치).',
+    };
+  }
+  const data: SessionData = {
+    ...(validated.data as unknown as Omit<SessionData, 'method'>),
+    method: validated.data.method ?? 'totalAverage',
+  } as SessionData;
+  saveSession(data);
+  return { ok: true, transactionCount: data.allUnified.length };
+}
+
+// 클립보드 안전한 파일 다운로드. browser 환경에서만 동작.
+export function downloadAsFile(
+  data: string,
+  filename: string,
+  mimeType = 'application/json',
+): void {
+  if (typeof window === 'undefined') return;
+  const blob = new Blob([data], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
