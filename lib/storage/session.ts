@@ -8,7 +8,43 @@ import type {
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
 
-const KEY = 'kontaxt-session-v1';
+// 거래 데이터는 현재 localStorage 보관 (Phase 7 결제 출시 후 DB 이전 예정).
+// 같은 브라우저에서 계정 전환 시 데이터 섞임 방지를 위해 user_id 별로 키 분리.
+//
+// - 로그인 시: `kontaxt-session-v1-${userId}` — 본인 데이터 격리
+// - 비로그인 시: `kontaxt-session-v1-anon` — 데모/시연용
+//
+// setSessionUser() 는 useCurrentUser hook 의 auth state listener 에서 호출.
+// SSR 환경에선 currentUserId 가 항상 null (server context).
+
+const KEY_PREFIX = 'kontaxt-session-v1';
+const ANON_KEY = `${KEY_PREFIX}-anon`;
+
+let currentUserId: string | null = null;
+
+export function setSessionUser(userId: string | null): void {
+  currentUserId = userId;
+}
+
+function getKey(): string {
+  return currentUserId ? `${KEY_PREFIX}-${currentUserId}` : ANON_KEY;
+}
+
+/**
+ * 구버전 단일 키(`kontaxt-session-v1`) 데이터가 남아있는 경우 — 사용자
+ * 격리 안 된 잠재적 누출 데이터. 새 키 체계 도입(2026-05-23) 후 첫 로드 시
+ * 무조건 제거. 사용자 본인이 가입 전 입력한 데이터는 안타깝지만 보안 우선.
+ */
+function purgeLegacyKey(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (localStorage.getItem(KEY_PREFIX) !== null) {
+      localStorage.removeItem(KEY_PREFIX);
+    }
+  } catch {
+    // private mode 등 — 무시.
+  }
+}
 
 export interface SessionData {
   allParsed: ParsedTransactionWire[];
@@ -49,14 +85,15 @@ const sessionSchema = z.object({
 export function loadSession(): SessionData | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(KEY);
+    purgeLegacyKey();
+    const raw = localStorage.getItem(getKey());
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const validated = sessionSchema.safeParse(parsed);
     if (!validated.success) {
       // 손상된 데이터는 제거해 무한 실패 방지.
       console.warn('[session] corrupted localStorage data, clearing.');
-      localStorage.removeItem(KEY);
+      localStorage.removeItem(getKey());
       return null;
     }
     // 구버전 세션(method 미보유) 호환: 거주자 디폴트 'totalAverage' 보강.
@@ -72,7 +109,7 @@ export function loadSession(): SessionData | null {
 export function saveSession(data: SessionData): void {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem(getKey(), JSON.stringify(data));
   } catch {
     // QuotaExceededError 등 — 무시.
   }
@@ -80,7 +117,27 @@ export function saveSession(data: SessionData): void {
 
 export function clearSession(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(KEY);
+  localStorage.removeItem(getKey());
+}
+
+/**
+ * 로그아웃 시 호출 — 현재 user 키와 anon 키 모두 정리.
+ * 다음 사용자 (또는 본인 재로그인 전 anonymous 상태) 가 이전 데이터를 보지
+ * 않도록.
+ */
+export function clearAllSessions(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    purgeLegacyKey();
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
+    }
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {
+    // 무시.
+  }
 }
 
 export function appendUpload(
