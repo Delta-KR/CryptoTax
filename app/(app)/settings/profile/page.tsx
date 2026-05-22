@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -8,6 +8,10 @@ import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { PasswordStrength } from '@/components/auth/PasswordStrength';
+import {
+  TurnstileWidget,
+  TURNSTILE_ENABLED,
+} from '@/components/auth/TurnstileWidget';
 import { useCurrentUser, hasEmailIdentity } from '@/lib/auth';
 import { isPasswordValid } from '@/lib/auth/password-rules';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
@@ -35,6 +39,15 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [oauthOnly, setOauthOnly] = useState(false);
+  // Turnstile: token은 1회용. 제출 후 widget을 재마운트해서 새 token을 받기 위한 key.
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  const handleCaptchaToken = useCallback(
+    (t: string) => setCaptchaToken(t || null),
+    [],
+  );
+  const handleCaptchaError = useCallback(() => setCaptchaToken(null), []);
+  const captchaReady = !TURNSTILE_ENABLED || captchaToken !== null;
 
   useEffect(() => {
     if (user) setName(user.name);
@@ -104,12 +117,20 @@ export default function ProfilePage() {
       setConfirmError('새 비밀번호가 일치하지 않습니다.');
       return;
     }
+    if (TURNSTILE_ENABLED && !captchaToken) {
+      toast.show('보안 검증을 완료해주세요.', 'error');
+      return;
+    }
     setChangingPw(true);
     const result = await changePassword({
       oldPassword: oldPw,
       newPassword: newPw,
+      captchaToken: captchaToken || undefined,
     });
     setChangingPw(false);
+    // Turnstile token은 검증 시 소모됨 → 다음 시도를 위해 widget 재마운트.
+    setCaptchaToken(null);
+    setCaptchaResetKey((k) => k + 1);
     if (result.ok) {
       setOldPw('');
       setNewPw('');
@@ -125,6 +146,7 @@ export default function ProfilePage() {
       case 'weak':
         setNewPwError(result.error ?? '새 비밀번호 조건을 충족하지 않습니다.');
         break;
+      case 'captcha_failed':
       case 'oauth_only':
       case 'missing_email':
       case 'unauthenticated':
@@ -224,8 +246,17 @@ export default function ProfilePage() {
                 disabled={changingPw}
                 error={confirmError ?? undefined}
               />
+              <TurnstileWidget
+                key={captchaResetKey}
+                onToken={handleCaptchaToken}
+                onError={handleCaptchaError}
+              />
               <div className="flex justify-end pt-1">
-                <Button type="submit" variant="secondary" disabled={changingPw}>
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  disabled={changingPw || !captchaReady}
+                >
                   {changingPw ? '변경 중…' : '비밀번호 변경'}
                 </Button>
               </div>

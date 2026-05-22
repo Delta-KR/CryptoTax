@@ -13,6 +13,7 @@ export type ChangePasswordCode =
   | 'weak'
   | 'missing_email'
   | 'unauthenticated'
+  | 'captcha_failed'
   | 'unknown';
 
 export interface ChangePasswordResult {
@@ -24,6 +25,7 @@ export interface ChangePasswordResult {
 export async function changePassword(input: {
   oldPassword: string;
   newPassword: string;
+  captchaToken?: string;
 }): Promise<ChangePasswordResult> {
   const supabase = createSupabaseServerClient();
   const {
@@ -61,11 +63,22 @@ export async function changePassword(input: {
   }
 
   // Re-auth로 기존 비밀번호 검증. signInWithPassword가 성공하면 세션이 refresh됨.
+  // Supabase project에 captcha protection이 켜져 있으면 captchaToken 없이는
+  // password grant가 전부 거부됨 → 사용자에게 "비번 불일치"로 보여 혼란 유발.
   const { error: reauthError } = await supabase.auth.signInWithPassword({
     email,
     password: input.oldPassword,
+    options: input.captchaToken ? { captchaToken: input.captchaToken } : undefined,
   });
   if (reauthError) {
+    const msg = (reauthError.message || '').toLowerCase();
+    if (msg.includes('captcha')) {
+      return {
+        ok: false,
+        error: '보안 검증에 실패했습니다. 페이지를 새로고침 후 다시 시도해주세요.',
+        code: 'captcha_failed',
+      };
+    }
     return {
       ok: false,
       error: '기존 비밀번호가 일치하지 않습니다.',

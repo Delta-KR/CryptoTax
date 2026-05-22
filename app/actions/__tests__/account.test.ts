@@ -140,6 +140,58 @@ describe('changePassword', () => {
     expect(updateUserMock).not.toHaveBeenCalled();
   });
 
+  // Supabase project에 captcha protection이 켜진 환경에서 captchaToken 누락 시,
+  // Supabase가 "captcha protection: request disallowed (no captcha_token found)"를 반환.
+  // 이걸 wrong_password로 잘못 매핑하면 사용자는 비번이 맞는데도 틀렸다고 표시됨.
+  it('returns captcha_failed code when reauth error mentions captcha', async () => {
+    getUserMock.mockReturnValue({
+      data: {
+        user: {
+          id: 'u',
+          email: 'x@x.com',
+          app_metadata: { providers: ['email'] },
+        },
+      },
+    });
+    signInWithPasswordMock.mockReturnValue({
+      error: {
+        message: 'captcha protection: request disallowed (no captcha_token found)',
+      },
+    });
+    const r = await changePassword({
+      oldPassword: 'old',
+      newPassword: 'Aa1!aaaaaaaa',
+    });
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('captcha_failed');
+    expect(updateUserMock).not.toHaveBeenCalled();
+  });
+
+  it('forwards captchaToken to signInWithPassword options', async () => {
+    getUserMock.mockReturnValue({
+      data: {
+        user: {
+          id: 'u',
+          email: 'x@x.com',
+          app_metadata: { providers: ['email'] },
+        },
+      },
+    });
+    signInWithPasswordMock.mockReturnValue({ error: null });
+    updateUserMock.mockReturnValue({ error: null });
+    const r = await changePassword({
+      oldPassword: 'old',
+      newPassword: 'Aa1!aaaaaaaa',
+      captchaToken: 'tok-123',
+    });
+    expect(r.ok).toBe(true);
+    expect(signInWithPasswordMock).toHaveBeenCalledWith({
+      email: 'x@x.com',
+      password: 'old',
+      options: { captchaToken: 'tok-123' },
+    });
+  });
+
   it('succeeds when re-auth + updateUser succeed', async () => {
     getUserMock.mockReturnValue({
       data: {
