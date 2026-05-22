@@ -16,6 +16,7 @@ import type {
   UnifiedTransaction,
 } from '@/lib/engine/types';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getEffectivePlan } from '@/lib/auth/server';
 import {
   MAX_PREV_STRING,
   previousParsedSchema,
@@ -28,25 +29,6 @@ import type {
   TaxResultWire,
   UnifiedTransactionWire,
 } from './calculate.types';
-
-async function getUserPlan(): Promise<'free' | 'premium'> {
-  try {
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return 'free';
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', user.id)
-      .maybeSingle<{ plan: 'free' | 'premium' }>();
-    return profile?.plan ?? 'free';
-  } catch (e) {
-    console.error('[getUserPlan] error:', e);
-    return 'free';
-  }
-}
 
 function maskForFree(wire: TaxResultWire): TaxResultWire {
   return {
@@ -337,7 +319,7 @@ export async function calculateTaxFromFiles(
       imputedExpenseCoins,
     });
 
-    const plan = await getUserPlan();
+    const plan = await getEffectivePlan();
     const wire = resultToWire(result, plan);
     const sourceInfo = rates.getSourceInfo();
     // fallbackDateRange는 server-only (warning 메시지 작성에만 사용). wire에는 제외.

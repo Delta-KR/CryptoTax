@@ -5,37 +5,13 @@
 // Premium 전용 — 의제취득가액과 동일한 fallback 영역이므로 유료 기능으로 묶음.
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { requirePremium } from '@/lib/auth/server';
 
 const COIN_PATTERN = /^[A-Z0-9_-]{1,16}$/;
 
 interface ActionResult {
   ok: boolean;
   error?: string;
-}
-
-async function ensurePremium(): Promise<
-  | { ok: true; userId: string }
-  | { ok: false; error: string }
-> {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: '로그인이 필요합니다.' };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('plan')
-    .eq('id', user.id)
-    .maybeSingle<{ plan: 'free' | 'premium' }>();
-
-  if (profile?.plan !== 'premium') {
-    return {
-      ok: false,
-      error: '필요경비 의제 적용은 프리미엄 전용 기능입니다.',
-    };
-  }
-  return { ok: true, userId: user.id };
 }
 
 export async function saveImputedExpenseCoin(
@@ -46,7 +22,7 @@ export async function saveImputedExpenseCoin(
       return { ok: false, error: '코인 형식이 올바르지 않습니다.' };
     }
 
-    const guard = await ensurePremium();
+    const guard = await requirePremium('필요경비 의제 적용');
     if (!guard.ok) return { ok: false, error: guard.error };
 
     const supabase = createSupabaseServerClient();
@@ -74,7 +50,7 @@ export async function deleteImputedExpenseCoin(
       return { ok: false, error: '코인 형식이 올바르지 않습니다.' };
     }
 
-    const guard = await ensurePremium();
+    const guard = await requirePremium('필요경비 의제 적용');
     if (!guard.ok) return { ok: false, error: guard.error };
 
     const supabase = createSupabaseServerClient();
