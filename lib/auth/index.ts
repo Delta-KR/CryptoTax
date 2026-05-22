@@ -22,10 +22,19 @@ async function buildUser(sessionUser: SessionUser): Promise<User> {
   const supabase = createSupabaseBrowserClient();
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan')
+    .select('plan, premium_until')
     .eq('id', sessionUser.id)
-    .maybeSingle<{ plan: Plan }>();
+    .maybeSingle<{ plan: Plan; premium_until: string | null }>();
   const email = sessionUser.email ?? '';
+  // 만료된 premium은 client UI에서도 free로 강등 — 서버의 requirePremium과 일관.
+  // premium_until=null은 legacy/관리자 grant로 무기한 처리.
+  let effectivePlan: Plan = profile?.plan ?? 'free';
+  if (effectivePlan === 'premium' && profile?.premium_until) {
+    const until = new Date(profile.premium_until);
+    if (Number.isNaN(until.getTime()) || until.getTime() <= Date.now()) {
+      effectivePlan = 'free';
+    }
+  }
   return {
     id: sessionUser.id,
     email,
@@ -33,7 +42,7 @@ async function buildUser(sessionUser: SessionUser): Promise<User> {
       sessionUser.user_metadata?.name ??
       email.split('@')[0] ??
       '사용자',
-    plan: profile?.plan ?? 'free',
+    plan: effectivePlan,
   };
 }
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { requirePremium } from '@/lib/auth/server';
 import { ensureFontRegistered } from '@/lib/report/font-config';
 import { TaxReport } from '@/lib/report/tax-report';
 import { reportRequestSchema } from '@/lib/validation/report';
@@ -46,6 +47,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const guard = await requirePremium('PDF 리포트 다운로드');
+    if (!guard.ok) {
+      const status = guard.reason === 'unauthenticated' ? 401 : 403;
+      const error =
+        guard.reason === 'not_premium'
+          ? 'PDF 리포트 다운로드는 프리미엄 전용 기능입니다. 업그레이드 후 이용해주세요.'
+          : guard.error;
+      return NextResponse.json({ error }, { status });
+    }
+
+    // 다운로드 메타데이터(파일명 생성)에 user 객체가 필요해 한 번 더 가져옴.
+    // requirePremium 내부에서 이미 검증된 user — 여기서는 null 가드만.
     const supabase = createSupabaseServerClient();
     const {
       data: { user },
@@ -54,22 +67,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '로그인이 필요합니다.' },
         { status: 401 },
-      );
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', user.id)
-      .maybeSingle<{ plan: 'free' | 'premium' }>();
-
-    if (profile?.plan !== 'premium') {
-      return NextResponse.json(
-        {
-          error:
-            'PDF 리포트 다운로드는 프리미엄 전용 기능입니다. 업그레이드 후 이용해주세요.',
-        },
-        { status: 403 },
       );
     }
 

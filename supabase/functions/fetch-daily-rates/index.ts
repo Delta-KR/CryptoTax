@@ -6,10 +6,15 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // Body: { startDate?: 'YYYY-MM-DD', coins?: string[] }
 // startDate 기본값: 30일 전. coins 기본값: BTC,ETH,USDT,SOL,XRP
 //
-// 주의: verify_jwt=false. v2에서 추가 예정:
-//   - body 시크릿 인증 (env: FETCH_RATES_SECRET)
-//   - rate limit (Upstash Redis 등)
-//   - cron 자동화
+// 인증: x-shared-secret 헤더 == FETCH_RATES_SHARED_SECRET (env) 필수.
+// verify_jwt=false 이므로 익명 호출이 가능한 점을 shared secret로 보강.
+// pg_cron이 호출할 때 cron.schedule 본문에 동일 헤더를 동봉.
+//
+// 입력 clamp (DoS·data abuse 방어):
+//   - coins: 1~50개, 각 코인 정규식 검증
+//   - startDate: 2022-01-01 ~ 오늘(UTC) 범위
+//
+// v2 추가 예정: rate limit (Upstash Redis 등).
 
 const UPBIT_API = "https://api.upbit.com/v1/candles/days";
 const DEFAULT_COINS = ["BTC", "ETH", "USDT", "SOL", "XRP"];
@@ -17,6 +22,9 @@ const MAX_PAGES = 50;
 const CANDLES_PER_PAGE = 200;
 const PAGE_DELAY_MS = 300; // Upbit 공용 API: 10 req/sec
 const COIN_DELAY_MS = 1500;
+const COIN_PATTERN = /^[A-Z0-9]{1,16}$/;
+const MAX_COINS = 50;
+const MIN_START_DATE = "2022-01-01";
 
 interface UpbitCandle {
   market: string;
@@ -68,6 +76,22 @@ Deno.serve(async (req: Request) => {
     );
   }
 
+  // Shared secret 검증. 미설정 시 함수 자체를 거부 (open access 방지).
+  const sharedSecret = Deno.env.get("FETCH_RATES_SHARED_SECRET");
+  if (!sharedSecret) {
+    return new Response(
+      JSON.stringify({ error: "server_misconfigured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const providedSecret = req.headers.get("x-shared-secret");
+  if (providedSecret !== sharedSecret) {
+    return new Response(
+      JSON.stringify({ error: "unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!supabaseUrl || !serviceRole) {
@@ -86,17 +110,63 @@ Deno.serve(async (req: Request) => {
     // body 없으면 기본값 사용
   }
 
-  const coins = Array.isArray(body.coins) && body.coins.length > 0
-    ? body.coins.filter((c) =>
-      typeof c === "string" && /^[A-Z0-9]{1,16}$/.test(c)
-    )
-    : DEFAULT_COINS;
-  const startDate = typeof body.startDate === "string" &&
-      /^\d{4}-\d{2}-\d{2}$/.test(body.startDate)
-    ? body.startDate
-    : new Date(Date.now() - 30 * 24 * 3600 * 1000)
+  // coins clamp: 최대 50개. 입력이 array지만 모두 invalid면 빈 배열로 fall through하지 않도록 거부.
+  let coins: string[];
+  if (Array.isArray(body.coins) && body.coins.length > 0) {
+    if (body.coins.length > MAX_COINS) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_coins",
+          message: `coins는 최대 ${MAX_COINS}개까지 허용됩니다.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    const filtered = body.coins.filter(
+      (c): c is string => typeof c === "string" && COIN_PATTERN.test(c),
+    );
+    if (filtered.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_coins",
+          message: "유효한 coin 코드가 없습니다.",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    coins = filtered;
+  } else {
+    coins = DEFAULT_COINS;
+  }
+
+  // startDate clamp: 2022-01-01 ~ 오늘 (UTC) 범위.
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  let startDate: string;
+  if (typeof body.startDate === "string") {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(body.startDate)) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_startDate",
+          message: "startDate는 YYYY-MM-DD 형식이어야 합니다.",
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (body.startDate < MIN_START_DATE || body.startDate > todayUtc) {
+      return new Response(
+        JSON.stringify({
+          error: "invalid_startDate",
+          message: `startDate는 ${MIN_START_DATE} ~ ${todayUtc} 범위여야 합니다.`,
+        }),
+        { status: 400, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    startDate = body.startDate;
+  } else {
+    startDate = new Date(Date.now() - 30 * 24 * 3600 * 1000)
       .toISOString()
       .slice(0, 10);
+  }
 
   let inserted = 0;
   const errors: string[] = [];

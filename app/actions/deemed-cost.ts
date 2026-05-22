@@ -5,6 +5,7 @@
 // 판단할 때 fallback으로 사용. 저장된 override는 본인에게만 적용 (RLS).
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { requirePremium } from '@/lib/auth/server';
 
 const DEEMED_DATE = '2026-12-31';
 const MAX_PRICE_KRW = 1e12; // 1조원 — 어떤 코인 단가도 이를 넘을 수 없음.
@@ -13,31 +14,6 @@ const COIN_PATTERN = /^[A-Z0-9_-]{1,16}$/;
 interface ActionResult {
   ok: boolean;
   error?: string;
-}
-
-async function ensurePremium(): Promise<
-  | { ok: true; userId: string }
-  | { ok: false; error: string }
-> {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { ok: false, error: '로그인이 필요합니다.' };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('plan')
-    .eq('id', user.id)
-    .maybeSingle<{ plan: 'free' | 'premium' }>();
-
-  if (profile?.plan !== 'premium') {
-    return {
-      ok: false,
-      error: '의제취득가액 매뉴얼 입력은 프리미엄 전용 기능입니다.',
-    };
-  }
-  return { ok: true, userId: user.id };
 }
 
 export async function saveUserDeemedCostOverride(
@@ -60,7 +36,7 @@ export async function saveUserDeemedCostOverride(
       };
     }
 
-    const guard = await ensurePremium();
+    const guard = await requirePremium('의제취득가액 매뉴얼 입력');
     if (!guard.ok) return { ok: false, error: guard.error };
 
     const supabase = createSupabaseServerClient();
@@ -93,7 +69,7 @@ export async function deleteUserDeemedCostOverride(
       return { ok: false, error: '코인 형식이 올바르지 않습니다.' };
     }
 
-    const guard = await ensurePremium();
+    const guard = await requirePremium('의제취득가액 매뉴얼 입력');
     if (!guard.ok) return { ok: false, error: guard.error };
 
     const supabase = createSupabaseServerClient();
