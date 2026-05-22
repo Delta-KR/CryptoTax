@@ -44,6 +44,7 @@ export default function SignupPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const [success, setSuccess] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   const handleToken = useCallback((t: string) => setCaptchaToken(t), []);
   const handleCaptchaError = useCallback(
@@ -86,13 +87,17 @@ export default function SignupPage() {
           sessionStorage.setItem('kontaxt-pending-plan', pendingPlan);
         } catch {}
       }
-      const { needsEmailConfirmation } = await signUpWithPassword(
-        email.trim(),
-        password,
-        name.trim(),
-        captchaToken || undefined,
-      );
-      if (needsEmailConfirmation) {
+      const { needsEmailConfirmation, alreadyRegistered: existing } =
+        await signUpWithPassword(
+          email.trim(),
+          password,
+          name.trim(),
+          captchaToken || undefined,
+        );
+      if (existing) {
+        setAlreadyRegistered(true);
+        setSubmitting(false);
+      } else if (needsEmailConfirmation) {
         setSuccess(true);
         setSubmitting(false);
       } else {
@@ -117,7 +122,29 @@ export default function SignupPage() {
         </>
       }
     >
-      {success ? (
+      {alreadyRegistered ? (
+        <div className="rounded-md border border-warn/40 bg-warn-soft px-4 py-5 text-[13px] leading-[1.6] text-warn">
+          <div className="mb-1 font-bold">이미 가입된 이메일입니다</div>
+          <div className="mb-3">
+            <strong>{email}</strong>은 이미 Kontaxt 계정으로 등록되어 있습니다.
+            기존 비밀번호로 로그인하거나, 비밀번호를 잊으셨다면 재설정하세요.
+          </div>
+          <div className="flex gap-2">
+            <Link
+              href={`/login?email=${encodeURIComponent(email)}`}
+              className="rounded-md border border-warn/50 px-3 py-1.5 text-[12.5px] font-medium text-warn hover:bg-warn/10"
+            >
+              로그인 →
+            </Link>
+            <Link
+              href={`/reset-password?email=${encodeURIComponent(email)}`}
+              className="rounded-md px-3 py-1.5 text-[12.5px] font-medium text-warn underline"
+            >
+              비밀번호 재설정
+            </Link>
+          </div>
+        </div>
+      ) : success ? (
         <div className="rounded-md border border-good/40 bg-good-soft px-4 py-5 text-[13px] leading-[1.6] text-good">
           <div className="mb-1 font-bold">인증 이메일 발송 완료</div>
           <div>

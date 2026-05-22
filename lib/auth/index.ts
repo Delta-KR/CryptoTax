@@ -107,7 +107,10 @@ export async function signUpWithPassword(
   password: string,
   name?: string,
   captchaToken?: string,
-): Promise<{ needsEmailConfirmation: boolean }> {
+): Promise<{
+  needsEmailConfirmation: boolean;
+  alreadyRegistered: boolean;
+}> {
   const supabase = createSupabaseBrowserClient();
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -118,8 +121,17 @@ export async function signUpWithPassword(
     },
   });
   if (error) throw new Error(translateSupabaseError(error.message));
+
+  // Supabase는 이미 confirmed된 이메일로 signUp 시 user.identities를 빈 배열로 반환.
+  // (보안 패턴 — 명시적 에러 대신 응답 구조로 신호)
+  // 우리는 한국 사용자 친화 UX를 위해 이를 감지해 "이미 가입됨" 안내로 분기.
+  const alreadyRegistered =
+    !!data.user && (data.user.identities?.length ?? 0) === 0;
+
   return {
-    needsEmailConfirmation: !data.session && !!data.user,
+    needsEmailConfirmation:
+      !data.session && !!data.user && !alreadyRegistered,
+    alreadyRegistered,
   };
 }
 
