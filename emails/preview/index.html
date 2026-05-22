@@ -301,7 +301,7 @@
           <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
           <div class="mail-meta"><strong>kontaxt</strong>Confirm your email</div>
         </div>
-        <iframe class="mail" id="frame-verify" src="../dist/verify-email.html" title="Verify email preview"></iframe>
+        <iframe class="mail" id="frame-verify" data-src="../dist/verify-email.html" title="Verify email preview"></iframe>
       </div>
     </div>
 
@@ -313,7 +313,7 @@
           <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
           <div class="mail-meta"><strong>kontaxt</strong>Reset your password</div>
         </div>
-        <iframe class="mail" id="frame-reset" src="../dist/reset-password.html" title="Reset password preview"></iframe>
+        <iframe class="mail" id="frame-reset" data-src="../dist/reset-password.html" title="Reset password preview"></iframe>
       </div>
     </div>
   </section>
@@ -331,6 +331,24 @@
   const btnD = document.getElementById('btn-dark');
   const btnS = document.getElementById('btn-system');
   const frames = ['frame-verify', 'frame-reset'].map(id => document.getElementById(id));
+
+  // dist HTML을 fetch → srcdoc 으로 inject.
+  // Launch preview / file:// 등 iframe src cross-directory가 막히는 환경에서도
+  // 동일 origin 안의 fetch 는 통상 동작하므로 srcdoc 으로 풀어서 표시.
+  // fetch 실패 시 src 로 fallback.
+  async function loadFrame(frame) {
+    const path = frame.dataset.src;
+    if (!path) return;
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error('fetch ' + res.status);
+      frame.srcdoc = await res.text();
+    } catch (e) {
+      console.warn('[preview] fetch failed, falling back to src:', e);
+      frame.src = path;
+    }
+  }
+  frames.forEach(loadFrame);
 
   function setMode(mode) {
     localStorage.setItem('kontaxt-mail-theme', mode);
