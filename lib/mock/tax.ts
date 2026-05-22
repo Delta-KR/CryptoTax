@@ -3,7 +3,7 @@
 import { loadSession } from '@/lib/storage/session';
 import type { Transaction } from './transactions';
 
-export type TaxMethod = 'fifo' | 'avg';
+export type TaxMethod = 'totalAverage' | 'fifo' | 'avg';
 
 export interface RateSourceClient {
   primary: string;
@@ -75,13 +75,6 @@ export interface HoldingsByCoinClient {
   lots: HoldingLotClient[];
 }
 
-// v2 #1: 비교 카드용 client 타입.
-export interface MethodComparisonClient {
-  fifo: { netPnL: number; taxable: number; tax: number };
-  ma: { netPnL: number; taxable: number; tax: number };
-  selected: 'fifo' | 'ma';
-}
-
 export interface TaxResult {
   totalGain: number; // 양수 손익 합계 (순수 이익 합계)
   totalLoss: number; // 음수 손익 합계의 절댓값 (순수 손실 합계)
@@ -98,7 +91,6 @@ export interface TaxResult {
   masked: boolean;
   rateSource: RateSourceClient | null;
   deemedCostSource: DeemedCostSourceClient | null;
-  methodComparison: MethodComparisonClient | null; // v2 #1
 }
 
 const DEDUCTION_KRW = 2_500_000;
@@ -119,7 +111,6 @@ const EMPTY_RESULT: TaxResult = {
   masked: false,
   rateSource: null,
   deemedCostSource: null,
-  methodComparison: null,
 };
 
 export function calculateTax(
@@ -206,21 +197,6 @@ export function calculateTax(
     masked: r.masked ?? false,
     rateSource: r.rateSource ?? null,
     deemedCostSource: r.deemedCostSource ?? null,
-    methodComparison: r.methodComparison
-      ? {
-          fifo: {
-            netPnL: r.methodComparison.fifo.netPnLKRW,
-            taxable: r.methodComparison.fifo.taxableIncomeKRW,
-            tax: r.methodComparison.fifo.taxAmountKRW,
-          },
-          ma: {
-            netPnL: r.methodComparison.ma.netPnLKRW,
-            taxable: r.methodComparison.ma.taxableIncomeKRW,
-            tax: r.methodComparison.ma.taxAmountKRW,
-          },
-          selected: r.methodComparison.selected,
-        }
-      : null,
   };
 }
 
@@ -310,9 +286,10 @@ export function calculateMATimeline(): MATimelineCoin[] {
 const METHOD_KEY = 'kontaxt-method';
 
 export function getTaxMethod(): TaxMethod {
-  if (typeof window === 'undefined') return 'fifo';
+  if (typeof window === 'undefined') return 'totalAverage';
   const v = localStorage.getItem(METHOD_KEY);
-  return v === 'avg' ? 'avg' : 'fifo';
+  if (v === 'fifo' || v === 'avg' || v === 'totalAverage') return v;
+  return 'totalAverage';
 }
 
 export function setTaxMethod(m: TaxMethod) {

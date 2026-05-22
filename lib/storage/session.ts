@@ -31,8 +31,9 @@ const sessionSchema = z.object({
   allUnified: reportRequestSchema.shape.transactions,
   result: reportRequestSchema.shape.result,
   year: z.number().int().min(2020).max(2030),
-  // 구버전 세션 호환: method 누락 시 'fifo'로 기본값 처리 (loadSession에서 보강).
-  method: z.enum(['fifo', 'avg']).optional(),
+  // 구버전 세션 호환: method 누락 시 'totalAverage'로 기본값 처리 (loadSession에서 보강).
+  // 시행령 §88① 거주자 총평균법이 디폴트. 'fifo'/'avg'는 구세션 또는 비거주자 모드 호환.
+  method: z.enum(['totalAverage', 'fifo', 'avg']).optional(),
   uploads: z
     .array(
       z.object({
@@ -58,10 +59,10 @@ export function loadSession(): SessionData | null {
       localStorage.removeItem(KEY);
       return null;
     }
-    // 구버전 세션(method 미보유) 호환: 기본 'fifo' 보강.
+    // 구버전 세션(method 미보유) 호환: 거주자 디폴트 'totalAverage' 보강.
     return {
       ...(validated.data as unknown as Omit<SessionData, 'method'>),
-      method: validated.data.method ?? 'fifo',
+      method: validated.data.method ?? 'totalAverage',
     } as SessionData;
   } catch {
     return null;

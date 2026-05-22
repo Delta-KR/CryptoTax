@@ -209,115 +209,6 @@ function MATimelineCard({
   );
 }
 
-// v2 #1: FIFO vs MA 자동 비교 카드. 마케팅 약속(components/sections/example.tsx "cheaper" 자동 비교)
-// 충족용. 양쪽 method 결과가 wire에 같이 와서 토글 없이도 자동 비교.
-// masked면 카드 전체에 BlurOverlay (premium 전용 카드).
-function MethodComparisonCard({
-  comparison,
-  selected,
-  masked,
-}: {
-  comparison: {
-    fifo: { netPnL: number; tax: number };
-    ma: { netPnL: number; tax: number };
-  };
-  selected: 'fifo' | 'ma';
-  masked: boolean;
-}) {
-  const fifoTax = comparison.fifo.tax;
-  const maTax = comparison.ma.tax;
-  // 세금 기준 비교 (납부세액 작은 쪽이 유리). 동률이면 cheaper=null.
-  const cheaper: 'fifo' | 'ma' | null =
-    fifoTax === maTax ? null : fifoTax < maTax ? 'fifo' : 'ma';
-  const diff = Math.abs(fifoTax - maTax);
-
-  // 양쪽 모두 세금 0이면 비교 의미 없음 (공제 이하 또는 손실).
-  const bothZero = fifoTax === 0 && maTax === 0;
-
-  return (
-    <Card padding="lg" className="mb-6">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-[16px] font-bold text-ink">
-          FIFO vs 이동평균법 자동 비교
-        </h2>
-        <Pill tone="brand" size="sm">
-          PREMIUM
-        </Pill>
-      </div>
-      <BlurOverlay masked={masked}>
-        <div className="grid grid-cols-2 gap-3">
-          {(['fifo', 'ma'] as const).map((m) => {
-            const data = comparison[m];
-            const isSelected = m === selected;
-            const isCheaper = m === cheaper;
-            return (
-              <div
-                key={m}
-                className={
-                  'rounded-lg border p-4 transition-colors ' +
-                  (isCheaper
-                    ? 'border-good/50 bg-good-soft'
-                    : 'border-line bg-card-2')
-                }
-              >
-                <div className="mb-1 flex items-center gap-1.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-2">
-                    {m === 'fifo' ? '선입선출법 (FIFO)' : '이동평균법 (MA)'}
-                  </div>
-                  {isSelected && (
-                    <Pill tone="brand" size="sm">
-                      현재
-                    </Pill>
-                  )}
-                  {isCheaper && !bothZero && (
-                    <Pill tone="good" size="sm">
-                      유리
-                    </Pill>
-                  )}
-                </div>
-                <div className="num mt-2 text-[20px] font-extrabold tracking-tighter3 text-ink">
-                  {formatKrw(data.tax)}
-                </div>
-                <div className="mt-1 text-[11px] text-muted">
-                  순손익 {formatKrw(data.netPnL)}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-4 text-[12.5px] leading-[1.6] text-ink-2">
-          {bothZero ? (
-            <span className="text-muted">
-              두 방식 모두 과세표준이 0이라 납부세액이 같습니다 (공제 ₩2.5M
-              이내 또는 손실).
-            </span>
-          ) : cheaper === null ? (
-            <span className="text-muted">
-              두 방식의 납부세액이 동일합니다.
-            </span>
-          ) : (
-            <>
-              <strong className="text-good">
-                {cheaper === 'fifo' ? '선입선출법' : '이동평균법'}
-              </strong>
-              이 <strong className="text-good">{formatKrw(diff)}</strong> 더
-              유리합니다.{' '}
-              {cheaper !== selected && (
-                <Link
-                  href="/tax/settings"
-                  className="font-semibold text-brand hover:underline"
-                >
-                  방식 변경 →
-                </Link>
-              )}
-            </>
-          )}
-        </div>
-      </BlurOverlay>
-    </Card>
-  );
-}
-
 // P1 #10: 이월 보유 자산 — 신고 연도 종료 시점 잔여 lots.
 function HoldingsAfterTable({
   holdings,
@@ -719,7 +610,7 @@ export default function TaxPage() {
   const toast = useToast();
   const { user } = useCurrentUser();
   const [year, setYear] = useState(2027);
-  const [method, setMethod] = useState<TaxMethod>('fifo');
+  const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const recalcTriggered = useRef(false);
@@ -769,7 +660,7 @@ export default function TaxPage() {
     <>
       <PageHeader
         title="세금 계산"
-        description={`${year}년 양도소득 · ${method === 'fifo' ? '선입선출법' : '이동평균법'} 적용`}
+        description={`${year}년 양도소득 · ${method === 'totalAverage' ? '총평균법 (시행령 §88①)' : method === 'fifo' ? '선입선출법' : '이동평균법'} 적용`}
         right={
           <div className="flex items-center gap-2">
             <Select
@@ -821,26 +712,6 @@ export default function TaxPage() {
           />
         </BlurOverlay>
       </div>
-
-      {/* v2 #1: FIFO vs MA 자동 비교 카드 (마케팅 약속 충족) */}
-      {result.methodComparison && (
-        <div className="mt-6">
-          <MethodComparisonCard
-            comparison={{
-              fifo: {
-                netPnL: result.methodComparison.fifo.netPnL,
-                tax: result.methodComparison.fifo.tax,
-              },
-              ma: {
-                netPnL: result.methodComparison.ma.netPnL,
-                tax: result.methodComparison.ma.tax,
-              },
-            }}
-            selected={result.methodComparison.selected}
-            masked={masked}
-          />
-        </div>
-      )}
 
       {/* v2 #2: MA 평균 단가 timeline — MA 사용 시에만 의미 있음 */}
       {method === 'avg' && maTimelines.length > 0 && (
@@ -1012,7 +883,7 @@ export default function TaxPage() {
           {result.perCoin.length > 0 && (
             <div className="border-t border-line-2 px-6 py-3">
               <Pill tone="brand" size="sm">
-                {method === 'fifo' ? '선입선출법(FIFO)' : '이동평균법(MA)'}
+                {method === 'totalAverage' ? '총평균법' : method === 'fifo' ? '선입선출법(FIFO)' : '이동평균법(MA)'}
               </Pill>
             </div>
           )}
@@ -1090,13 +961,15 @@ export default function TaxPage() {
                 매도-매수 매칭
               </h2>
               <p className="mt-0.5 text-[12px] text-muted">
-                {method === 'fifo'
+                {method === 'totalAverage'
+                  ? '각 매도에 적용된 연 단위 총평균 단가 (lot 추적 없음, 시행령 §92②4호)'
+                  : method === 'fifo'
                   ? '각 매도가 어떤 매수 lot과 페어됐는지 (선입선출 순)'
                   : '각 매도에 적용된 평균 단가 · 의제취득가액 여부'}
               </p>
             </div>
             <Pill tone="brand" size="sm">
-              {method === 'fifo' ? 'FIFO' : 'MA'}
+              {method === 'totalAverage' ? '총평균법' : method === 'fifo' ? 'FIFO' : 'MA'}
             </Pill>
           </div>
           {masked ? (

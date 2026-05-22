@@ -61,14 +61,6 @@ function maskForFree(wire: TaxResultWire): TaxResultWire {
       ...s,
       realizedPnLKRW: 0,
     })),
-    // v2 #1: 비교 카드도 premium 전용. 양쪽 모두 0으로 마스킹.
-    methodComparison: wire.methodComparison
-      ? {
-          fifo: { netPnLKRW: 0, taxableIncomeKRW: 0, taxAmountKRW: 0 },
-          ma: { netPnLKRW: 0, taxableIncomeKRW: 0, taxAmountKRW: 0 },
-          selected: wire.methodComparison.selected,
-        }
-      : undefined,
     masked: true,
   };
 }
@@ -284,9 +276,12 @@ export async function calculateTaxFromFiles(
       };
     }
 
-    // method: 'fifo' | 'avg'. 미지정 또는 알 수 없는 값은 'fifo' 기본.
+    // 거주자 디폴트 'totalAverage' (시행령 §88①). 'fifo'/'avg'는 비거주자 모드(§183⑥) 또는 참고용.
     const methodRaw = formData.get('method');
-    const method: TaxMethod = methodRaw === 'avg' ? 'avg' : 'fifo';
+    const method: TaxMethod =
+      methodRaw === 'fifo' || methodRaw === 'avg' || methodRaw === 'totalAverage'
+        ? methodRaw
+        : 'totalAverage';
 
     // 같은 파일(또는 기간 겹친 파일) 재업로드 시 cost basis 2배 방지.
     // 모든 핵심 필드가 동일한 거래는 자동 제거. 결과 warnings에 N건 명시.
@@ -316,37 +311,17 @@ export async function calculateTaxFromFiles(
     const deemedRes = await resolveDeemedCostPrices(preCoinsSet);
 
     const year = currentTargetYear();
-    // v2 백로그 #1: FIFO vs MA 자동 비교 — 양쪽 method 모두 계산.
-    // 메인 결과는 사용자가 선택한 method, 비교 카드용 alternative 결과는 핵심 지표만.
-    const fifoResult = calculateTax({
+    // 거주자 단일 method 계산 (시행령 §88① 총평균법 디폴트). v2 #1 듀얼 계산은 법령 정립
+    // 결과 폐기 — 거주자에게 FIFO/MA는 비표준이라 비교 무의미.
+    const result = calculateTax({
       transactions: unified,
       year,
       deemedCostPrices: deemedRes.prices,
-      method: 'fifo',
+      method,
     });
-    const maResult = calculateTax({
-      transactions: unified,
-      year,
-      deemedCostPrices: deemedRes.prices,
-      method: 'avg',
-    });
-    const result = method === 'avg' ? maResult : fifoResult;
 
     const plan = await getUserPlan();
     const wire = resultToWire(result, plan);
-    wire.methodComparison = {
-      fifo: {
-        netPnLKRW: fifoResult.netPnLKRW,
-        taxableIncomeKRW: fifoResult.taxableIncomeKRW,
-        taxAmountKRW: fifoResult.taxAmountKRW,
-      },
-      ma: {
-        netPnLKRW: maResult.netPnLKRW,
-        taxableIncomeKRW: maResult.taxableIncomeKRW,
-        taxAmountKRW: maResult.taxAmountKRW,
-      },
-      selected: method === 'avg' ? 'ma' : 'fifo',
-    };
     const sourceInfo = rates.getSourceInfo();
     // fallbackDateRange는 server-only (warning 메시지 작성에만 사용). wire에는 제외.
     wire.rateSource = {

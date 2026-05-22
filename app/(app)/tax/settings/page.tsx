@@ -20,32 +20,54 @@ interface MethodOption {
   description: string;
   pros: string[];
   cons: string[];
+  badge?: string;
 }
 
 const options: MethodOption[] = [
   {
+    id: 'totalAverage',
+    name: '총평균법',
+    short: 'Total Average · 시행령 §88① · §92②4호',
+    description:
+      '거주자 가상자산 양도소득의 법정 평가방법. 과세기간(1.1~12.31) 개시일 보유분과 연내 매수분의 총가액을 총수량으로 나눈 평균단가로 매도 손익을 산정합니다.',
+    pros: [
+      '거주자 신고에 법정 적용 (시행령 §88①, 2025-02-28 개정)',
+      '연 단위 평균이라 거래 순서 정밀도 의존이 낮음',
+      '거래소·지갑 통합 (한 거주자의 모든 보유 합산)',
+    ],
+    cons: [
+      '과세기간 종료 후 평균단가 확정 — 분기 중 중간 결과는 잠정치',
+      '연내 매수 부대비용이 평균단가에 흡수되어 lot 단위 추적 불가',
+    ],
+    badge: '거주자 법정',
+  },
+  {
     id: 'fifo',
     name: '선입선출법 (FIFO)',
-    short: 'First-In First-Out',
-    description: '먼저 매수한 코인부터 매도된 것으로 계산합니다. 한국 세법 기본 방식.',
-    pros: ['직관적이고 계산이 단순', '국세청 권장 방식', '대부분의 거래소 호환'],
-    cons: ['장기 보유분 처분 시 과세표준 높을 수 있음', '시세 변동성 큰 코인에 불리'],
+    short: 'First-In First-Out — 참고용 시나리오',
+    description:
+      '먼저 매수한 코인부터 매도된 것으로 계산하는 방식. 현행 시행령상 거주자 신고에는 적용되지 않으며, 참고용 시나리오 비교에만 사용됩니다.',
+    pros: ['매도-매수 lot 매칭으로 audit trail이 명확'],
+    cons: ['거주자 신고에는 비표준 — 시행령 §88①과 불일치', '연내 거래 순서에 결과가 민감'],
+    badge: '참고용',
   },
   {
     id: 'avg',
     name: '이동평균법 (MA)',
-    short: 'Moving Average',
-    description: '각 매수 시점마다 평균 취득가를 갱신하며, 매도 시 평균가를 사용.',
-    pros: ['매수가 평탄화 → 변동성 큰 코인 유리', '세무 처리 시 일관성'],
-    cons: ['매수마다 평균 재계산 필요', '거래소별 평균이 다를 수 있음'],
+    short: 'Moving Average — 시행령 §183⑥ (비거주자)',
+    description:
+      '매수 시마다 평균 취득가를 갱신하는 방식. 시행령 §183⑥에 따라 비거주자 가상자산 양도소득의 법정 평가방법입니다. 거주자는 적용 대상이 아닙니다.',
+    pros: ['비거주자 신고 법정 (§183⑥)', '평균 자체는 매수 시점에 확정'],
+    cons: ['거주자에게는 비표준', '매수마다 평균 재계산 필요'],
+    badge: '비거주자',
   },
 ];
 
 export default function TaxSettingsPage() {
   const router = useRouter();
   const toast = useToast();
-  const [current, setCurrent] = useState<TaxMethod>('fifo');
-  const [selected, setSelected] = useState<TaxMethod>('fifo');
+  const [current, setCurrent] = useState<TaxMethod>('totalAverage');
+  const [selected, setSelected] = useState<TaxMethod>('totalAverage');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -63,9 +85,15 @@ export default function TaxSettingsPage() {
     const session = loadSession();
     const hasData = (session?.allParsed.length ?? 0) > 0;
 
+    const methodLabel =
+      selected === 'totalAverage'
+        ? '총평균법'
+        : selected === 'fifo'
+        ? '선입선출법'
+        : '이동평균법';
     if (!hasData) {
       toast.show(
-        `계산 방식이 ${selected === 'fifo' ? '선입선출법' : '이동평균법'}으로 변경되었습니다. 다음 업로드부터 적용됩니다.`,
+        `계산 방식이 ${methodLabel}으로 변경되었습니다. 다음 업로드부터 적용됩니다.`,
         'success',
       );
       router.push('/tax');
@@ -92,10 +120,7 @@ export default function TaxSettingsPage() {
         return;
       }
       replaceCalculation(result.payload);
-      toast.show(
-        `${selected === 'fifo' ? '선입선출법' : '이동평균법'}으로 재계산 완료`,
-        'success',
-      );
+      toast.show(`${methodLabel}으로 재계산 완료`, 'success');
       router.push('/tax');
     } catch (e) {
       setTaxMethod(current);
@@ -112,13 +137,14 @@ export default function TaxSettingsPage() {
     <>
       <PageHeader
         title="계산 방식 설정"
-        description="양도소득 계산에 사용할 방식을 선택합니다. 변경 시 모든 연도의 결과가 재계산됩니다."
+        description="거주자 가상자산 양도소득은 시행령 §88①에 따라 총평균법이 법정 방식입니다. 다른 방식은 참고용·비거주자 시나리오 비교에만 사용하세요."
       />
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {options.map((opt) => {
           const active = selected === opt.id;
           const isCurrent = current === opt.id;
+          const isLegal = opt.id === 'totalAverage';
           return (
             <label
               key={opt.id}
@@ -139,8 +165,13 @@ export default function TaxSettingsPage() {
               />
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-[18px] font-bold text-ink">{opt.name}</h3>
+                    {opt.badge && (
+                      <Pill tone={isLegal ? 'brand' : 'neutral'} size="sm">
+                        {opt.badge}
+                      </Pill>
+                    )}
                     {isCurrent && (
                       <Pill tone="good" size="sm">
                         현재 적용

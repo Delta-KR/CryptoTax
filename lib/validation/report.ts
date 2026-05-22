@@ -88,20 +88,6 @@ const deemedCostSourceSchema = z
   })
   .optional();
 
-// v2 #1: FIFO vs MA 자동 비교. 양쪽 method 핵심 지표를 함께 보관.
-const comparisonResultSchema = z.object({
-  netPnLKRW: moneyKRW,
-  taxableIncomeKRW: moneyKRW,
-  taxAmountKRW: moneyKRW,
-});
-const methodComparisonSchema = z
-  .object({
-    fifo: comparisonResultSchema,
-    ma: comparisonResultSchema,
-    selected: z.enum(['fifo', 'ma']),
-  })
-  .optional();
-
 const taxResultSchema = z.object({
   year: z.number().int().min(2020).max(2030),
   totalGainKRW: moneyKRW,
@@ -131,7 +117,6 @@ const taxResultSchema = z.object({
   masked: z.boolean(),
   rateSource: rateSourceSchema,
   deemedCostSource: deemedCostSourceSchema,
-  methodComparison: methodComparisonSchema,
 });
 
 const rateMetaSchema = z
@@ -161,8 +146,9 @@ export const reportRequestSchema = z.object({
   year: z.number().int().min(2020).max(2030),
   result: taxResultSchema,
   transactions: z.array(unifiedTransactionSchema).max(10_000),
-  // 구버전 세션 호환: method 누락 시 'fifo' 디폴트 (route.ts에서 보강).
-  method: z.enum(['fifo', 'avg']).optional(),
+  // 구버전 세션 호환: method 누락 시 'totalAverage' 디폴트 (route.ts에서 보강).
+  // 시행령 §88① 거주자 총평균법.
+  method: z.enum(['totalAverage', 'fifo', 'avg']).optional(),
 });
 
 export type ReportRequest = z.infer<typeof reportRequestSchema>;
