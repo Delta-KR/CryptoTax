@@ -7,6 +7,13 @@ import { TaxReport } from '@/lib/report/tax-report';
 import { reportRequestSchema } from '@/lib/validation/report';
 import { SITE_URL } from '@/lib/site';
 import { checkRateLimit, getReportRateLimit } from '@/lib/rate-limit';
+import { calculateTax } from '@/lib/engine/tax-calculator';
+import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
+import {
+  resolveDeemedCostPrices,
+  resolveImputedExpenseCoins,
+} from '@/lib/engine/resolvers';
+import { resultToWire, unifiedFromWire } from '@/lib/engine/wire';
 
 export const maxDuration = 60;
 
@@ -128,6 +135,57 @@ export async function POST(request: NextRequest) {
     }
     const body = parsed.data;
 
+    // C4: 거주자 양도소득은 시행령 §88①에 따라 총평균법만 신고 가능.
+    // fifo/avg 결과로 만든 PDF는 신고서로 쓸 수 없으므로 다운로드 차단.
+    // method 미전송(legacy session) 시 totalAverage로 간주.
+    const requestedMethod = body.method ?? 'totalAverage';
+    if (requestedMethod !== 'totalAverage') {
+      return NextResponse.json(
+        {
+          error:
+            '거주자 가상자산 양도소득은 시행령 §88①에 따라 총평균법만 신고 가능합니다. 참고용 계산 결과(FIFO/이동평균)는 PDF로 다운로드할 수 없습니다.',
+        },
+        { status: 400 },
+      );
+    }
+
+    // C5: 서버 재계산. client가 보낸 `body.result`는 신뢰하지 않음 — 사용자가
+    // DevTools로 0원 신고서를 만들 수 있으므로. transactions만 zod 검증된 입력으로
+    // 받아서, 의제 시가 + 의제 50% 코인 + 환율 출처는 서버 DB에서 다시 조회.
+    const transactions = body.transactions.map(unifiedFromWire);
+    const preCoinsSet = new Set<string>();
+    for (const tx of transactions) {
+      if (tx.type === 'BUY' && isPreDeemedDate(tx.date)) {
+        preCoinsSet.add(tx.coin);
+      }
+    }
+    const [deemedRes, imputedExpenseCoins] = await Promise.all([
+      resolveDeemedCostPrices(preCoinsSet),
+      resolveImputedExpenseCoins(),
+    ]);
+
+    const serverResult = calculateTax({
+      transactions,
+      year: body.year,
+      method: 'totalAverage', // C4 가드로 인해 여기까지 오면 항상 totalAverage.
+      deemedCostPrices: deemedRes.prices,
+      imputedExpenseCoins,
+    });
+
+    // wire 변환 + 출처 메타데이터 부여 (PDF audit trail용).
+    // rateSource는 클라이언트가 보낸 값을 그대로 신뢰 — pricePerUnitKRW 자체는
+    // 검증된 transactions에 박혀 있고, rateSource는 표시용 메타에 불과.
+    // 잘못 표시될 경우 audit trail이 부정확해지지만 세액 자체는 영향 없음.
+    const wire = resultToWire(serverResult, 'premium');
+    wire.rateSource = body.result.rateSource;
+    wire.deemedCostSource = {
+      realCoins: deemedRes.realCoins,
+      estimateCoins: deemedRes.estimateCoins,
+      userOverrideCoins: deemedRes.userOverrideCoins,
+      missingCoins: deemedRes.missingCoins,
+      deemedDate: deemedRes.deemedDate,
+    };
+
     ensureFontRegistered();
 
     const userName =
@@ -139,9 +197,9 @@ export async function POST(request: NextRequest) {
       TaxReport({
         userName,
         year: body.year,
-        result: body.result,
+        result: wire,
         transactions: body.transactions,
-        method: body.method ?? 'totalAverage',
+        method: 'totalAverage',
       }),
     );
 

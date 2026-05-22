@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
+import { findUserByEmail } from '@/lib/supabase/admin-lookup';
 
 // Naver OAuth 콜백:
 // 1. state 검증 (CSRF)
 // 2. code → Naver access_token 교환
 // 3. access_token → Naver 사용자 정보 (email, name) fetch
-// 4. Supabase admin generateLink로 magic link 발급 (이메일 발송 X, URL만 받음)
-// 5. magic link로 server-side redirect → Supabase가 자동 세션 발급 + /dashboard로 이동
+// 4. 같은 email에 다른 provider 계정이 있는지 검증 (C2 account takeover 차단)
+// 5. Supabase admin generateLink로 magic link 발급 (이메일 발송 X, URL만 받음)
+// 6. app_metadata에 provider=naver 명시 (Dashboard 표시용)
+// 7. magic link로 server-side redirect → Supabase가 자동 세션 발급 + /dashboard로 이동
 //
 // iCloud Mail prefetch issue 무관 — 사용자 클릭 안 함, server redirect로 즉시 처리.
 
@@ -68,7 +71,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=access_denied', url.origin));
     }
 
-    // 4. Supabase admin: 사용자 upsert + magic link 발급
+    // 4. 기존 사용자 식별자(identity) 검증 — C2 account takeover 방지.
+    //    다른 provider(예: email/google/kakao)로 이미 가입된 이메일에 Naver 매직 링크를
+    //    발급하면 그 계정으로 강제 로그인 → 인계 가능. 따라서 기존 user에
+    //    `provider='naver'` identity가 없으면 가입 차단.
+    //    REST API(`/auth/v1/admin/users?filter=<email>`) — auth-js 2.105.4의 listUsers는
+    //    filter를 지원하지 않으므로 lib/supabase/admin-lookup.ts에서 직접 호출.
+    const lookup = await findUserByEmail(naverUser.email);
+    if (lookup.error) {
+      // REST 호출 실패 시 fail-closed — 검증 못 한 상태로 가입 진행 ❌.
+      return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+    }
+    if (lookup.user) {
+      const identities = lookup.user.identities ?? [];
+      const naverLinked = identities.some((i) => i.provider === 'naver');
+      if (!naverLinked) {
+        console.error(
+          '[naver/callback] email already registered with different provider(s):',
+          identities.map((i) => i.provider).join(','),
+        );
+        return NextResponse.redirect(
+          new URL(
+            '/login?error=already_registered_other_provider',
+            url.origin,
+          ),
+        );
+      }
+    }
+
+    // 5. Supabase admin: 사용자 upsert + magic link 발급
     //    redirectTo는 /auth/finish (client component) — magic link verify가
     //    URL fragment에 access_token을 박아 보내는데, server middleware는
     //    fragment를 못 보므로 client-side에서 setSession 명시 호출 필요.
@@ -91,7 +122,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
     }
 
-    // 5. app_metadata에 provider=naver 박기. Supabase native OAuth는 자동으로
+    // 6. app_metadata에 provider=naver 박기. Supabase native OAuth는 자동으로
     //    identities + app_metadata에 박는데, admin.generateLink는 email로 분류함.
     //    Dashboard Users의 Providers 컬럼이 app_metadata.provider 기반이라 명시 설정.
     const userId = linkData.user?.id;
@@ -104,7 +135,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 6. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
+    // 7. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
     const response = NextResponse.redirect(linkData.properties.action_link);
     response.cookies.delete('naver_oauth_state');
     return response;
