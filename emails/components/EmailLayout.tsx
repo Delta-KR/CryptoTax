@@ -14,8 +14,7 @@ import {
 import { Fragment, type ReactNode } from 'react';
 import { colors, fontStack, layout } from './tokens';
 import {
-  KONTAXT_LOGO_LIGHT_URL,
-  KONTAXT_LOGO_DARK_URL,
+  KONTAXT_LOGO_URL,
   KONTAXT_LOGO_HEIGHT,
   KONTAXT_LOGO_WIDTH,
 } from './kontaxt-logo';
@@ -104,34 +103,27 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
             margin: '0 auto',
           }}
         >
-          {/* Logo — <picture> 태그로 다크모드 swap.
-              미디어쿼리 + CSS display 분기는 Apple Mail 에서 inline style
-              specificity 이슈로 안 먹는 경우 있음. <picture>/<source media>
-              패턴은 HTML 레벨에서 처리되어 클라이언트 호환성 더 높음. */}
+          {/* Logo — 단일 brand blue PNG (라이트/다크 양쪽 가시).
+              미디어쿼리/<picture> 기반 swap 이 Apple Mail 에서 모두 실패한
+              뒤 단일 색 채택. kontaxt-logo.ts 의 시도 이력 주석 참고. */}
           <Section style={{ padding: '48px 24px 24px 24px' }}>
             <Link
               href="https://kontaxt.kr"
               style={{ textDecoration: 'none', lineHeight: 0, display: 'inline-block' }}
             >
-              <picture>
-                <source
-                  srcSet={KONTAXT_LOGO_DARK_URL}
-                  media="(prefers-color-scheme: dark)"
-                />
-                <img
-                  src={KONTAXT_LOGO_LIGHT_URL}
-                  alt="kontaxt."
-                  width={KONTAXT_LOGO_WIDTH}
-                  height={KONTAXT_LOGO_HEIGHT}
-                  style={{
-                    display: 'block',
-                    border: 0,
-                    outline: 'none',
-                    height: 'auto',
-                    width: `${KONTAXT_LOGO_WIDTH}px`,
-                  }}
-                />
-              </picture>
+              <Img
+                src={KONTAXT_LOGO_URL}
+                alt="kontaxt."
+                width={KONTAXT_LOGO_WIDTH}
+                height={KONTAXT_LOGO_HEIGHT}
+                style={{
+                  display: 'block',
+                  border: 0,
+                  outline: 'none',
+                  height: 'auto',
+                  width: `${KONTAXT_LOGO_WIDTH}px`,
+                }}
+              />
             </Link>
           </Section>
 
