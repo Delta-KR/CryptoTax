@@ -176,5 +176,5 @@ If you didn't sign up, ignore this email.
 
 —
 Kontaxt · 가상자산 양도세 정산
-support@kontaxt.app
+support@kontaxt.kr
 `.trim();

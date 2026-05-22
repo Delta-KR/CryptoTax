@@ -28,7 +28,7 @@ export interface WelcomeEmailProps {
  */
 export default function WelcomeEmail({
   userName,
-  dashboardUrl = 'https://kontaxt.app/dashboard',
+  dashboardUrl = 'https://kontaxt.kr/dashboard',
   daysUntilLaw = 237,
 }: WelcomeEmailProps) {
   return (
@@ -201,24 +201,24 @@ export default function WelcomeEmail({
           }}
         >
           <Link
-            href="https://kontaxt.app/guide"
+            href="https://kontaxt.kr/guide"
             style={{ color: colors.brand, textDecoration: 'none', fontWeight: 500 }}
           >
             사용 가이드
           </Link>
           <span style={{ color: colors.muted2 }}>{' · '}</span>
           <Link
-            href="https://kontaxt.app/faq"
+            href="https://kontaxt.kr/faq"
             style={{ color: colors.brand, textDecoration: 'none', fontWeight: 500 }}
           >
             자주 묻는 질문
           </Link>
           <span style={{ color: colors.muted2 }}>{' · '}</span>
           <Link
-            href="mailto:support@kontaxt.app"
+            href="mailto:support@kontaxt.kr"
             style={{ color: colors.brand, textDecoration: 'none', fontWeight: 500 }}
           >
-            support@kontaxt.app
+            support@kontaxt.kr
           </Link>
         </Text>
         <Text
@@ -329,12 +329,12 @@ D-${props.daysUntilLaw ?? 237} until the law takes effect.
 2. 자동 정규화 + FIFO 계산
 3. 손익 대시보드 + 세무사용 PDF
 
-대시보드: ${props.dashboardUrl ?? 'https://kontaxt.app/dashboard'}
+대시보드: ${props.dashboardUrl ?? 'https://kontaxt.kr/dashboard'}
 
 도움이 필요하면 · Need help?
-사용 가이드: https://kontaxt.app/guide
-자주 묻는 질문: https://kontaxt.app/faq
-문의: support@kontaxt.app
+사용 가이드: https://kontaxt.kr/guide
+자주 묻는 질문: https://kontaxt.kr/faq
+문의: support@kontaxt.kr
 
 —
 Kontaxt · 가상자산 양도세 정산

@@ -52,11 +52,11 @@ lib/email/
 
 ```bash
 RESEND_API_KEY=re_xxx
-RESEND_FROM_EMAIL="Kontaxt <noreply@kontaxt.app>"   # 도메인 인증 필요
-NEXT_PUBLIC_APP_URL=https://kontaxt.app
+RESEND_FROM_EMAIL="Kontaxt <noreply@kontaxt.kr>"   # 도메인 인증 필요
+NEXT_PUBLIC_APP_URL=https://kontaxt.kr
 ```
 
-Resend 대시보드에서 `kontaxt.app` 도메인 인증 (SPF/DKIM/DMARC 레코드 추가) — 안 하면 스팸함 직행.
+Resend 대시보드에서 `kontaxt.kr` 도메인 인증 (SPF/DKIM/DMARC 레코드 추가) — 안 하면 스팸함 직행.
 
 ---
 
@@ -72,7 +72,7 @@ Resend 대시보드에서 `kontaxt.app` 도메인 인증 (SPF/DKIM/DMARC 레코�
    - Port: `465`
    - User: `resend`
    - Pass: Resend API key (`RESEND_API_KEY` 와 동일)
-   - Sender email: `noreply@kontaxt.app` (도메인 인증 필수)
+   - Sender email: `noreply@kontaxt.kr` (도메인 인증 필수)
 3. **Supabase Dashboard → Auth → Email Templates** — 각 템플릿에 `dist/` 안의 HTML 붙여넣기:
    - "Confirm signup" ← `verify-email.html`
    - "Reset Password" ← `reset-password.html`

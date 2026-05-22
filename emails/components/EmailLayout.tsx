@@ -21,7 +21,7 @@ interface EmailLayoutProps {
   children: React.ReactNode;
 }
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kontaxt.app';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://kontaxt.kr';
 const LOGO_URL = `${APP_URL}/logo.svg`;
 
 /**
@@ -135,10 +135,10 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
             >
               본 메일은 발신 전용입니다. 문의는{' '}
               <Link
-                href={`mailto:support@kontaxt.app`}
+                href={`mailto:support@kontaxt.kr`}
                 style={{ color: colors.brand, textDecoration: 'none' }}
               >
-                support@kontaxt.app
+                support@kontaxt.kr
               </Link>
             </Text>
             <Text
@@ -152,10 +152,10 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
             >
               This is a send-only address. Contact{' '}
               <Link
-                href={`mailto:support@kontaxt.app`}
+                href={`mailto:support@kontaxt.kr`}
                 style={{ color: colors.brand, textDecoration: 'none' }}
               >
-                support@kontaxt.app
+                support@kontaxt.kr
               </Link>{' '}
               for inquiries.
             </Text>

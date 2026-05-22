@@ -52,8 +52,8 @@ function getResend(): Resend {
 }
 
 const FROM =
-  process.env.RESEND_FROM_EMAIL ?? 'Kontaxt <noreply@kontaxt.app>';
-const REPLY_TO = 'support@kontaxt.app';
+  process.env.RESEND_FROM_EMAIL ?? 'Kontaxt <noreply@kontaxt.kr>';
+const REPLY_TO = 'support@kontaxt.kr';
 
 // ---------------------------------------------------------------------------
 // 공통 발송 래퍼

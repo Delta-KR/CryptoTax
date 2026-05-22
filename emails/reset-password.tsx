@@ -185,8 +185,8 @@ export default function ResetPasswordEmail({
           marginBottom="12px"
         />
         <BilingualText
-          ko="다만 같은 요청이 반복되거나 모르는 기기에서 로그인이 의심된다면, 비밀번호를 즉시 변경하고 support@kontaxt.app으로 알려주세요."
-          en="If these requests keep happening or you suspect access from an unknown device, change your password right away and email support@kontaxt.app."
+          ko="다만 같은 요청이 반복되거나 모르는 기기에서 로그인이 의심된다면, 비밀번호를 즉시 변경하고 support@kontaxt.kr으로 알려주세요."
+          en="If these requests keep happening or you suspect access from an unknown device, change your password right away and email support@kontaxt.kr."
           marginBottom="16px"
         />
         <Text
@@ -227,5 +227,5 @@ If you didn't request this, ignore this email. Your password stays the same.
 
 —
 Kontaxt · 가상자산 양도세 정산
-support@kontaxt.app
+support@kontaxt.kr
 `.trim();
