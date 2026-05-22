@@ -22,7 +22,7 @@ const big: BigData = {
 const items: readonly SmallData[] = [
   {
     title: '계산 방식 선택',
-    desc: '선입선출법(FIFO) 또는 이동평균법(MA). 동일 거래에서 어느 쪽이 유리한지 즉시 비교해드립니다.',
+    desc: '총평균법 (시행령 §88①) 자동 적용. 시행 전 보유분에는 의제취득가액 자동 비교.',
     icon: 'compare',
   },
   {

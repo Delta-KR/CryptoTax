@@ -8,7 +8,7 @@ Sections (in order):
 2. **Hero** — D-237 badge, gradient headline, dual CTAs, trust checks, dashboard mock with two floating cards
 3. **Problem** — CSV/PDF/XLS format comparison across 3 exchanges + a reconciliation diagram
 4. **HowItWorks** — 3 numbered step cards with connecting arrows
-5. **Example** — interactive tax calculation: FIFO / 이동평균 toggle, gain/loss list, derived 납부세액 card
+5. **Example** — 총평균법 단일 시연 (시행령 §88①), gain/loss list, derived 납부세액 card
 6. **Exchanges** — supported exchange grid (Live vs Coming Soon)
 7. **Features** — bento-style grid: 1 big card + 4 small cards
 8. **Pricing** — 3 tiers (무료 / 프리미엄 / 원타임), monthly↔annual toggle, BEST VALUE emphasis
@@ -172,7 +172,7 @@ Right: **DashboardMock** — a glass-effect "app window" with macOS traffic-ligh
 - Header: "2027년 귀속 · 가상자산 양도소득" / "세금 계산 결과" + green ● 계산 완료 pill
 - 3 stat tiles (총 양도차익 / 기본공제 / 납부세액) — the 납부세액 tile uses `--brand-faint` background and brand-tinted border
 - Horizontal bar chart: BTC / ETH / SOL / XRP, each a 36px label + bar + amount, with gradient fills (`#60A5FA → var(--brand)` for gains, `#FCA5A5 → var(--bad)` for losses)
-- 4 chips below: 선입선출법 / 의제취득가액 적용 / 3개 거래소 통합 / 247건 거래
+- 4 chips below: 총평균법 / 의제취득가액 적용 / 3개 거래소 통합 / 247건 거래
 - Two **floating cards** absolutely positioned above + below-right of the mock: "업비트 거래내역 · upbit_2027.pdf · 통합 완료" with green check, and "2027 신고용 PDF · tax_report_홍길동.pdf · 세무사 전달 가능" with green dot.
 
 ### 3. Problem (`parts/problem.jsx`)
@@ -247,7 +247,6 @@ Bottom bar: copyright left, disclaimer right ("본 서비스는 세무 신고의
 - **Theme toggle** — Light / Dark via `data-theme` attribute on `<html>`. Persisted in `localStorage["kontaxt-theme"]`. **Implement an inline script that reads the saved value before first paint** to avoid theme flash.
 - **`.hov` hover** — pointer-tracked spotlight + lift on cards (CSV cards, step cards, exchange cards, feature cards, pricing cards). Transition `transform .35s cubic-bezier(.2,.7,.2,1)`.
 - **CSV card highlight** — `onMouseEnter` sets an active exchange in `Problem`; the active card gets a colored border + soft glow.
-- **Example FIFO/MA toggle** — toggles `method` state; the active segment animates background. Values shown are static (no real recompute needed for v1).
 - **Pricing monthly/annual toggle** — flips price and sub-label, shows saving line on annual.
 - **Anchor nav** — smooth scroll to `#how`, `#exchanges`, `#features`, `#pricing`. (Use `scroll-behavior: smooth` on `html` or per-link.)
 - **Responsive** — not implemented in the mock. Production must collapse all `repeat(3, 1fr)` and 2-column hero grids to single-column below ~960px, with reduced section padding (`80px 24px`) on tablet and `64px 20px` on mobile. The dashboard mock should hide its floating cards or restack on narrow widths.
@@ -259,7 +258,6 @@ Bottom bar: copyright left, disclaimer right ("본 서비스는 세무 신고의
 Local component state only:
 - `App` → `useTweaks` (authoring-only, **do not ship**)
 - `Problem` → `active` (string: 'upbit' / 'bithumb' / 'binance')
-- `Example` → `method` (string: 'fifo' / 'avg')
 - `Pricing` → `annual` (boolean)
 - `chrome.Nav.ThemeToggle` → `dark` (boolean, persisted)
 
