@@ -2,6 +2,10 @@
 import { useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/auth/safe-next';
+import {
+  clearAllSessions,
+  setSessionUser,
+} from '@/lib/storage/session';
 
 export type Plan = 'free' | 'premium';
 
@@ -55,6 +59,10 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
     let cancelled = false;
 
     async function refresh(sessionUser: SessionUser | undefined | null) {
+      // localStorage 거래 데이터를 user_id 별로 격리. 같은 브라우저에서
+      // 계정 전환 시 이전 사용자 데이터가 새 사용자에게 보이지 않도록.
+      setSessionUser(sessionUser?.id ?? null);
+
       if (!sessionUser) {
         if (!cancelled) {
           setUser(null);
@@ -160,6 +168,10 @@ export async function updateUserPassword(newPassword: string): Promise<void> {
 
 export async function signOut(): Promise<void> {
   const supabase = createSupabaseBrowserClient();
+  // 모든 user 키 + anon 키 정리 — 다음 사용자가 공용 PC 등에서 이전
+  // 데이터를 보지 않도록.
+  clearAllSessions();
+  setSessionUser(null);
   await supabase.auth.signOut();
 }
 
