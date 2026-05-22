@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kontaxt — Email templates</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
+  :root {
+    --brand: #2563EB;
+    --brand-2: #1D4ED8;
+    --ink: #0B1220;
+    --ink-2: #1F2937;
+    --muted: #5C6678;
+    --muted-2: #8A93A4;
+    --line: #E6EAF0;
+    --line-2: #EEF1F6;
+    --bg: #FAFBFD;
+    --card: #FFFFFF;
+    --chrome-bg: #F4F7FB;
+    --chrome-border: #E6EAF0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
+      'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .wm { display: flex; align-items: center; gap: 8px; }
+  .wm-pills { display: inline-flex; gap: 3px; }
+  .wm-pill { width: 6.5px; height: 20px; border-radius: 3.25px; background: #2A2BFB; }
+  .wm-text { font-size: 17px; font-weight: 800; letter-spacing: -0.025em; color: var(--ink); line-height: 1; white-space: nowrap; }
+  .top-label {
+    margin-left: 4px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .spacer { flex: 1; }
+
+  .seg {
+    display: inline-flex;
+    background: var(--chrome-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: -0.005em;
+    transition: color 150ms ease, background-color 150ms ease;
+    white-space: nowrap;
+  }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] {
+    background: #FFFFFF;
+    color: var(--ink);
+    box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 1px 2px rgba(15,23,42,.05), 0 0 0 1px rgba(15,23,42,.06);
+  }
+
+  main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+
+  .intro {
+    max-width: 680px;
+    margin: 0 0 40px 0;
+  }
+  .intro .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand);
+    font-weight: 700;
+    margin: 0 0 10px 0;
+  }
+  .intro h1 {
+    margin: 0 0 8px 0;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .intro p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+  }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+
+  .col h2 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .col p.sub {
+    margin: 0 0 16px 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .mail-frame {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--card);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.7) inset,
+      0 6px 20px -6px rgba(15,23,42,.08),
+      0 0 0 1px rgba(15,23,42,.04);
+    transition: background-color 250ms ease, border-color 250ms ease;
+  }
+  .mail-chrome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-2);
+    background: var(--card);
+    transition: background-color 250ms ease, border-color 250ms ease;
+  }
+  .dots { display: inline-flex; gap: 6px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #E0E4EA; }
+  .dot.r { background: #FF5F57; }
+  .dot.y { background: #FEBC2E; }
+  .dot.g { background: #28C840; }
+  .mail-meta {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .mail-meta strong { color: var(--ink-2); font-weight: 600; margin-right: 6px; }
+
+  iframe.mail {
+    display: block;
+    width: 100%;
+    height: 660px;
+    border: 0;
+    background: transparent;
+  }
+
+  /* dark mode preview wrapper */
+  body.dark {
+    background: #0B1220;
+    color: #F5F7FA;
+  }
+  body.dark .top {
+    background: rgba(11,18,32,0.78);
+    border-bottom-color: #1F2937;
+  }
+  body.dark .top-label { color: var(--muted-2); }
+  body.dark .wm-text { color: #F5F7FA; }
+  body.dark .seg {
+    background: #0F172A;
+    border-color: #1F2937;
+  }
+  body.dark .seg button { color: var(--muted-2); }
+  body.dark .seg button:hover { color: #F5F7FA; }
+  body.dark .seg button[aria-pressed="true"] {
+    background: #1F2937;
+    color: #F5F7FA;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.06);
+  }
+  body.dark .intro h1 { color: #F5F7FA; }
+  body.dark .intro p { color: var(--muted-2); }
+  body.dark .col h2 { color: #F5F7FA; }
+  body.dark .col p.sub { color: var(--muted-2); }
+  body.dark .mail-frame {
+    background: #0F172A;
+    border-color: #1F2937;
+    box-shadow:
+      0 6px 20px -6px rgba(0,0,0,.4),
+      0 0 0 1px rgba(255,255,255,.04);
+  }
+  body.dark .mail-chrome {
+    background: #0F172A;
+    border-bottom-color: #1F2937;
+  }
+  body.dark .dot { background: #1F2937; }
+  body.dark .mail-meta { color: var(--muted-2); }
+  body.dark .mail-meta strong { color: #D6DBE4; }
+
+  .footer-note {
+    margin-top: 40px;
+    padding: 20px 24px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .footer-note strong { color: var(--ink-2); font-weight: 600; }
+  body.dark .footer-note {
+    background: #0F172A;
+    border-color: #1F2937;
+    color: var(--muted-2);
+  }
+  body.dark .footer-note strong { color: #D6DBE4; }
+
+  code {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    background: var(--chrome-bg);
+    border: 1px solid var(--line-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--ink-2);
+  }
+  body.dark code {
+    background: #0B1220;
+    border-color: #1F2937;
+    color: #D6DBE4;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="wm">
+      <span class="wm-pills"><span class="wm-pill"></span><span class="wm-pill"></span></span>
+      <span class="wm-text">kontaxt.</span>
+    </div>
+    <span class="top-label">Email Templates</span>
+    <div class="spacer"></div>
+    <div class="seg" role="tablist" aria-label="Theme">
+      <button id="btn-light" aria-pressed="true" type="button">라이트</button>
+      <button id="btn-dark"  aria-pressed="false" type="button">다크</button>
+      <button id="btn-system" aria-pressed="false" type="button" title="시스템 설정 따라가기">시스템</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <p class="eyebrow">Transactional</p>
+    <h1>인증·재설정 메일.</h1>
+    <p>한 화면, 한 동작. 로고·헤드라인·버튼만.</p>
+  </section>
+
+  <section class="grid">
+    <div class="col">
+      <h2>이메일 인증</h2>
+      <p class="sub">신규 가입 직후 · 60분 만료</p>
+      <div class="mail-frame">
+        <div class="mail-chrome">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="mail-meta"><strong>kontaxt</strong>Confirm your email</div>
+        </div>
+        <iframe class="mail" id="frame-verify" data-src="../dist/verify-email.html" title="Verify email preview"></iframe>
+      </div>
+    </div>
+
+    <div class="col">
+      <h2>비밀번호 재설정</h2>
+      <p class="sub">재설정 요청 직후 · 30분 만료</p>
+      <div class="mail-frame">
+        <div class="mail-chrome">
+          <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+          <div class="mail-meta"><strong>kontaxt</strong>Reset your password</div>
+        </div>
+        <iframe class="mail" id="frame-reset" data-src="../dist/reset-password.html" title="Reset password preview"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer-note">
+    <strong>빌드</strong>: <code>npm run email:build</code> 실행 후 이 페이지를 다시 로드하세요.
+    iframe은 <code>../dist/verify-email.html</code> / <code>../dist/reset-password.html</code>을 가리킵니다.
+  </div>
+</main>
+
+<script>
+  const html = document.documentElement;
+  const body = document.body;
+  const btnL = document.getElementById('btn-light');
+  const btnD = document.getElementById('btn-dark');
+  const btnS = document.getElementById('btn-system');
+  const frames = ['frame-verify', 'frame-reset'].map(id => document.getElementById(id));
+
+  // dist HTML을 fetch → srcdoc 으로 inject.
+  // Launch preview / file:// 등 iframe src cross-directory가 막히는 환경에서도
+  // 동일 origin 안의 fetch 는 통상 동작하므로 srcdoc 으로 풀어서 표시.
+  // fetch 실패 시 src 로 fallback.
+  async function loadFrame(frame) {
+    const path = frame.dataset.src;
+    if (!path) return;
+    try {
+      const res = await fetch(path);
+      if (!res.ok) throw new Error('fetch ' + res.status);
+      frame.srcdoc = await res.text();
+    } catch (e) {
+      console.warn('[preview] fetch failed, falling back to src:', e);
+      frame.src = path;
+    }
+  }
+  frames.forEach(loadFrame);
+
+  function setMode(mode) {
+    localStorage.setItem('kontaxt-mail-theme', mode);
+    [btnL, btnD, btnS].forEach(b => b.setAttribute('aria-pressed', 'false'));
+    ({light: btnL, dark: btnD, system: btnS}[mode]).setAttribute('aria-pressed', 'true');
+
+    let effective = mode;
+    if (mode === 'system') {
+      effective = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    body.classList.toggle('dark', effective === 'dark');
+    html.style.colorScheme = (effective === 'dark') ? 'dark' : 'light';
+
+    frames.forEach(f => applyThemeToFrame(f, effective));
+  }
+
+  // Same-origin iframes — inject a style mimicking prefers-color-scheme: dark
+  // so we can preview both themes without changing the OS setting.
+  function applyThemeToFrame(frame, effective) {
+    function inject() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        let s = doc.getElementById('__theme-preview');
+        if (!s) {
+          s = doc.createElement('style');
+          s.id = '__theme-preview';
+          doc.head.appendChild(s);
+        }
+        if (effective === 'dark') {
+          s.textContent = `
+            body, .page-bg { background-color: #0B1220 !important; }
+            .card { background-color: #0F172A !important; border-color: #1F2937 !important; }
+            .ink { color: #F5F7FA !important; }
+            .ink-2 { color: #D6DBE4 !important; }
+            .muted { color: #8A93A4 !important; }
+            .muted-2 { color: #6B7385 !important; }
+            .fallback-link { color: #6BA1FF !important; }
+            .logo-dark-invert { filter: brightness(0) invert(1) !important; }
+          `;
+        } else {
+          s.textContent = '';
+        }
+      } catch (e) { /* not loaded yet */ }
+    }
+    if (frame.contentDocument && frame.contentDocument.readyState === 'complete') {
+      inject();
+    } else {
+      frame.addEventListener('load', inject, { once: true });
+    }
+  }
+
+  btnL.addEventListener('click', () => setMode('light'));
+  btnD.addEventListener('click', () => setMode('dark'));
+  btnS.addEventListener('click', () => setMode('system'));
+
+  const saved = localStorage.getItem('kontaxt-mail-theme') || 'light';
+  setMode(saved);
+
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (localStorage.getItem('kontaxt-mail-theme') === 'system') setMode('system');
+  });
+</script>
+
+</body>
+</html>
