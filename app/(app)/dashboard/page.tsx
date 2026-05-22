@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 label="예상 납부세액"
                 value={formatKrw(result.tax)}
                 tone="brand"
-                sub={`과세표준 × 22%`}
+                sub={`과세표준 × 20% (지방세 2% 별도)`}
               />
             </div>
             <div className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-gradient-to-br from-brand/15 via-transparent to-brand/15 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
@@ -179,7 +179,7 @@ export default function DashboardPage() {
             label="예상 납부세액"
             value={formatKrw(result.tax)}
             tone="brand"
-            sub={`과세표준 × 22%`}
+            sub={`과세표준 × 20% (지방세 2% 별도)`}
           />
         )}
         <StatCard
@@ -199,7 +199,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <Pill tone="brand" size="sm">
-            22% 세율
+            세율 20% + 2%
           </Pill>
         </div>
         {chartItems.length > 0 ? (

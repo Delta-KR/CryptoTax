@@ -76,7 +76,7 @@ export default function SamplePage() {
             label="납부세액"
             value={formatKrw(sampleData.tax)}
             tone="brand"
-            sub="과세표준 × 22%"
+            sub="과세표준 × 20% (지방세 2% 별도)"
           />
         </div>
 

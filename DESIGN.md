@@ -256,6 +256,9 @@ Footer        → 4 컬럼 (브랜드·서비스·보안·고객지원)
 
 ## 12. 변경 이력
 
+- **2026-05-22** — 세법 정립에 따른 기획 변경 사항 기록 (코드 반영은 P1~P2에서 진행).
+  - **FIFO/이동평균 토글 폐기 결정** (위 §11 페이지 구조의 Example 토글 포함): 현행 시행령 §88①이 거주자에게 **총평균법 단일**을 강제하므로 사용자 선택권 모델 자체가 법령과 충돌. 자세한 근거·변경 범위는 [docs/tax-law-compliance.md](docs/tax-law-compliance.md) v1.0 참조.
+  - **세율 표기 22% 단일 → 20%/2% 분리**: 법문(소득세법 §64의3②)은 세율 20%만 명시. 지방세 2%는 별도 신고·납부 대상. UI/리포트 8군데 일관 정리.
 - **2026-05-15** — 초안 작성. 5개 batch 리팩터링 직후 정리.
   - AI 티 6대 시그니처 제거 (atmosphere blob, pointer spotlight, gradient text, heavy glass, notebook grid, rainbow palette)
   - Hero 단문 헤드라인 도입
