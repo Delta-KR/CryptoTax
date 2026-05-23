@@ -65,6 +65,33 @@
 
 ---
 
+## 💰 가격 전략 sync (★ Phase 7 진입 전 처리 ★)
+
+> 2026-05-21 확정 가격 전략 (`pricing-strategy-summary.md` Section 6)이 코드에 반영 안 됨. 코드는 2026-05-12 결정한 mock 가격 (₩29,900/₩19,900) 그대로. 확정안은 원타임 ₩49,900 / 구독 ₩89,000/년 + 포트원 + MVP 원타임만. 출처: `pricing-strategy-summary.md`, Obsidian `Daily/2026-05-21.md` §7.
+
+### P0 — 코드 가격 sync
+
+- [ ] **lib/mock/billing.ts → lib/pricing/plans.ts 단일 source 분리** — 가격은 mock 아니라 source. 가격 ₩49,900(onetime)/₩89,000(premium) 적용. mock 폴더에는 PaymentRecord/TaxProRequest만 남김.
+- [ ] **JSON-LD + tax 페이지 PremiumBanner 카피 sync** — `app/layout.tsx` offers, `app/(app)/tax/page.tsx` PremiumBanner 하드코딩 카피, `app/(marketing)/legal/terms/page.tsx` 이용약관 가격 2곳.
+- [ ] **랜딩 pricing.tsx 단일 source 참조** — `components/sections/pricing.tsx` 하드코딩 가격 → lib/pricing/plans.ts. 비교 카피 "₩59,800 vs ₩19,900" 도 재고 (₩89K 구독은 단순 가격 비교로 카피 안 됨; 가치 기반 카피로 변경 또는 제거).
+- [ ] **MVP 노출 정책 결정 + 적용** — 전략은 "MVP는 원타임만, 구독은 Phase 2". 옵션: (a) 구독 카드 숨김 / (b) "Phase 2 출시 예정" placeholder / (c) 3티어 그대로. 결정 후 랜딩 + billing 페이지 반영.
+- [ ] **포트원 placeholder 정리** — `app/(app)/billing/checkout/page.tsx` "토스페이먼츠(Toss) 통합" → "포트원" (확정 PG).
+
+### P1 — 가치 노출 UX (sync 후 후속)
+
+- [ ] **가치 앵커 3층 구조 첫 화면 노출** — 세무사 비용 + 가산세·추징 + 시간·정신 비용. 단일 앵커만으론 WTP가 ₩49,900에 못 미침 (전략 §6.2).
+- [ ] **결제 페이지 동적 가치 표시** — 사용자 거래 데이터 기반 예상 절세액 + 가산세 회피액. 매몰비용 효과 (전략 §6.3).
+- [ ] **paywall 위치 = PDF 다운로드 지점 일치 확인** — 현재 tax 페이지 maskForFree 패턴이 전략(PDF wall)과 정합한지 검증 (전략 §6.4).
+- [ ] **구독 features 재정의** — 코드의 구독 features (PDF 무제한, 거래소 무제한 등)은 원타임과 차별 약함. 전략은 "연중 절세 도구" — TLH 알림, 상시 대시보드, 거래소 API 자동 연동. 구독 출시 시점에 재작성.
+
+### P2 — 사전 예약(LOI) + 연중 hook
+
+- [ ] **LOI 페이지** — 2026.07~12 운영, ₩39,900 (20% 얼리), 100명, 30일 환불 보증 (전략 §6.6)
+- [ ] **양도 시뮬레이터 무료 페이지** — 회원가입 없이 "지금 팔면 세금 ₩XXX" 단일 입력 페이지. 5월 매출 집중 분산용 (전략 §6.7). Phase 1 후반.
+- [ ] **포트원 가입 + 결제 페이지 구현** — 카카오·네이버·토스페이 + 카드 일괄 (전략 §6.5)
+
+---
+
 ## 🔒 종합 감사 2026-05-22 / 23 후속 (★ Phase 7 진입 전 처리 ★)
 
 > 2026-05-22: P0 13건 hotfix → 5 subagent 병렬 → PR #28~#32 머지.
@@ -205,7 +232,8 @@
 
 - **2026-05-12**: pdf-parse v2 대신 v1 — Vercel serverless DOMMatrix 호환성.
 - **2026-05-12**: 빗썸 파서 Phase 2에서 빼고 Coming Soon으로 — XLS 파싱 난이도 + 타임라인 압박.
-- **2026-05-12**: 결제 모델 = 단일 연도 ₩29,900 + 구독 ₩19,900/년 두 상품.
+- **2026-05-12**: 결제 모델 mock 가격 = 단일 연도 ₩29,900 + 구독 ₩19,900/년 (코드 prototype 용). ⚠ 2026-05-21 확정 가격으로 폐기 — 아래 참조.
+- **2026-05-21**: 가격 전략 확정 — 원타임 ₩49,900 / 연간 구독 ₩89,000 (1.8× 갭) / 결제 = 포트원 / MVP는 원타임만 / paywall = PDF 다운로드 / LOI 2026.07~12 (`pricing-strategy-summary.md` Section 6, Obsidian Daily 2026-05-21 §7). 코드 sync는 2026-05-23 별도 PR에서 진행.
 - **2026-05-15**: 마케팅 톤 — "AI" 색깔 빼고 Mercury·Obsidian·Rogo 같은 fintech/tooling 톤.
 - **2026-05-18**: 브랜드명 = 크립토택스 → **Kontaxt**.
 - **2026-05-19**: 작업 기록 = Obsidian vault. Daily/Weekly + Projects/kontaxt.md.

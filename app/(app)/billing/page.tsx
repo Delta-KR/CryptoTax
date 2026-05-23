@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Pill } from '@/components/ui/Pill';
 import { HoverCard } from '@/components/ui/HoverCard';
-import { plans, type PlanId } from '@/lib/mock/billing';
+import { plans, type PlanId } from '@/lib/pricing/plans';
 import { useCurrentUser } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
@@ -16,7 +16,7 @@ export default function BillingPage() {
     <>
       <PageHeader
         title="구독 및 결제"
-        description="한 해만 신고하면 단일 과세연도, 여러 해를 정리하면 구독을 선택하세요."
+        description="지금은 단일 과세연도 결제로 신고 시즌을 해결하세요. 연간 구독은 2026.Q4 출시 예정입니다."
         right={
           <Pill tone="brand" size="md">
             현재 {plans.find((p) => p.id === current)?.name}
@@ -55,7 +55,7 @@ export default function BillingPage() {
                   className="absolute -top-3 left-1/2 -translate-x-1/2 nowrap rounded-full bg-brand px-3 py-1 text-[10px] font-bold tracking-[0.06em] text-white"
                   style={{ boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
                 >
-                  BEST VALUE
+                  2026.Q4 출시 예정
                 </div>
               )}
               <div className="flex items-center justify-between">
@@ -139,7 +139,7 @@ export default function BillingPage() {
                       {plan.id === 'free'
                         ? '다운그레이드'
                         : plan.id === 'premium'
-                          ? '구독 시작'
+                          ? '출시 알림 받기'
                           : '구매'}
                     </Button>
                   </Link>

@@ -1,69 +1,52 @@
 import Link from 'next/link';
 import { HoverCard } from '@/components/ui/HoverCard';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { getPlan, type PlanId } from '@/lib/pricing/plans';
 
-interface Tier {
-  name: string;
+// 랜딩 카드 메타 — 가격/이름/features 는 lib/pricing/plans.ts 단일 source 에서 가져옴.
+// 여기엔 랜딩 전용 카피(tag/sub/description/cta/href/emphasis/badge)만.
+//
+// 구독(premium)은 2026-05-21 전략대로 MVP 출시 시점엔 아직 살 수 없음 (Phase 2: 2026.Q4 이후).
+// 카드는 노출하되 "곧 출시" 배지 + 사전 알림 CTA. 가격(₩89K) anchoring 효과 유지.
+interface TierMeta {
+  planId: PlanId;
   tag: string;
-  price: string;
   sub: string;
   description: string;
-  features: readonly string[];
   cta: string;
   href: string;
   emphasis: boolean;
   badge?: string;
+  comingSoon?: boolean;
 }
 
-const TIERS: readonly Tier[] = [
+const TIERS: readonly TierMeta[] = [
   {
-    name: '무료',
+    planId: 'free',
     tag: '체험·검증',
-    price: '₩0',
     sub: '영구 무료',
     description: '결제 전 결과를 미리 확인할 수 있습니다.',
-    features: [
-      '모든 거래소 파일 업로드',
-      '총 양도차익 미리보기',
-      '계산 흐름 / 거래 내역',
-      '결제 전 결과 검증',
-    ],
     cta: '무료로 시작',
     href: '/signup?plan=free',
     emphasis: false,
   },
   {
-    name: '구독',
-    tag: '여러 해 신고',
-    price: '₩19,900',
+    planId: 'premium',
+    tag: '연중 절세 도구',
     sub: '/ 년 · 모든 과세연도',
-    description: '여러 해를 한꺼번에 정리하거나 연중 예상 세액을 추적하는 분에게.',
-    features: [
-      '모든 과세연도(과거·현재·미래)',
-      'PDF 리포트 무제한 생성',
-      '해지 후에도 기존 PDF 영구 다운로드',
-      '모든 거래소 무제한',
-      '의제취득가액 자동 적용',
-      '이메일 우선 지원',
-    ],
-    cta: '구독 사전 등록',
+    description:
+      '여러 해를 한꺼번에 정리하거나 연중 절세 기회를 포착하고 싶은 분에게. 2026.Q4 출시 예정.',
+    cta: '출시 알림 받기',
     href: '/signup?plan=subscription',
     emphasis: true,
-    badge: 'BEST VALUE',
+    badge: '2026.Q4 출시 예정',
+    comingSoon: true,
   },
   {
-    name: '단일 과세연도',
+    planId: 'onetime',
     tag: '한 해만 신고',
-    price: '₩29,900',
     sub: '1개 연도 · 영구 접근',
-    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게.',
-    features: [
-      '선택한 1개 과세연도 결과 열람',
-      '해당 연도 PDF 리포트 무제한',
-      '모든 거래소 무제한',
-      '의제취득가액 자동 적용',
-      '코인별 손익 상세',
-    ],
+    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게. 지금 결제 가능.',
     cta: '단일 연도 사전 등록',
     href: '/signup?plan=annual',
     emphasis: false,
@@ -92,8 +75,9 @@ function FeatureCheck() {
   );
 }
 
-function PricingCard({ tier }: { tier: Tier }) {
+function PricingCard({ tier }: { tier: TierMeta }) {
   const e = tier.emphasis;
+  const plan = getPlan(tier.planId);
   return (
     <HoverCard
       className={
@@ -113,13 +97,13 @@ function PricingCard({ tier }: { tier: Tier }) {
         <div className={'mb-1 text-[11px] font-semibold tracking-[0.06em] ' + (e ? 'text-brand-2' : 'text-muted-2')}>
           {tier.tag.toUpperCase()}
         </div>
-        <h3 className="text-[22px] font-extrabold tracking-tightish text-ink">{tier.name}</h3>
+        <h3 className="text-[22px] font-extrabold tracking-tightish text-ink">{plan.name}</h3>
       </div>
 
       <div className="mb-5 border-b border-line-2 pb-5">
         <div className="flex items-baseline gap-1.5">
           <span className="num text-[40px] font-extrabold leading-none tracking-tighter3 text-ink">
-            {tier.price}
+            {plan.price}
           </span>
           <span className="text-[13px] text-muted">{tier.sub}</span>
         </div>
@@ -127,7 +111,7 @@ function PricingCard({ tier }: { tier: Tier }) {
       </div>
 
       <ul className="mb-7 flex flex-1 list-none flex-col gap-3">
-        {tier.features.map((f) => (
+        {plan.features.map((f) => (
           <li key={f} className="flex items-center gap-2.5 text-sm">
             <FeatureCheck />
             <span className="text-ink-2">{f}</span>
@@ -160,9 +144,9 @@ export function Pricing() {
             상황에 맞게 한 번만 선택하세요
           </h2>
           <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
-            한 해만 신고하면 <strong className="font-semibold text-ink">단일 과세연도</strong>,
-            여러 해를 정리하면 <strong className="font-semibold text-ink">구독</strong>.
-            모두 결제 전에 무료로 결과를 미리 확인할 수 있어요.
+            먼저 <strong className="font-semibold text-ink">단일 과세연도</strong>로 신고 시즌을
+            해결하세요. 연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>이
+            2026.Q4 출시됩니다. 모두 결제 전에 무료로 결과를 미리 확인할 수 있어요.
           </p>
           <div className="mx-auto mt-5 inline-flex max-w-[640px] items-center gap-2 rounded-full border border-warn/40 bg-warn-soft px-3.5 py-1.5 text-[12.5px] font-medium text-warn">
             <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warn" />
@@ -172,14 +156,15 @@ export function Pricing() {
 
         <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 md:grid-cols-3 lg:grid-cols-[1fr_1.18fr_1fr]">
           {TIERS.map((t) => (
-            <PricingCard key={t.name} tier={t} />
+            <PricingCard key={t.planId} tier={t} />
           ))}
         </div>
 
         <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
-          <strong className="font-semibold text-ink-2">왜 두 가지 상품으로 나눴나요?</strong>{' '}
-          과세연도 2개만 결제해도 단일 상품은 ₩59,800인데 구독은 ₩19,900입니다.
-          여러 해를 다룰 거면 구독이, 한 해만 정리할 거면 단일 연도가 자연스럽게 유리합니다.
+          <strong className="font-semibold text-ink-2">단일 과세연도와 구독의 차이</strong>{' '}
+          단일은 매년 5월 신고 시즌 1회 결제용입니다. 구독은 단순한 PDF 무제한이 아니라
+          상시 손익 대시보드 · Tax-Loss Harvesting 알림 · 거래소 API 자동 연동을 더한
+          &ldquo;연중 절세 도구&rdquo;입니다 (2026.Q4 출시 시 상세 안내).
         </div>
 
         <p className="mt-6 text-center text-[12.5px] text-muted-2">

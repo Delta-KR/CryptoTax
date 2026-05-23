@@ -131,14 +131,14 @@ export default function TermsPage() {
             <div className="ml-5 rounded-md border border-line bg-bg-soft px-5 py-4">
               <p className="mb-2 text-[14.5px] font-bold text-ink">가. 단일 과세연도 리포트</p>
               <p className="text-[14px] leading-[1.7]">
-                ₩29,900 일시불. 회원이 선택한 특정 과세연도(예: 2027년) 1개에 대한 계산 결과 열람 및
+                ₩49,900 일시불. 회원이 선택한 특정 과세연도(예: 2027년) 1개에 대한 계산 결과 열람 및
                 PDF 리포트 다운로드 권한이 제공됩니다.
               </p>
             </div>
             <div className="ml-5 rounded-md border border-line bg-bg-soft px-5 py-4">
               <p className="mb-2 text-[14.5px] font-bold text-ink">나. 정기 구독</p>
               <p className="text-[14px] leading-[1.7]">
-                ₩19,900/년. 결제 유효기간 동안 모든 과세연도(현재·과거·미래)에 대한 무제한 계산 및 PDF
+                ₩89,000/년. 결제 유효기간 동안 모든 과세연도(현재·과거·미래)에 대한 무제한 계산 및 PDF
                 리포트 생성 권한이 제공됩니다.
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function TermsPage() {
             </Clause>
             <Clause num={3}>
               유료 서비스 이용 요금, 결제 수단, 결제 절차는 결제 페이지에 별도로 안내합니다. 결제는
-              Toss Payments 등 외부 결제대행사를 통해 처리되며, 회원의 카드 정보는 본 서비스가 직접
+              포트원(PortOne) 등 외부 결제대행사를 통해 처리되며, 회원의 카드 정보는 본 서비스가 직접
               저장하지 않습니다.
             </Clause>
           </Article>
