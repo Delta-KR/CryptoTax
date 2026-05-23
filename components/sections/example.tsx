@@ -130,7 +130,7 @@ function CalculationCard({
       <div className="mb-1 text-[11px] font-semibold tracking-[0.06em] text-muted-2">
         세액 산출
       </div>
-      <div className="mb-[18px] text-[15px] font-bold text-ink">2027년 5월 신고 기준</div>
+      <div className="mb-[18px] text-[15px] font-bold text-ink">2028년 5월 신고 기준</div>
 
       <CalcRow label="총 양도차익" value={`+${totalGain.toLocaleString()}만원`} tone="good" />
       <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
@@ -142,7 +142,7 @@ function CalculationCard({
       {/* Brand-filled result box */}
       <div className="mt-2 rounded-md bg-brand px-[22px] py-5 text-white">
         <div className="nowrap mb-1 text-xs font-medium opacity-90">
-          2027년 5월 납부 세액
+          2028년 5월 납부 세액
         </div>
         <div className="num nowrap text-[36px] font-extrabold leading-[1.05] tracking-tighter3">
           {tax.toLocaleString()}
