@@ -1,0 +1,185 @@
+# Kontaxt — Claude Code Working Memory
+
+Claude Code가 이 워크트리에서 작업할 때 먼저 읽는 파일. 프로젝트의 컨텍스트와 결정사항이 여기 모인다.
+
+---
+
+## 프로젝트 한 줄
+
+**Kontaxt** — 한국 가상자산 양도소득세(2027.01.01 시행) 정산 플랫폼. Upbit / Bithumb / Binance CSV·PDF·XLS를 한국 세법(FIFO, 이동평균, 의제취득가액, 250만원 공제, 22%)에 맞춰 통합 계산.
+
+## 핵심 문서
+
+- `README.md` — 디자인 핸드오프, 토큰, 섹션 구조
+- `DESIGN.md` — 디자인 시스템·5대 원칙·안티패턴 (이메일·UI 모두 적용)
+- `TASKS.md` — 현재 작업 목록·로드맵
+- `docs/audit/` — 감사 보고서 (security·ux·logic·quality·perf)
+
+## 스택
+
+Next.js 14 (App Router) · React 18 · Tailwind · Supabase (Auth + Postgres + RLS) · Resend (SMTP) · Pretendard / JetBrains Mono
+
+---
+
+## 코드 탐색은 graphify 우선
+
+이 레포는 `graphify-out/`에 knowledge graph가 빌드돼 있다. **새 세션에서 코드 탐색 시 grep/glob보다 graphify를 먼저 시도**할 것 — 관련 노드만 좁혀 보여줘서 컨텍스트 점유가 작고 정확하다.
+
+| 목적 | 명령 |
+|------|------|
+| 개념·기능 조회 | `graphify query "<질문>"` |
+| 두 심볼/모듈 사이 관계 | `graphify path "<A>" "<B>"` |
+| 개별 개념 설명 | `graphify explain "<concept>"` |
+| 넓은 아키텍처 리뷰 | `graphify-out/GRAPH_REPORT.md` |
+| 도메인 위키 | `graphify-out/wiki/index.md` |
+
+코드 변경 후: `graphify update .` (AST 기반, API 비용 없음)로 그래프 최신화.
+
+---
+
+## 작업 패턴 (검증된 워크플로우)
+
+### 1) 작은 PR 사이클 — 큰 머지 직후 prod 검증 fix
+
+큰 PR (예: 21파일 audit trail) 머지 후 prod 검증에서 UX·견고성 구멍이 줄줄이 발견되면, **각 fix를 별도 PR로 1건씩 분리해 빠르게 머지** (분당 1 PR 가능). 묶음 PR로 만들지 말 것.
+
+- 검증된 사례: PR #5~#9 (2026-05-20), PR #33~#37 (2026-05-23)
+- Squash merge, main 히스토리 PR당 1 커밋 유지
+- 사용자 명시 동의(`ㄱㄱ`) 받은 후 머지 호출 — PR 생성 + 즉시 머지 같은 turn에 chain하면 auto-classifier가 막을 수 있음
+
+### 2) 대규모 fix (10건+) — Subagent + worktree 병렬
+
+1. **5개 배치로 분할** (충돌 가능성 기준 — 예: SQL / Marketing / PDF·Auth / Backend / Rate-limit·PIPA)
+2. **subagent 병렬 dispatch** — `Agent({ isolation: "worktree" })`로 각 subagent가 독립 worktree에서 작업
+3. **5개 별도 PR 생성** (작은 PR 사이클과 일치)
+4. **머지 순서 신중** — 의존 base PR(공통 헬퍼 신설) 먼저, 같은 파일 수정 PR은 후순위
+5. **충돌 resolve** — 두 변경 모두 보존 (import 양쪽 유지, 함수 분리) + typecheck 1차 검증 → `push --force-with-lease` → `gh pr merge`
+
+5개 적정. subagent 6개 이상 동시 dispatch 시 API 529 위험.
+
+### 3) 사용자 메시지 변수 ≥ 3개
+
+에러·warning 메시지의 변수 수가 1~2개뿐이면 **사용자는 매크로/하드코딩으로 인식**한다. 데이터에 있는 컨텍스트(거래소·기간·총량·해결 액션 대상)를 의식적으로 풀어내라.
+
+- 같은 데이터가 세션에 누적되면 변수 5개여도 또 매크로처럼 보임 → **출처/시점 메타 정보** 명시 ("이번 업로드 결과" vs "이전 세션 누적")
+- 추정치는 출처(범위·시점)를 메시지에 포함해 "왜 추정인지" 즉시 이해 가능하게
+
+### 4) Supabase prod 작업은 MCP로
+
+CLI 미설치 환경에서 `mcp__supabase__*` 도구로 prod 직접 조작 가능:
+- `apply_migration` / `deploy_edge_function` / `execute_sql` / `get_advisors` / `get_logs` / `list_tables`
+
+prod 영향이라 사용자 명시 허락 후만. `apply_migration`은 reversible 어려움.
+
+---
+
+## 알려진 함정 (반복 금지)
+
+세션에서 같은 실수 반복하지 말 것. 자세한 컨텍스트는 auto-memory 참조.
+
+- **이메일 로고 다크모드 swap** — base64 인라인 / CSS `filter` invert / `<picture>` `prefers-color-scheme` / inline `display:none` 분기 **4가지 모두 Apple Mail에서 실패**. 정답은 단일 brand blue PNG (`public/kontaxt-logo-brand.png`).
+- **Supabase captcha protection** — captcha ON 상태에서 서버 액션 `signInWithPassword`는 `captchaToken` 없이는 400 reject. 에러를 "비번 불일치"로 매핑하면 무한 재시도 발생. `reauthError.message`에 `captcha` 포함 여부로 분기 필요.
+- **Supabase Free tier — `auth_leaked_password_protection`** — Pro 전용. Security Advisor에 영구 warning으로 남음. **무시해야 정상**. "Dashboard에서 켜라" 안내 금지.
+- **이메일 인프라 안내 반복** — Resend 가입/도메인 인증/환경변수/Custom SMTP/Email Templates **전부 완료된 상태**. "혹시 가입하셨나요?" 같은 재확인 금지.
+- **client-side 데이터 격리** — localStorage / sessionStorage / IndexedDB / non-HttpOnly cookie에 user 데이터 저장 시 user_id별 키 분리 필수. 단일 키 = 격리 실패 → 같은 브라우저 A→B 계정 전환 시 누출. 보안 검사 시 server-side 위주 도구가 자주 놓침.
+
+---
+
+## 이메일 시스템
+
+### 아키텍처 — Supabase Custom SMTP via Resend
+
+```
+[가입/재설정 트리거]
+      ↓
+Supabase Auth (토큰 생성 + 템플릿 머지)
+      ↓ SMTP
+Resend (실제 발송 + DKIM 서명, kontaxt.kr 도메인)
+      ↓
+사용자 받은편지함
+```
+
+| 책임 | 담당 |
+|------|------|
+| 토큰·매직링크 생성 | Supabase Auth |
+| HTML 템플릿 저장 | Supabase Dashboard → Auth → Email Templates |
+| SMTP 발송 | Resend (Supabase Custom SMTP 설정) |
+| 도메인 인증 (SPF/DKIM/DMARC) | Resend 대시보드에서 `kontaxt.kr` |
+
+**Welcome 메일은 예외** — Supabase Auth 흐름이 아니라 인증 콜백에서 자체 트리거. `lib/email/send.ts`의 `sendWelcomeEmail()` 호출.
+
+### 파일 구조
+
+```
+emails/
+├── README.md                    # 이메일 시스템 전반 가이드
+├── components/
+│   ├── tokens.ts                # 색상·폰트·간격 (DESIGN.md → inline hex)
+│   ├── EmailLayout.tsx          # 헤더·카드·푸터·Trust strip
+│   ├── EmailButton.tsx          # Primary / Secondary
+│   ├── BilingualBlock.tsx       # 한국어 + 영어 병기 패턴
+│   └── kontaxt-logo.ts          # 단일 brand blue PNG (Apple Mail 호환)
+├── verify-email.tsx             # Supabase 변수 사용: {{ .ConfirmationURL }}, {{ .Email }}
+├── reset-password.tsx           # Supabase 변수 사용: {{ .ConfirmationURL }}
+├── welcome.tsx                  # 실제 URL (자체 발송용)
+├── dist/                        # 빌드 결과 (gitignored, npm run email:build로 재생성)
+│   ├── verify-email.html        ← Supabase 템플릿에 붙여넣을 최종 HTML
+│   ├── reset-password.html      ← Supabase 템플릿에 붙여넣을 최종 HTML
+│   └── welcome.html             ← Resend SDK로 자체 발송
+└── preview/index.html           # 패키지 없이 브라우저로 열어 보는 정적 미리보기
+
+lib/email/
+├── send.ts                      # Resend SDK 래퍼 (welcome 등 자체 발송용)
+└── integration-examples.md      # Supabase + Resend 연동 패턴 4가지
+
+scripts/
+└── build-emails.ts              # React Email → 정적 HTML 빌드
+```
+
+### 빌드 / 미리보기
+
+```bash
+npm run email:build       # emails/*.tsx → emails/dist/*.html
+npm run email:dev         # http://localhost:3001 — 실시간 미리보기
+```
+
+### 카피 톤 규칙 (이메일에도 적용)
+
+- 헤드라인은 마침표 있는 단문 한 문장
+- 한국어가 시각적으로 우선, 영어는 작고 muted
+- 그라디언트·이모지·블롭 금지 (DESIGN.md 8장 안티패턴)
+- brand blue 단일 컬러 (`#2563EB`)
+- 숫자는 `tabular-nums` 또는 `.num` 클래스
+
+### 향후 작업 시 주의
+
+- React Email render() 결과의 `{{ .ConfirmationURL }}` 같은 Go template 변수가 escape되는 경우가 있어, `scripts/build-emails.ts`의 `restoreSupabaseVars()`에서 후처리. 새 Supabase 변수 추가 시 이 함수에도 패턴 추가 필요.
+- Supabase 기본 발송이 이중으로 나가지 않도록, Custom SMTP 설정 후 기본 SMTP는 disable 확인.
+- 새 이메일 함수는 `lib/email/send.ts`의 `sendEmail` 래퍼 + `tag` 분류 패턴 따를 것.
+
+---
+
+## 디자인 원칙 (요약 — 자세한 건 DESIGN.md)
+
+1. 에디토리얼 단문 헤드라인 (마침표)
+2. 큰 호흡 (section padding, column gap 넉넉히)
+3. 콘텐츠가 곧 비주얼 (블롭·글로우·그라디언트 금지)
+4. 신뢰는 디자인으로 (Trust strip, Security 섹션)
+5. CTA 단계적 노출
+
+**컬러**: `--brand: #2563EB` 단일 + 중립 그레이. 보라·시안·인디고 금지 (DESIGN.md 3장).
+
+---
+
+## 변경 이력
+
+- **2026-05-23** — Working memory 현행화
+  - 도메인 sync (`kontaxt.app` → `kontaxt.kr`)
+  - graphify 사용 가이드 상단으로 이동·강조
+  - 신규 섹션: 작업 패턴 (작은 PR 사이클·subagent 병렬·메시지 변수·Supabase MCP)
+  - 신규 섹션: 알려진 함정 (이메일 로고 / Supabase captcha / Free tier / 안내 반복 / client 데이터 격리)
+  - 이메일 로고 정착 반영 (단일 brand blue PNG)
+- **2026-05-19** — 트랜잭셔널 이메일 3종 (verify-email / reset-password / welcome) 추가
+  - React Email 컴포넌트 + Supabase Custom SMTP via Resend 아키텍처
+  - 한국어+영어 병기, DESIGN.md 토큰 그대로 적용
+  - 빌드 스크립트 `scripts/build-emails.ts` 추가
