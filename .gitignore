@@ -13,3 +13,6 @@ next-env.d.ts
 
 # Secrets / personal — never commit
 recovery-codes.txt
+
+# graphify knowledge graph — regenerable via `graphify update` or git post-commit hook
+graphify-out/

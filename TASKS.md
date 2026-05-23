@@ -1,0 +1,230 @@
+# Kontaxt Task Backlog
+
+> 마지막 갱신: 2026-05-23 (D-223 to 2027.1.1 신고 시행)
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 (2026-05-22, 23) 후속 처리 중 → Phase 7 진입 전 P0 prod DB apply 필수.
+> 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
+
+---
+
+## ✅ MVP 완성 — Phase 0~6 (5/11 ~ 5/19)
+
+5/12 풀스택 스프린트로 MVP 코어 일단락. 자세한 일자별 기록은 Obsidian vault (`Daily/2026-05-12.md` 등) 참고.
+
+### 코어
+- **Phase 0 — Auth (Supabase)** — 기본 5/12 / Google·Kakao OAuth 5/12 / Naver OAuth 5/19 / 비번 재설정 5/18 / Apple 제거 5/19
+- **Phase 1 — FIFO 엔진** (`src/engine/types.ts`, `fifo.ts`, vitest) — 5/12
+- **Phase 2 — 거래소 파서**: Binance Spot CSV ✅, Upbit PDF ✅ — 5/12 (Bithumb은 Coming Soon으로 이동)
+- **Phase 3 — 정규화 + 세법**: 환율 변환 + SWAP 분리 + 의제취득가액 + `tax-calculator` — 5/12
+- **Phase 4 — E2E 테스트** (4 시나리오 + 풀 파이프라인) — 5/12
+- **Phase 5 — UI 연결**: Server Action `uploadAndCalculate` + 대시보드 + mock 교체 — 5/12
+- **Phase 6 — PDF 리포트** (react-pdf 한국 양도소득 신고용) — 5/12
+
+### 부가 인프라
+- 결제: ₩29,900 단일 + ₩19,900/년 구독 + `/billing` — 5/12
+- 보안: Cloudflare Turnstile + open redirect 방어 + 보안 감사 후속 1~3 — 5/13, 5/15
+- 마케팅 랜딩: 10섹션 + UX 휴리스틱 8건 + Mercury 톤 리디자인 — 5/12, 5/14, 5/15
+- Kontaxt 리브랜딩 + 로고 자산 (헤더·풋터·favicon·OG) — 5/18, 5/19
+- SEO: Google Search Console + Naver Search Advisor + 사이트맵 3개 — 5/18
+- 페이지: `/guide` 사용 가이드 + 이용약관 + 개인정보처리방침 — 5/12
+- 트랜잭셔널 이메일 3종 (verify / reset / welcome) — Resend + Supabase Custom SMTP — 5/19, 5/23
+
+---
+
+## 🔧 Quick Wins — 다음 작업 사이클 전 처리
+
+- [ ] **Naver OAuth 통합 패턴 추출** — fragment 세션 처리 + provider 메타데이터(`app_metadata.provider`)를 공통 OAuth 모듈로. 카카오/구글에 동일 패턴 적용 가능한지 확인.
+- [ ] **favicon SVG-only fallback 검토** — 구형 안드로이드/IE에서 PNG fallback 필요한지 GA/Search Console 데이터로 판단.
+- [ ] **Dashboard 한 사이클 검증** — 로컬에서 파일 업로드 → 결과 화면 → PDF 다운로드 풀 플로우 실제로 돌려보기. 5/12 이후 직접 안 돌려본 상태일 가능성 있음.
+
+---
+
+## ✅ 출시 전 신뢰도 잠금 — 완료 (2026-05-19, 20)
+
+> 2026-05-19 엔진 감사에서 발견한 P0/P1 10건. 베타 진입 전 필수 처리 항목 전부 ✅. 자세한 분석: `vault/Projects/engine-audit-2026-05-19.md`
+
+### P0 — 즉시 처리
+- [x] **옛 브랜드명 "크립토택스" / "CRYPTOTAX" 잔재 제거** — 21개 파일, ~46개 변경
+- [x] **Dashboard "총 양도차익" 라벨 정정** — totalGain/totalLoss/netPnL 3개 분리
+- [x] **이동평균법(MA) 옵션 구현** — `MAEngine` + dispatch + 19개 신규 테스트
+- [x] **환율 데이터 일별 fetch + 출처 표시** — Supabase `daily_rates` + Edge function + DBExchangeRateProvider
+- [x] **의제취득가액 시가** — `deemed_cost_snapshots` 테이블 + 자동 승격 함수
+
+### P1 — Audit Trail (PR #4)
+- [x] FIFO 매칭 표시 / 의제 배지 / 환율 출처 / 거래소별 분리 / holdingsAfter UI
+
+### P1 머지 후 prod 검증 fix (PR #5~#8, 2026-05-20)
+- [x] Binance Order History 친절 안내 / 에러 토스트 영구 / 중복 거래 dedupe / 무관 PDF 거절
+
+### P2 — 검증 절차 (P0/P1 후, 진행 중)
+- [ ] **국세청 공식 케이스 회귀 테스트** — NTS 가상자산 양도소득세 가이드라인의 예시 케이스 5-10개를 vitest에 추가.
+- [ ] **세무사 검증** — 한국 가상자산 전문 세무사 1-2명한테 시나리오 5-10개 결과 검증 의뢰. 비용 30-50만원 예상.
+- [ ] **엣지 케이스 테스트 추가**:
+  - Dust 매도 (1e-9), 동일 timestamp 대량 거래, 부분 의제+실가 mix, 환율 fallback 한계, 시간대 경계 BUY/SELL
+  - Property-based: `sum(consumedLots.costKRW) === costBasisKRW`, `totalGain+totalLoss === netPnL`
+- [ ] **베타 사용자 dry run** — 실제 거래내역으로 엔진 결과 → 엑셀 손계산 대조.
+
+---
+
+## 🔒 종합 감사 2026-05-22 / 23 후속 (★ Phase 7 진입 전 처리 ★)
+
+> 2026-05-22: P0 13건 hotfix → 5 subagent 병렬 → PR #28~#32 머지.
+> 2026-05-23: 5 영역 종합 감사 (security/UX/logic/quality/perf) → 50+ fix → /code-review × 3 + 사용자 플로우 워크스루 → PR #33~#37 머지.
+> 코드는 main 반영 완료. **prod DB / 수동 검증 / 큰 refactor 가 후속**.
+> 5 감사 보고서: `docs/audit/{security,ux,logic-bugs,code-quality,perf}-2026-05-23.md`
+
+### P0 — prod DB 동기 (지금 시급) 🚨
+
+- [ ] **Supabase 마이그레이션 prod apply** — PR #33의 SQL 2개가 main에 있지만 prod DB 미적용
+  - `supabase/migrations/20260523030000_optimize_rls_initplan.sql`
+  - `supabase/migrations/20260523040000_lockdown_profiles_and_cron_secret.sql`
+  - 적용 방법: `mcp__supabase__apply_migration` (사용자 직접 호출 필요) / Supabase Dashboard SQL editor / `supabase db push`
+  - 적용 후 `mcp__supabase__get_advisors`로 `auth_rls_initplan` 10건 → 0건 확인
+
+### P1 — 수동 검증 (30분 내)
+
+코드 fix 검증. 한 사이클 워크스루로 처리.
+
+- [ ] **Naver 재로그인 lockout 해소** (PR #35) — Naver signup → logout → Naver 재로그인 시 `?error=already_registered_other_provider` 발생 안 함
+- [ ] **changePassword brute-force RL** (PR #35) — 잘못된 oldPassword 6회 연속 → 6번째에 "15분 후 다시 시도" + `code: 'rate_limited'`
+- [ ] **/tax 재계산 race** (PR #36) — 재계산 더블클릭 → 한 번만 실행, "재계산 중…" 라벨 노출
+- [ ] **/report year 동기** (PR #36) — year 2026 선택 후 PDF → 파일명/내용이 2026
+- [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능
+- [ ] **theme toggle 깜빡임** (PR #37) — 다크 모드 새로고침 시 sun 아이콘이 moon으로 1-2 frame 깜빡임 없음
+- [ ] **404 페이지** — 존재하지 않는 URL → 404 + "메인으로" 버튼
+
+### P2 — 보류한 audit 후속 (별도 PR 후보)
+
+- [ ] **next@16 major bump** — `npm audit` 14건 (Next.js DoS / XSS / cache poisoning / SSRF via WebSocket). breaking change라 별도 의사결정 PR
+- [ ] **`useCurrentUser` React Context 화** (perf P1-1) — AppShell + 5 child page 각각이 독립 listener → context 1회로 통합. ~200-500ms 절감/페이지
+- [ ] **marketing nav 정적화** (perf P1-2) — Nav가 `cookies()` 호출해서 marketing 트리 전체 dynamic. 옵션: nav를 client comp 화 OR `revalidate=86400` 추가
+- [ ] **`/auth/finish` nonce binding** (security P1-6) — magic link fragment만으로 setSession → phishing 가능. nonce cookie + redirectTo 쿼리로 검증 추가
+- [ ] **`/api/report` PDF route 가 client transactions 신뢰** (P0-4 partial fix only) — 5% → 0.5% tolerance refine으로 trivial 공격은 차단, amount+price 동시 위조 여지 남음. 근본 fix: parsed 거래 server-side 보관 또는 PDF "self-declared worksheet" disclaimer 강화
+- [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — rate provider 재실행해서 진짜 audit-trail metadata 사용. 현재는 generic "내부 DB 시세 (서버 재검증)" 라벨
+- [ ] **deemedCostSource wire 객체 dedup** (reuse R#4) — `calculate.ts` + `/api/report` 둘 다 동일한 5-field 객체 빌드. `buildDeemedCostWire(deemedRes)` helper로 추출
+
+### P3 — code quality 폴리시
+
+- [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
+- [ ] README 갱신 — marketing-only → SaaS 전체 (code-quality P1)
+- [ ] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용)
+- [ ] `@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합
+- [ ] doge.svg 압축 — 56 KB, 다른 코인 로고의 30× (perf P1-6)
+- [ ] mark.svg 인라인 SVG 화 — `<img>` 대신
+- [ ] `error.tsx`가 `<Button>` 사용 (reuse R#10), login `Input.error` aria 복원 (R#14)
+
+### 직전 세션 핵심 참고
+
+- 새 공통 헬퍼: `lib/auth/client-ip.ts`, `lib/auth/naver.ts`, `components/ui/FormErrorBanner.tsx`
+- 새 페이지: `app/loading.tsx`, `app/error.tsx`, `app/not-found.tsx`, `app/(app)/loading.tsx`
+- `lib/rate-limit.ts` parameterized — 새 limiter 1줄 (`makeLimit(prefix, count, window)`)
+- `lib/engine/exchange-rate.ts`의 `kstYearOf` / `kstMonthOf` / `kstDayOf` — KST 단일 helper, 신규 코드는 이걸 사용
+- `PremiumGuardOk.userName` — narrow된 타입으로 `/api/report` 등에서 `getUser` 중복 제거
+
+---
+
+## 🔥 Phase 7 — 사용자 확보 + 피드백 루프 (D-223)
+
+신고 시행까지 7개월. 베타 사용자 모집해서 피드백 루프 만드는 게 우선.
+
+- [ ] **베타 모집 채널 정하기** — 한국 크립토 커뮤니티 (Discord/X/Bitcoin Korea/디시 갤러리/네이버 카페) 중 어디서 시작할지
+- [ ] **첫 50명 베타 모집** — 무료 사용 + 피드백 약속
+- [ ] **온보딩 funnel 트래킹** — 가입 → 파일 업로드 → 결과 → 결제, 각 단계 drop-off 측정 도구 결정 (PostHog/Amplitude/GA4)
+- [ ] **피드백 채널 결정** — 인앱 위젯(Userflow/Featurebase) vs 단톡방(Discord/Slack) vs 1:1 인터뷰
+- [ ] **세션 리플레이 도입** — Microsoft Clarity (무료) or Hotjar — 첫 사용자가 어디서 막히는지 관찰
+
+---
+
+## 🏦 Phase 8 — 거래소 확장
+
+랜딩에서 "Coming Soon" 표시한 거래소 차례로 구현. 사용자 수요 기반 우선순위 조정.
+우선순위: 한국 사용자 비중 → 글로벌 인기도 → 데이터 포맷 난이도.
+
+- [ ] **Bithumb XLS** — 한국 사용자 비중 큰데 Phase 2에서 빠짐. 최우선.
+- [ ] **Coinone** — 한국 거래소
+- [ ] **Bybit** (CSV)
+- [ ] **Coinbase** (CSV) — 글로벌 대표
+- [ ] **Gate.io** (CSV)
+- [ ] **OKX** (CSV)
+- [ ] **Bitget** (CSV)
+
+각 거래소 추가 시:
+1. 샘플 거래내역 파일 확보 (베타 사용자 협조 또는 본인 계정)
+2. 파서 구현 (`src/parsers/{exchange}.parser.ts`)
+3. vitest 케이스 추가 (정상 + 엣지 케이스 3-5개)
+4. 랜딩 "Coming Soon" → "Live"로 이동
+
+---
+
+## 📈 Phase 9 — 마케팅 콘텐츠 + SEO
+
+- [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크, 인덱싱 안 되는 페이지 원인 파악
+- [ ] **블로그/가이드 콘텐츠 첫 5개** (long-tail 키워드 타깃):
+  1. "업비트 PDF로 양도소득세 신고하는 법"
+  2. "FIFO vs 이동평균 — 가상자산 세금 계산 방식 차이"
+  3. "의제취득가액이란? 2027 가상자산 세금 계산법"
+  4. "바이낸스 CSV로 한국 양도소득세 신고하기"
+  5. "거래소 통합 데이터로 신고하는 이유 (수동 vs 자동)"
+- [ ] **랜딩 A/B 테스트** — Hero copy or 가격 카드 variant
+- [ ] **사용자 후기 섹션** (베타 첫 5명 후기 모이면 랜딩에 추가)
+
+---
+
+## 📑 Phase 10 — 신고 시즌 대비 (2027년 1-5월)
+
+- [ ] **캐파 점검** — PDF 생성 부하 테스트 (동시 100/500/1000 요청). Vercel function 한도 점검.
+- [ ] **세무사 협업 채널** — PDF 직접 전송 or 세무사 추천 디렉토리. 한국 가상자산 전문 세무사 5-10명 발굴.
+- [ ] **고객 지원** — 신고 기간 FAQ 보강, 인앱 채팅(Crisp/Intercom) 또는 이메일 응대 SLA 정의.
+- [ ] **회계연도 분리** — 2026/2027 분리 (재신고/수정신고 대응)
+- [ ] **에러 모니터링** — Sentry/Vercel Analytics 도입 (있는지 확인 필요)
+
+---
+
+## ⚠️ 알려진 이슈 / 리스크
+
+- **pdf-parse v1 의존성**: Vercel serverless의 DOMMatrix 미지원 때문에 v1 고정 (5/12 deploy 4번 돌려서 해결). 라이브러리 보안 업데이트 끊기면 자체 PDF 파싱 또는 외부 서비스로 마이그레이션 검토 필요.
+- **Bithumb 파서 미구현**: 한국 사용자 중 빗썸 비중 큰데 데이터는 Coming Soon. Phase 8 1순위로 조기 처리.
+- **테스트 커버리지 측정 안 됨**: vitest 셋업 + 50+ 케이스 있지만 `@vitest/coverage-v8` 패키지 미설치로 % 측정 안 됨. 추가 필요.
+- **Dashboard 회귀 테스트 없음**: 5/12 이후 mock → 실제 엔진 교체된 후 풀 플로우 회귀 안 돈 듯. Quick Wins에서 검증.
+- **next@16 advisories 14건 미처리**: DoS / XSS / cache poisoning / SSRF via WebSocket. breaking change라 별도 의사결정 PR 필요. audit 2026-05-23 후속 P2에 등록.
+- **PDF route client 신뢰 문제 (partial fix)**: tolerance refine으로 trivial 공격은 막았지만 amount+price 동시 위조 여지 남음. audit 후속 P2에 근본 fix 등록.
+
+### 해결된 이슈
+
+- ~~**엔진 audit trail 부재**~~ — 2026-05-20 해결 (PR #4).
+- ~~**환율 데이터 하드코딩**~~ — 2026-05-19 해결. Supabase DB + Upbit Edge function.
+- ~~**의제취득가액 시가 10개 코인만**~~ — 2026-05-19 해결. DB 테이블 + 추정치 시드 + 실시가 자동 승격.
+- ~~**이동평균법 거짓 옵션**~~ — 2026-05-19 해결. MAEngine 구현.
+- ~~**옛 브랜드명 "크립토택스" 잔재**~~ — 2026-05-19 해결.
+- ~~**localStorage 거래 데이터 user 격리 누락**~~ — 2026-05-23 PR #28 해결. 5-23 audit 발견 패턴 → `CLAUDE.md` 알려진 함정 섹션에 재발 방지 가이드.
+
+---
+
+## 🧭 의사결정 기록
+
+큰 결정만 메모. 자세한 컨텍스트는 vault `Daily/` 참고.
+
+- **2026-05-12**: pdf-parse v2 대신 v1 — Vercel serverless DOMMatrix 호환성.
+- **2026-05-12**: 빗썸 파서 Phase 2에서 빼고 Coming Soon으로 — XLS 파싱 난이도 + 타임라인 압박.
+- **2026-05-12**: 결제 모델 = 단일 연도 ₩29,900 + 구독 ₩19,900/년 두 상품.
+- **2026-05-15**: 마케팅 톤 — "AI" 색깔 빼고 Mercury·Obsidian·Rogo 같은 fintech/tooling 톤.
+- **2026-05-18**: 브랜드명 = 크립토택스 → **Kontaxt**.
+- **2026-05-19**: 작업 기록 = Obsidian vault. Daily/Weekly + Projects/kontaxt.md.
+- **2026-05-19**: 엔진 신뢰도 감사 — 엔진 코어 A−, UI C, 환율데이터 D. P0 5건 + P1 5건 처리 후 베타 진입.
+- **2026-05-20**: P1 audit trail 5건 + UX fix 4건 한 번에 머지 (PR #4~#8). 큰 PR 후 prod 검증 fix는 분당 1 PR 사이클로 빠르게 (`feedback-small-pr-cycles` 메모리).
+- **2026-05-22**: P0 13건 fix를 5 subagent 병렬 worktree로 dispatch → 5 PR 분할 머지 (#28~#32). 새 패턴 검증 (`subagent-worktree-pattern` 메모리).
+- **2026-05-23**: 5 영역 종합 감사 (security/UX/logic/quality/perf) — subagent 5개 병렬 + /code-review × 3 + 사용자 플로우 워크스루 → 50+ fix → 5 PR 머지 (#33~#37). 코드는 main, prod DB / 수동 검증 / 큰 refactor 후속.
+- **2026-05-23**: 이메일 인프라 정착 — Resend (`kontaxt.kr`) + Supabase Custom SMTP. 로고는 단일 brand blue PNG (Apple Mail 호환). 다크모드 swap 4가지 시도 다 실패 — 반복 금지.
+- **2026-05-23**: Working memory 현행화 — `CLAUDE.md`에 graphify 사용 강제 / 작업 패턴 / 함정 섹션 추가.
+
+---
+
+## 📂 참고 경로
+
+- 코드: `/Users/delta/Desktop/kontaxt/`
+- 작업 기록 vault: `/Users/delta/Documents/Obsidian Vault/kontaxt-vault/`
+- 프로젝트 메인 페이지: `vault/Projects/kontaxt.md`
+- 데일리 노트: `vault/Daily/YYYY-MM-DD.md`
+- CLAUDE.md (코드 가이드라인): `/Users/delta/Desktop/kontaxt/CLAUDE.md`
+- 디자인 핸드오프: `/Users/delta/Desktop/kontaxt/README.md`
+- 감사 보고서: `/Users/delta/Desktop/kontaxt/docs/audit/`
+- 지식 그래프: `/Users/delta/Desktop/kontaxt/graphify-out/`
