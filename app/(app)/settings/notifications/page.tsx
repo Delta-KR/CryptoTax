@@ -91,7 +91,7 @@ export default function NotificationsPage() {
         </ul>
       </Card>
 
-      <p className="mt-4 text-[12px] text-muted-2">
+      <p className="mt-4 text-[12px] text-muted">
         변경사항은 자동으로 저장됩니다.
       </p>
     </>

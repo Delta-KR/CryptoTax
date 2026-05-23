@@ -94,8 +94,8 @@ function Bar({ label, amount, pct, gain }: BarProps) {
           style={{
             width: `${pct}%`,
             background: gain
-              ? 'linear-gradient(90deg, #60A5FA, rgb(var(--brand)))'
-              : 'linear-gradient(90deg, #FCA5A5, rgb(var(--bad)))',
+              ? 'linear-gradient(90deg, rgb(var(--brand-light)), rgb(var(--brand)))'
+              : 'linear-gradient(90deg, rgb(var(--bad-light)), rgb(var(--bad)))',
           }}
         />
       </div>
@@ -120,7 +120,7 @@ function Chip({ children, light }: { children: React.ReactNode; light?: boolean 
           ? 'border border-line-2 bg-bg-tint text-muted'
           : 'border bg-brand-soft text-brand-2')
       }
-      style={light ? undefined : { borderColor: '#DBEAFE' }}
+      style={light ? undefined : { borderColor: 'rgb(var(--brand) / 0.2)' }}
     >
       {children}
     </span>
@@ -191,7 +191,8 @@ function DashboardMock() {
 
       {/* Main dashboard window — .glass adds dark-mode glass treatment */}
       <div className="glass relative z-20 overflow-hidden rounded-lg border border-line-2 bg-card shadow-lg">
-        {/* macOS chrome */}
+        {/* macOS chrome — skeuomorphic OS dots (DESIGN.md §3 exception:
+            depicting native OS controls, not brand color). Keep hex literal. */}
         <div className="flex items-center justify-between border-b border-line-2 bg-bg-soft px-4 py-3">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: '#FF5F56' }} />

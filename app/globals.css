@@ -36,6 +36,7 @@
   /* Brand */
   --brand: 37 99 235;          /* #2563EB */
   --brand-2: 29 78 216;        /* #1D4ED8 */
+  --brand-light: 96 165 250;   /* #60A5FA — lighter shade for gradient stops */
   --brand-soft: 238 244 255;   /* #EEF4FF */
   --brand-faint: 245 248 255;  /* #F5F8FF */
   /* Text */
@@ -55,6 +56,7 @@
   --good: 22 163 74;           /* #16A34A */
   --good-soft: 236 253 245;    /* #ECFDF5 */
   --bad: 220 38 38;            /* #DC2626 */
+  --bad-light: 252 165 165;    /* #FCA5A5 — lighter shade for gradient stops */
   --bad-soft: 254 242 242;     /* #FEF2F2 */
   --warn: 217 119 6;           /* #D97706 */
   --warn-soft: 255 251 235;    /* #FFFBEB */
@@ -78,6 +80,7 @@
 [data-theme="dark"] {
   --brand: 59 130 246;         /* #3B82F6 */
   --brand-2: 37 99 235;        /* #2563EB */
+  --brand-light: 96 165 250;   /* #60A5FA — same in dark (gradient highlight) */
   --brand-soft: 30 42 74;      /* #1E2A4A */
   --brand-faint: 24 34 56;     /* #182238 */
   --ink: 241 245 249;          /* #F1F5F9 */
@@ -94,6 +97,7 @@
   --good: 34 197 94;           /* #22C55E */
   --good-soft: 15 42 31;       /* #0F2A1F */
   --bad: 248 113 113;          /* #F87171 */
+  --bad-light: 252 165 165;    /* #FCA5A5 — same in dark (gradient highlight) */
   --bad-soft: 42 20 20;        /* #2A1414 */
   --warn: 251 191 36;          /* #FBBF24 */
   --warn-soft: 42 31 10;       /* #2A1F0A */

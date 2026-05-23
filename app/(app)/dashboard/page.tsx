@@ -59,7 +59,7 @@ const quickActions = [
         <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     ),
-    color: '#2563EB',
+    color: 'rgb(var(--brand))',
     soft: 'rgb(var(--brand-faint))',
   },
   {
@@ -73,8 +73,8 @@ const quickActions = [
       </svg>
     ),
     // DESIGN.md §3: 보라(#7C3AED) 금지. 단일 brand blue 로 통일.
-    color: '#2563EB',
-    soft: '#EEF4FF',
+    color: 'rgb(var(--brand))',
+    soft: 'rgb(var(--brand-soft))',
   },
   {
     href: '/report',
@@ -86,8 +86,8 @@ const quickActions = [
         <path d="M14 3v5h5M9 14l3 3 3-3M12 11v6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    color: '#16A34A',
-    soft: '#ECFDF5',
+    color: 'rgb(var(--good))',
+    soft: 'rgb(var(--good-soft))',
   },
 ];
 
