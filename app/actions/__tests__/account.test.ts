@@ -12,6 +12,7 @@ const signOutMock = vi.fn();
 const adminDeleteUserMock = vi.fn();
 const profilesDeleteEqMock = vi.fn();
 const redirectMock = vi.fn();
+const checkRateLimitMock = vi.fn();
 
 let callOrder: string[] = [];
 
@@ -21,6 +22,22 @@ vi.mock('next/navigation', () => ({
     redirectMock(...args);
     throw new Error('NEXT_REDIRECT');
   },
+}));
+
+vi.mock('next/headers', () => ({
+  cookies: () => ({
+    getAll: () => [],
+    delete: () => {},
+  }),
+}));
+
+// rate-limit 모듈은 prod 에서 Upstash env 없으면 throw — 테스트에서 mock 으로 우회.
+vi.mock('@/lib/rate-limit', () => ({
+  checkRateLimit: (...args: unknown[]) => Promise.resolve(checkRateLimitMock(...args)),
+  getAuthReauthRateLimit: () => ({}),
+  getReportRateLimit: () => ({}),
+  getCalculateRateLimit: () => ({}),
+  getOAuthStartRateLimit: () => ({}),
 }));
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -76,6 +93,14 @@ beforeEach(() => {
   adminDeleteUserMock.mockReset();
   profilesDeleteEqMock.mockReset();
   redirectMock.mockReset();
+  checkRateLimitMock.mockReset();
+  // 기본값: rate limit 통과. 개별 test 에서 throttled 시나리오 override.
+  checkRateLimitMock.mockReturnValue({
+    ok: true,
+    limit: 5,
+    remaining: 4,
+    reset: Date.now() + 60_000,
+  });
 });
 
 afterEach(() => {
@@ -210,6 +235,33 @@ describe('changePassword', () => {
     });
     expect(r.ok).toBe(true);
     expect(callOrder).toEqual(['signInWithPassword', 'updateUser']);
+  });
+
+  it('rate-limits brute force attempts (rate_limited code)', async () => {
+    getUserMock.mockReturnValue({
+      data: {
+        user: {
+          id: 'u',
+          email: 'x@x.com',
+          app_metadata: { providers: ['email'] },
+        },
+      },
+    });
+    // throttled
+    checkRateLimitMock.mockReturnValue({
+      ok: false,
+      limit: 5,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+    });
+    const r = await changePassword({
+      oldPassword: 'old',
+      newPassword: 'Aa1!aaaaaaaa',
+    });
+    expect(r.ok).toBe(false);
+    expect(r.code).toBe('rate_limited');
+    // rate limit 으로 막혔으면 signInWithPassword 가 호출되지 않아야 함.
+    expect(signInWithPasswordMock).not.toHaveBeenCalled();
   });
 });
 

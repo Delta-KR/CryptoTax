@@ -34,6 +34,17 @@ const securityHeaders = [
     value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
   },
   { key: 'Content-Security-Policy', value: cspDirectives.join('; ') },
+  // HSTS — kontaxt.kr 은 HTTPS-only. preload 등재 후에도 안전한 값.
+  // Vercel 이 엣지에서 자동 부여하긴 하지만 명시 선언으로 환경 변화 시 안전.
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
+  // OAuth popup (signInWithOAuth) 호환을 위해 strict 가 아닌 allow-popups.
+  {
+    key: 'Cross-Origin-Opener-Policy',
+    value: 'same-origin-allow-popups',
+  },
 ];
 
 const nextConfig = {

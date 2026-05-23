@@ -1,38 +1,19 @@
-// P4-R1 — Upstash Redis 기반 IP/user 슬라이딩 윈도우 rate limit.
-// 무료 cold-start 빠르고, Vercel + Edge에서 안정적으로 동작.
+// Upstash Redis 기반 슬라이딩 윈도우 rate limit. Vercel + Edge 안정.
 //
-// 환경변수 (Vercel + 로컬):
-//   UPSTASH_REDIS_REST_URL
-//   UPSTASH_REDIS_REST_TOKEN
+// 환경변수: UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN (Redis.fromEnv).
+// 미설정 시 fail-closed (open 아닌 close) — 환경 오류는 prod 에서 발생하면 안 됨.
 //
-// Redis.fromEnv()가 둘 다 읽음. 미설정 시 throw — 보수적으로 차단(open이 아니라 close)되도록
-// checkRateLimit에서 명시적으로 핸들링. 다만 환경변수 누락은 환경 설정 오류이므로 prod에서는
-// 절대 발생하면 안 됨.
-//
-// Limit 설정 근거:
-//   /api/report (PDF 생성)는 무거운 작업 — 분당 10회면 사용자 1명이 합리적으로 신고용 PDF를
-//   여러 번 받기에는 충분하고, 봇/DoS는 빠르게 차단됨.
-//   calculate (server action)은 자주 호출 가능 (파일 추가 업로드, 다른 method 시도 등) →
-//   분당 20회로 살짝 여유. user.id 기반이라 IP 공유 환경(회사 NAT)도 영향 없음.
-//
-// 향후 운영:
-//   Upstash 콘솔 analytics 활성화 시 키별 사용량 + 차단율 트래킹 가능 (analytics: true).
-//   요금제 free tier 10K commands/day까지 무료.
-//
-// Test 환경:
-//   Vitest에서는 환경변수 미설정 → fromEnv() throw. 단위 테스트에서는 이 모듈 직접 import하지
-//   않거나 mocking 필요. 통합 테스트는 prod env로만.
-//   현재 단위 테스트에서는 calculate.ts를 mock 없이 import하지 않음 (lib/engine 직접 테스트).
+// Limit 설계:
+//   report (PDF) — IP+user 1m/10. 무거운 작업, DoS 차단.
+//   calculate — user 1m/20. 자주 호출, 회사 NAT 영향 없게 user 기반.
+//   auth-reauth — user 15m/5. changePassword brute-force 차단.
+//   oauth-start — IP 1m/10. generateLink 쿼터·magic link 비용 보호.
 
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
-
-// Lazy singleton — module load 시점에는 throw하지 않도록 함수로 감싸 첫 호출 시점에만 초기화.
-// 환경변수 누락 시 명확한 에러 메시지로 fail-closed.
+import { NextResponse } from 'next/server';
 
 let _redis: Redis | null = null;
-let _reportLimit: Ratelimit | null = null;
-let _calculateLimit: Ratelimit | null = null;
 
 function getRedis(): Redis {
   if (_redis) return _redis;
@@ -45,27 +26,26 @@ function getRedis(): Redis {
   return _redis;
 }
 
-export function getReportRateLimit(): Ratelimit {
-  if (_reportLimit) return _reportLimit;
-  _reportLimit = new Ratelimit({
+// Lazy singleton 캐시 — 각 limiter 는 1회만 생성. prefix 가 key.
+const _limiterCache = new Map<string, Ratelimit>();
+
+function makeLimit(prefix: string, count: number, window: '1 m' | '15 m'): Ratelimit {
+  const cached = _limiterCache.get(prefix);
+  if (cached) return cached;
+  const limit = new Ratelimit({
     redis: getRedis(),
-    limiter: Ratelimit.slidingWindow(10, '1 m'), // 분당 10회 IP
+    limiter: Ratelimit.slidingWindow(count, window),
     analytics: true,
-    prefix: 'kontaxt-report',
+    prefix,
   });
-  return _reportLimit;
+  _limiterCache.set(prefix, limit);
+  return limit;
 }
 
-export function getCalculateRateLimit(): Ratelimit {
-  if (_calculateLimit) return _calculateLimit;
-  _calculateLimit = new Ratelimit({
-    redis: getRedis(),
-    limiter: Ratelimit.slidingWindow(20, '1 m'), // 분당 20회 user
-    analytics: true,
-    prefix: 'kontaxt-calculate',
-  });
-  return _calculateLimit;
-}
+export const getReportRateLimit = () => makeLimit('kontaxt-report', 10, '1 m');
+export const getCalculateRateLimit = () => makeLimit('kontaxt-calculate', 20, '1 m');
+export const getAuthReauthRateLimit = () => makeLimit('kontaxt-auth-reauth', 5, '15 m');
+export const getOAuthStartRateLimit = () => makeLimit('kontaxt-oauth-start', 10, '1 m');
 
 export interface RateLimitResult {
   ok: boolean;
@@ -75,10 +55,10 @@ export interface RateLimitResult {
 }
 
 /**
- * 슬라이딩 윈도우 rate limit 체크. 환경변수 미설정 시 fail-closed (요청 차단).
+ * 슬라이딩 윈도우 rate limit 체크. Redis 오류 / 환경변수 누락 시 fail-closed.
  *
  * @param identifier IP, user.id 등 식별자
- * @param rateLimit `getReportRateLimit()` 또는 `getCalculateRateLimit()`
+ * @param rateLimit `getReportRateLimit()` 등의 factory 결과
  */
 export async function checkRateLimit(
   identifier: string,
@@ -88,9 +68,31 @@ export async function checkRateLimit(
     const { success, limit, remaining, reset } = await rateLimit.limit(identifier);
     return { ok: success, limit, remaining, reset };
   } catch (e) {
-    // Redis 통신 오류 또는 환경변수 누락. prod에서는 환경 설정 오류 외에는 발생하지 않아야 함.
-    // fail-closed로 보수적 차단 (DoS 방어 우선). 다만 로그로 감지 가능하게.
     console.error('[checkRateLimit] error — fail-closed:', e);
     return { ok: false, limit: 0, remaining: 0, reset: Date.now() + 60_000 };
   }
+}
+
+/**
+ * 429 응답 빌더 — 표준 X-RateLimit-* + Retry-After 헤더 일괄 부착.
+ * /api/* 라우트에서 동일 패턴이 여러 곳에 반복되던 boilerplate 제거.
+ */
+export function rateLimitResponse(
+  result: RateLimitResult,
+  message: string,
+): NextResponse {
+  return NextResponse.json(
+    { error: message },
+    {
+      status: 429,
+      headers: {
+        'X-RateLimit-Limit': String(result.limit),
+        'X-RateLimit-Remaining': String(result.remaining),
+        'X-RateLimit-Reset': String(result.reset),
+        'Retry-After': String(
+          Math.max(1, Math.ceil((result.reset - Date.now()) / 1000)),
+        ),
+      },
+    },
+  );
 }

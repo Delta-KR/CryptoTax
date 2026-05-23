@@ -1,11 +1,13 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
 } from '@/lib/supabase/server';
 import { isPasswordValid } from '@/lib/auth/password-rules';
+import { checkRateLimit, getAuthReauthRateLimit } from '@/lib/rate-limit';
 
 export type ChangePasswordCode =
   | 'oauth_only'
@@ -14,6 +16,7 @@ export type ChangePasswordCode =
   | 'missing_email'
   | 'unauthenticated'
   | 'captcha_failed'
+  | 'rate_limited'
   | 'unknown';
 
 export interface ChangePasswordResult {
@@ -59,6 +62,24 @@ export async function changePassword(input: {
       ok: false,
       error: '새 비밀번호가 조건을 충족하지 않습니다.',
       code: 'weak',
+    };
+  }
+
+  // P0: brute-force 방어. Turnstile 1회 해결로 무제한 추측 불가하도록 user.id 별 캡.
+  // wait time 은 limiter 의 reset 으로 동적 도출 — limiter 변경 시 메시지 회귀 방지.
+  const reauthLimit = await checkRateLimit(
+    `reauth:${user.id}`,
+    getAuthReauthRateLimit(),
+  );
+  if (!reauthLimit.ok) {
+    const minutes = Math.max(
+      1,
+      Math.ceil((reauthLimit.reset - Date.now()) / 60_000),
+    );
+    return {
+      ok: false,
+      error: `비밀번호 시도가 너무 많습니다. ${minutes}분 후 다시 시도해주세요.`,
+      code: 'rate_limited',
     };
   }
 
@@ -171,6 +192,17 @@ export async function deleteAccount(): Promise<{
   if (deleteError) {
     console.error('[deleteAccount] admin.deleteUser error:', deleteError);
     return { ok: false, error: deleteError.message };
+  }
+
+  // 4) sb-* auth 쿠키 명시 cleanup — signOut 의 cookieStore mutation 이
+  //    server-action 환경에서 best-effort 라 orphan 쿠키가 남을 수 있음.
+  try {
+    const cookieStore = cookies();
+    for (const c of cookieStore.getAll()) {
+      if (c.name.startsWith('sb-')) cookieStore.delete(c.name);
+    }
+  } catch {
+    // 무시 — redirect 직전.
   }
 
   redirect('/');

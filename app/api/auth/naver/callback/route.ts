@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
 import { findUserByEmail } from '@/lib/supabase/admin-lookup';
+import { checkRateLimit, getOAuthStartRateLimit } from '@/lib/rate-limit';
+import { getClientIp } from '@/lib/auth/client-ip';
+import { NAVER_STATE_COOKIE } from '@/lib/auth/naver';
 
 // Naver OAuth 콜백:
 // 1. state 검증 (CSRF)
-// 2. code → Naver access_token 교환
-// 3. access_token → Naver 사용자 정보 (email, name) fetch
-// 4. 같은 email에 다른 provider 계정이 있는지 검증 (C2 account takeover 차단)
-// 5. Supabase admin generateLink로 magic link 발급 (이메일 발송 X, URL만 받음)
-// 6. app_metadata에 provider=naver 명시 (Dashboard 표시용)
-// 7. magic link로 server-side redirect → Supabase가 자동 세션 발급 + /dashboard로 이동
-//
-// iCloud Mail prefetch issue 무관 — 사용자 클릭 안 함, server redirect로 즉시 처리.
+// 2. code → access_token → 사용자 정보 fetch
+// 3. 다른 provider 로 가입된 email 인지 검증 (C2 account takeover 차단)
+// 4. Supabase admin generateLink → /auth/finish 로 redirect → 자동 세션
+// 5. app_metadata.provider=naver 명시
 
 export const runtime = 'nodejs';
 
@@ -19,11 +18,17 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  const cookieState = request.cookies.get('naver_oauth_state')?.value;
+  const cookieState = request.cookies.get(NAVER_STATE_COOKIE)?.value;
 
-  // 1. state CSRF 검증
+  // state CSRF 검증을 먼저 — invalid state 일 때만 (의심 트래픽) rate limit 으로 차단.
+  // 정상 OAuth 흐름은 start 단계의 limiter 가 이미 보호 중이므로 callback 중복 호출 안 함.
   if (!code || !state || !cookieState || state !== cookieState) {
     console.error('[naver/callback] state mismatch or missing code');
+    const ip = getClientIp(request);
+    const { ok: rlOk } = await checkRateLimit(`oauth-cb:${ip}`, getOAuthStartRateLimit());
+    if (!rlOk) {
+      return NextResponse.redirect(new URL('/login?error=rate_limited', url.origin));
+    }
     return NextResponse.redirect(new URL('/login?error=invalid_request', url.origin));
   }
 
@@ -53,7 +58,7 @@ export async function GET(request: NextRequest) {
       error_description?: string;
     };
     if (!tokenData.access_token) {
-      console.error('[naver/callback] token exchange failed:', tokenData.error);
+      console.error('[naver/callback] token exchange failed');
       return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
     }
 
@@ -75,20 +80,26 @@ export async function GET(request: NextRequest) {
     //    다른 provider(예: email/google/kakao)로 이미 가입된 이메일에 Naver 매직 링크를
     //    발급하면 그 계정으로 강제 로그인 → 인계 가능. 따라서 기존 user에
     //    `provider='naver'` identity가 없으면 가입 차단.
-    //    REST API(`/auth/v1/admin/users?filter=<email>`) — auth-js 2.105.4의 listUsers는
-    //    filter를 지원하지 않으므로 lib/supabase/admin-lookup.ts에서 직접 호출.
     const lookup = await findUserByEmail(naverUser.email);
     if (lookup.error) {
-      // REST 호출 실패 시 fail-closed — 검증 못 한 상태로 가입 진행 ❌.
+      // REST 호출 실패 시 fail-closed.
       return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
     }
     if (lookup.user) {
+      // admin.generateLink 는 identities[].provider 를 'email' 로 세팅하므로
+      // app_metadata.providers / app_metadata.provider 까지 확인해야 Naver 로그인
+      // 재진입 시 본인을 잘못 차단하지 않는다 (재로그인 lockout 회귀 방지).
       const identities = lookup.user.identities ?? [];
-      const naverLinked = identities.some((i) => i.provider === 'naver');
+      const appMeta = lookup.user.app_metadata ?? {};
+      const naverLinked =
+        identities.some((i) => i.provider === 'naver') ||
+        (Array.isArray(appMeta.providers) && appMeta.providers.includes('naver')) ||
+        appMeta.provider === 'naver';
       if (!naverLinked) {
+        // 로그에는 user.id 만 — email/provider 목록은 로그 분석자에게 가입 사실을 노출하므로 제외.
         console.error(
-          '[naver/callback] email already registered with different provider(s):',
-          identities.map((i) => i.provider).join(','),
+          '[naver/callback] account-takeover blocked — userId=%s',
+          lookup.user.id,
         );
         return NextResponse.redirect(
           new URL(
@@ -118,7 +129,7 @@ export async function GET(request: NextRequest) {
     });
 
     if (linkError || !linkData?.properties?.action_link) {
-      console.error('[naver/callback] generateLink failed:', linkError);
+      console.error('[naver/callback] generateLink failed');
       return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
     }
 
@@ -137,7 +148,7 @@ export async function GET(request: NextRequest) {
 
     // 7. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
     const response = NextResponse.redirect(linkData.properties.action_link);
-    response.cookies.delete('naver_oauth_state');
+    response.cookies.delete(NAVER_STATE_COOKIE);
     return response;
   } catch (e) {
     console.error('[naver/callback] unexpected error:', e);

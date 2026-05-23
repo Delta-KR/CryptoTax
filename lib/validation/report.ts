@@ -128,19 +128,41 @@ const rateMetaSchema = z
   })
   .optional();
 
-const unifiedTransactionSchema = z.object({
-  id: z.string().min(1).max(64),
-  date: isoDate,
-  type: z.enum(['BUY', 'SELL', 'SWAP']),
-  coin: coinName,
-  amount: z.number().finite(),
-  pricePerUnitKRW: moneyKRW,
-  totalKRW: moneyKRW,
-  feeKRW: moneyKRW,
-  exchange: exchangeName,
-  originalCurrency: z.string().min(1).max(16),
-  rateMeta: rateMetaSchema,
-});
+// P0-4 hardening: 클라이언트가 unified.totalKRW 만 0 으로 바꿔 ₩0 세액 PDF 를 만드는
+// 공격을 차단. normalize() 는 totalKRW = round(amount * rate) 로 정확히 일치시키므로
+// 0.5% 면 라운딩·rate source 사소한 흔들림 흡수에 충분하고, 그 이상은 위변조로 본다.
+// (5% 면 공격자가 신고 세액을 5% 깎을 수 있어 의미 없음.)
+const UNIFIED_TX_RELATIVE_TOLERANCE = 0.005;
+
+const unifiedTransactionSchema = z
+  .object({
+    id: z.string().min(1).max(64),
+    date: isoDate,
+    type: z.enum(['BUY', 'SELL', 'SWAP']),
+    coin: coinName,
+    amount: z.number().finite(),
+    pricePerUnitKRW: moneyKRW,
+    totalKRW: moneyKRW,
+    feeKRW: moneyKRW,
+    exchange: exchangeName,
+    originalCurrency: z.string().min(1).max(16),
+    rateMeta: rateMetaSchema,
+  })
+  .refine(
+    (tx) => {
+      if (tx.amount === 0) {
+        return tx.totalKRW === 0 && tx.pricePerUnitKRW === 0;
+      }
+      const expected = tx.amount * tx.pricePerUnitKRW;
+      const diff = Math.abs(tx.totalKRW - expected);
+      const denom = Math.max(Math.abs(tx.totalKRW), Math.abs(expected), 1);
+      return diff / denom < UNIFIED_TX_RELATIVE_TOLERANCE;
+    },
+    {
+      message:
+        'totalKRW = amount × pricePerUnitKRW 불일치 — 거래 데이터가 손상됐거나 위변조됐을 수 있습니다.',
+    },
+  );
 
 export const reportRequestSchema = z.object({
   year: z.number().int().min(2020).max(2030),
