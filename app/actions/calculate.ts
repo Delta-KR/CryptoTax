@@ -87,6 +87,11 @@ export async function calculateTaxFromFiles(
       };
     }
 
+    // Plan 조회는 calculateTax 결과와 무관 — critical path 밖에서 미리 시작
+    // (Supabase RTT를 normalize/calculateTax 와 겹쳐서 ~50~100ms 절감).
+    // catch 는 getEffectivePlan 내부에서 처리 (실패 시 'free' fallback).
+    const planPromise = getEffectivePlan();
+
     const rawFiles = formData.getAll('files');
     const files = rawFiles.filter((f): f is File => f instanceof File);
     const previousJson = formData.get('previousParsed');
@@ -135,11 +140,11 @@ export async function calculateTaxFromFiles(
       );
     }
 
-    const newParsed: ParsedTransaction[] = [];
-    for (const file of files) {
-      const txs = await parseFile(file);
-      newParsed.push(...txs);
-    }
+    // 멀티 파일 업로드(업비트 PDF + 바이낸스 CSV + 빗썸 XLS 등) 시 파싱을 병렬화.
+    // pdf-parse / papaparse 가 async I/O 라 직렬 await 면 N배 latency. Promise.all 로
+    // 동시 처리하되 push 순서는 files 배열 순서 그대로 유지 (flat 가 보존).
+    const parsedPerFile = await Promise.all(files.map((f) => parseFile(f)));
+    const newParsed: ParsedTransaction[] = parsedPerFile.flat();
 
     if (newParsed.length === 0 && previous.length === 0) {
       return {
@@ -181,8 +186,12 @@ export async function calculateTaxFromFiles(
         preCoinsSet.add(tx.coin);
       }
     }
-    const deemedRes = await resolveDeemedCostPrices(preCoinsSet);
-    const imputedExpenseCoins = await resolveImputedExpenseCoins();
+    // 두 resolver 는 서로 독립 — Promise.all 로 ~70~120ms 절감.
+    // /api/report 라우트(route.ts:142)도 동일 패턴 적용 중.
+    const [deemedRes, imputedExpenseCoins] = await Promise.all([
+      resolveDeemedCostPrices(preCoinsSet),
+      resolveImputedExpenseCoins(),
+    ]);
 
     const year = currentTargetYear();
     // 거주자 단일 method 계산 (시행령 §88① 총평균법 디폴트). v2 #1 듀얼 계산은 법령 정립
@@ -196,7 +205,8 @@ export async function calculateTaxFromFiles(
       imputedExpenseCoins,
     });
 
-    const plan = await getEffectivePlan();
+    // 위쪽 rate limit 통과 직후 시작한 planPromise — 이 시점에선 거의 즉시 resolve.
+    const plan = await planPromise;
     const wire = resultToWire(result, plan);
     const sourceInfo = rates.getSourceInfo();
     // fallbackDateRange는 server-only (warning 메시지 작성에만 사용). wire에는 제외.
