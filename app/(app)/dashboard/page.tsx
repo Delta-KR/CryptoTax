@@ -22,6 +22,7 @@ import {
   type Transaction,
 } from '@/lib/mock/transactions';
 import { calculateTax, getTaxMethod, formatKrw, type TaxMethod } from '@/lib/mock/tax';
+import { kstYearOf } from '@/lib/engine/exchange-rate';
 
 function PageHeader({
   title,
@@ -71,8 +72,9 @@ const quickActions = [
         <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     ),
-    color: '#7C3AED',
-    soft: '#F5F3FF',
+    // DESIGN.md §3: 보라(#7C3AED) 금지. 단일 brand blue 로 통일.
+    color: '#2563EB',
+    soft: '#EEF4FF',
   },
   {
     href: '/report',
@@ -107,7 +109,8 @@ export default function DashboardPage() {
   const recent = useMemo(
     () =>
       [...transactions]
-        .filter((t) => new Date(t.date).getFullYear() === year)
+        // KST 기준 연도 — Vercel UTC 환경에서 새해 1일 거래가 누락되지 않도록.
+        .filter((t) => kstYearOf(new Date(t.date)) === year)
         .slice(0, 5),
     [transactions, year]
   );

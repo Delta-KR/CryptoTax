@@ -25,8 +25,10 @@ import {
   saveImputedExpenseCoin,
   deleteImputedExpenseCoin,
 } from '@/app/actions/imputed-expense';
+import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
+import { TAX_CONSTANTS } from '@/lib/engine/constants';
 
-const DEEMED_DATE = '2026-12-31';
+const DEEMED_DATE = TAX_CONSTANTS.DEEMED_COST_DATE;
 
 interface GlobalRow {
   coin: string;
@@ -54,14 +56,14 @@ function formatPrice(n: number): string {
 
 // 사용자가 거래내역에서 매수한 코인 중 2027-01-01 이전 매수가 있는 코인만 추출.
 // 의제취득가액은 pre-2027 매수에만 적용되므로 그 외 코인은 표시할 의미 없음.
+// engine 의 isPreDeemedDate 를 그대로 사용 — UI/engine 기준 동기.
 function extractPreDeemedCoins(): string[] {
   const session = loadSession();
   if (!session?.allParsed) return [];
   const set = new Set<string>();
   for (const tx of session.allParsed) {
     if (tx.type !== 'BUY') continue;
-    // ISO date 비교: YYYY-MM-DD prefix만 비교해도 충분.
-    if (tx.date.slice(0, 10) < '2027-01-01') {
+    if (isPreDeemedDate(new Date(tx.date))) {
       set.add(tx.coin);
     }
   }

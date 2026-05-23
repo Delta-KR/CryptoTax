@@ -14,16 +14,14 @@ import type { TaxEngine } from './tax-engine';
 import { applyDeemedCost } from './deemed-cost';
 import { TAX_CONSTANTS, roundKRW } from './constants';
 import { calculateTaxTotalAverage } from './total-average';
+import { kstYearOf } from './exchange-rate';
 
 // 시행령 §88①(2025-02-28 개정)이 거주자에게 강제하는 총평균법. 기본 method.
 // 'fifo'·'avg'(이동평균)는 비거주자 모드(§183⑥) 또는 참고 시나리오용 — 거주자 신고에는 부적합.
 export type TaxMethod = 'totalAverage' | 'fifo' | 'avg';
 
-const KST_OFFSET_MS = 9 * 3600 * 1000;
-
-export function kstYear(d: Date): number {
-  return new Date(d.getTime() + KST_OFFSET_MS).getUTCFullYear();
-}
+// 기존 호출자 (total-average 등) 호환을 위한 alias. 신규 코드는 kstYearOf 사용.
+export const kstYear = kstYearOf;
 
 export interface TaxCalculatorInput {
   transactions: UnifiedTransaction[];

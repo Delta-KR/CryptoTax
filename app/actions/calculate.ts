@@ -8,7 +8,7 @@ import { parseFile } from '@/lib/parsers/registry';
 import { normalize } from '@/lib/engine/normalizer';
 import { calculateTax, type TaxMethod } from '@/lib/engine/tax-calculator';
 import { DBExchangeRateProvider } from '@/lib/engine/rate-provider';
-import { toKSTDateStr } from '@/lib/engine/exchange-rate';
+import { toKSTDateStr, kstYearOf } from '@/lib/engine/exchange-rate';
 import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
 import { dedupeParsedTransactions } from '@/lib/engine/dedupe';
 import type { ParsedTransaction } from '@/lib/engine/types';
@@ -45,9 +45,8 @@ import {
 // 의제취득가액 시가 + 의제 50% 코인 조회는 lib/engine/resolvers.ts로 분리 (PDF route에서도 재사용).
 
 function currentTargetYear(): number {
-  const now = new Date();
-  const kstYear = new Date(now.getTime() + 9 * 3600 * 1000).getUTCFullYear();
-  return kstYear < 2027 ? 2027 : kstYear;
+  const year = kstYearOf(new Date());
+  return year < 2027 ? 2027 : year;
 }
 
 async function getRateLimitIdentifier(): Promise<string> {

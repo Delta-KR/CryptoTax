@@ -58,17 +58,34 @@ export function resultToWire(
 }
 
 export function maskForFree(wire: TaxResultWire): TaxResultWire {
+  // P1-7: 무료 사용자의 PnL/세액 노출 차단. 단순 derived 값 (netPnLKRW, totalGain/Loss)
+  // 뿐 아니라 lot-level (holdingsAfter.pricePerUnitKRW/totalCostKRW) 도 마스킹해야
+  // pre/post snapshot 비교로 PnL 역산되는 우회 차단됨.
+  // summary 의 buy/sell 도 함께 0 처리 — netPnL 도출 가능한 모든 경로 차단.
   return {
     ...wire,
+    totalGainKRW: 0,
+    totalLossKRW: 0,
+    netPnLKRW: 0,
     taxableIncomeKRW: 0,
     taxAmountKRW: 0,
     incomeTaxKRW: 0,
     localTaxKRW: 0,
     realizedGains: [],
-    summary: wire.summary.map((s) => ({ ...s, realizedPnLKRW: 0 })),
+    holdingsAfter: {},
+    summary: wire.summary.map((s) => ({
+      ...s,
+      totalBuyKRW: 0,
+      totalSellKRW: 0,
+      realizedPnLKRW: 0,
+      totalFeeKRW: 0,
+    })),
     summaryByExchange: wire.summaryByExchange.map((s) => ({
       ...s,
+      totalBuyKRW: 0,
+      totalSellKRW: 0,
       realizedPnLKRW: 0,
+      totalFeeKRW: 0,
     })),
     masked: true,
   };

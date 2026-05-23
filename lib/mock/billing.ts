@@ -61,59 +61,21 @@ export interface PaymentRecord {
   receiptUrl?: string;
 }
 
-const PLAN_KEY = 'kontaxt-plan';
 const HISTORY_KEY = 'kontaxt-billing-history';
 
-export function getCurrentPlan(): PlanId {
-  if (typeof window === 'undefined') return 'free';
-  const v = localStorage.getItem(PLAN_KEY);
-  if (v === 'premium' || v === 'onetime') return v;
-  return 'free';
-}
-
-export function subscribe(plan: PlanId) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(PLAN_KEY, plan);
-  // 결제 기록 추가
-  const target = plans.find((p) => p.id === plan);
-  if (target && plan !== 'free') {
-    const amount = plan === 'premium' ? 19900 : 29900;
-    addPayment({
-      item: `${target.name} 플랜 결제`,
-      amount,
-      status: '완료',
-    });
-  }
-}
+// Plan 상태는 Supabase profiles 테이블 + useCurrentUser 가 처리 — 더 이상 localStorage
+// 캐시 사용 안 함. getCurrentPlan / subscribe / addPayment / PLAN_KEY 는 제거됨.
 
 export function getPaymentHistory(): PaymentRecord[] {
-  if (typeof window === 'undefined') return defaultHistory;
+  if (typeof window === 'undefined') return [];
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
-    if (!raw) return defaultHistory;
+    if (!raw) return [];
     return JSON.parse(raw) as PaymentRecord[];
   } catch {
-    return defaultHistory;
+    return [];
   }
 }
-
-function addPayment(p: Omit<PaymentRecord, 'id' | 'date'>) {
-  if (typeof window === 'undefined') return;
-  const existing = getPaymentHistory();
-  const next: PaymentRecord[] = [
-    {
-      id: `pay_${Date.now()}`,
-      date: new Date().toISOString(),
-      receiptUrl: '#',
-      ...p,
-    },
-    ...existing,
-  ];
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
-}
-
-// 기본 결제 내역 (mock — 처음 방문 시 표시)
-const defaultHistory: PaymentRecord[] = [];
 
 // 세무사 매칭 신청
 const TAXPRO_KEY = 'kontaxt-taxpro';
