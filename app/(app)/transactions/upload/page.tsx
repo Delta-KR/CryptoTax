@@ -292,7 +292,7 @@ export default function UploadPage() {
                     </span>
                   </li>
                 </ol>
-                <p className="mt-4 rounded-sm bg-bg-soft px-3 py-2 text-[12px] text-muted-2">
+                <p className="mt-4 rounded-sm bg-bg-soft px-3 py-2 text-[12px] text-muted">
                   업로드된 파일은 서버 메모리에서 처리 후 즉시 폐기됩니다.
                   결과는 브라우저에만 저장됩니다.
                 </p>

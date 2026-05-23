@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
@@ -311,10 +312,10 @@ export default function DeemedCostPage() {
             불러오는 중…
           </p>
         ) : rows.length === 0 ? (
-          <p className="px-2 py-8 text-center text-[13px] text-muted">
-            2027-01-01 이전 매수 기록이 있는 코인이 없습니다. 거래내역을
-            업로드하면 여기에 표시됩니다.
-          </p>
+          <EmptyState
+            title="해당 코인 없음"
+            description="2027-01-01 이전 매수 기록이 있는 코인이 없습니다. 거래내역을 업로드하면 여기에 표시됩니다."
+          />
         ) : (
           <div className="flex flex-col divide-y divide-line-2">
             {rows.map((row) => {
@@ -429,9 +430,10 @@ export default function DeemedCostPage() {
         </div>
 
         {allTradedCoins.length === 0 ? (
-          <p className="px-2 py-8 text-center text-[13px] text-muted">
-            거래내역이 없습니다. 거래내역을 업로드하면 여기에 표시됩니다.
-          </p>
+          <EmptyState
+            title="거래내역 없음"
+            description="거래내역을 업로드하면 여기에 표시됩니다."
+          />
         ) : (
           <div className="flex flex-col divide-y divide-line-2">
             {allTradedCoins.map((coin) => {

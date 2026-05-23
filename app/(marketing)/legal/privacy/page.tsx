@@ -264,7 +264,7 @@ export default function PrivacyPage() {
                 <span className="font-semibold text-ink">개인정보 보호책임자</span>
               </p>
               <p>이메일: deltakr@icloud.com</p>
-              <p className="mt-2 text-[13px] text-muted-2">
+              <p className="mt-2 text-[13px] text-muted">
                 ※ 사업자 등록 후 상호·사업자등록번호·소재지 정보가 추가될 예정입니다.
               </p>
             </div>
@@ -292,7 +292,7 @@ export default function PrivacyPage() {
             </p>
           </Article>
 
-          <div className="mt-12 rounded-md border border-line-2 bg-bg-soft px-5 py-4 text-[13px] leading-[1.7] text-muted-2">
+          <div className="mt-12 rounded-md border border-line-2 bg-bg-soft px-5 py-4 text-[13px] leading-[1.7] text-muted">
             <div className="mb-1 font-semibold text-ink-2">부칙</div>
             <div>본 방침은 {EFFECTIVE_DATE}부터 시행합니다.</div>
           </div>
