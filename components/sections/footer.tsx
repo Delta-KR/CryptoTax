@@ -60,6 +60,7 @@ export function Footer() {
               { label: '거래 데이터 통합 엔진', href: '/#features' },
               { label: '한국 세법 기준 자동 계산', href: '/#how' },
               { label: '샘플 리포트 보기', href: '/sample' },
+              { label: '세금 계산기 (무료)', href: '/simulator' },
               { label: '사용 가이드', href: '/guide' },
             ]}
           />
