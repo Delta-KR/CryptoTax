@@ -128,16 +128,16 @@ const jsonLd = {
     {
       '@type': 'Offer',
       name: '단일 과세연도',
-      price: '29900',
+      price: '49900',
       priceCurrency: 'KRW',
       description: '선택한 1개 과세연도 결과 열람 + PDF 리포트 무제한',
     },
     {
       '@type': 'Offer',
       name: '구독 (연간)',
-      price: '19900',
+      price: '89000',
       priceCurrency: 'KRW',
-      description: '모든 과세연도 무제한 + 해지 후에도 기존 PDF 영구 다운로드',
+      description: '모든 과세연도 무제한 + 연중 절세 도구 (상시 대시보드 · TLH 알림 · 거래소 API 자동 연동)',
     },
   ],
 };

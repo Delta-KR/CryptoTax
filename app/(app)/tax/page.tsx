@@ -104,7 +104,7 @@ function PremiumBanner() {
           정확한 납부세액 + 코인별 손익 + PDF 리포트
         </div>
         <p className="mt-1 text-[13px] leading-[1.5] text-white/85">
-          단일 과세연도 ₩29,900 또는 구독 ₩19,900/년 — 결제 후 즉시 전체 결과를 확인할 수 있어요.
+          단일 과세연도 ₩49,900 — 결제 후 즉시 전체 결과를 확인할 수 있어요.
         </p>
       </div>
       <Link href="/billing" className="flex-shrink-0">

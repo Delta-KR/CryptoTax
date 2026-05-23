@@ -85,7 +85,7 @@ export default function PrivacyPage() {
                 결제 금액, 결제 일시, 결제 승인번호, 결제 수단 종류, 영수증 URL
                 <br />
                 <span className="text-muted">
-                  ※ 카드번호·유효기간 등 결제 수단 상세 정보는 결제대행사(Toss Payments)가 직접
+                  ※ 카드번호·유효기간 등 결제 수단 상세 정보는 결제대행사(포트원/PortOne)가 직접
                   처리하며, 본 서비스는 이를 수집·보관하지 않습니다.
                 </span>
               </p>
@@ -179,9 +179,9 @@ export default function PrivacyPage() {
                     </td>
                   </tr>
                   <tr>
-                    <td className="border-b border-line px-4 py-2.5">Toss Payments</td>
+                    <td className="border-b border-line px-4 py-2.5">포트원 (PortOne)</td>
                     <td className="border-b border-line px-4 py-2.5">
-                      유료 서비스 결제 처리
+                      유료 서비스 결제 처리 (카카오페이·네이버페이·토스페이·신용카드 통합 게이트웨이)
                     </td>
                   </tr>
                   <tr>
