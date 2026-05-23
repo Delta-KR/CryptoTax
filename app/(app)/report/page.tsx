@@ -63,14 +63,16 @@ export default function ReportPage() {
         setDownloading(false);
         return;
       }
+      // P1-1: 사용자가 선택한 year 를 실제로 반영. method 는 거주자 시행령 §88① 에 따라
+      // totalAverage 강제 — UI 에서도 단일 옵션으로만 노출.
       const response = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           result: session.result,
           transactions: session.allUnified,
-          year: session.year,
-          method: session.method,
+          year,
+          method: 'totalAverage',
         }),
       });
       if (!response.ok) {
@@ -86,7 +88,7 @@ export default function ReportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Kontaxt_${session.year}.pdf`;
+      a.download = `Kontaxt_${year}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -123,14 +125,14 @@ export default function ReportPage() {
                 <option value={2027}>2027년</option>
                 <option value={2026}>2026년</option>
               </Select>
+              {/* 거주자 양도소득은 시행령 §88① 에 따라 총평균법만 신고 가능 — 단일 선택지로 노출. */}
               <Select
                 label="계산 방식"
-                value={method}
-                onChange={(e) => setMethod(e.target.value as TaxMethod)}
+                value="totalAverage"
+                disabled
+                onChange={() => {}}
               >
                 <option value="totalAverage">총평균법 (거주자 · 시행령 §88①)</option>
-                <option value="fifo">선입선출법 (FIFO) — 참고용</option>
-                <option value="avg">이동평균법 (MA) — 비거주자 §183⑥</option>
               </Select>
             </div>
           </div>
@@ -177,10 +179,7 @@ export default function ReportPage() {
                   <Button fullWidth>PDF 다운로드</Button>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center rounded-md bg-gradient-to-br from-brand/10 via-transparent to-brand/10 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
-                  <div
-                    className="rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
-                    style={{ background: 'rgb(var(--brand))' }}
-                  >
+                  <div className="rounded-full bg-brand px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-brand-glow transition-colors group-hover:bg-brand-2">
                     프리미엄 전용
                   </div>
                 </div>

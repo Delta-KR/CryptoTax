@@ -1,7 +1,8 @@
 'use client';
 
-import { loadSession, clearSession } from '@/lib/storage/session';
+import { loadSession } from '@/lib/storage/session';
 import type { UnifiedTransactionWire } from '@/app/actions/calculate.types';
+import { kstYearOf } from '@/lib/engine/exchange-rate';
 
 export type ExchangeId = 'upbit' | 'binance' | 'bybit';
 
@@ -70,7 +71,9 @@ export function getTransactions(
 
   return all.filter((t) => {
     if (filters.year != null) {
-      const y = new Date(t.date).getFullYear();
+      // KST 기준 — Vercel UTC 환경에서 2027-01-01 01:00 KST 거래가 2026 으로 잘못
+      // 분류되지 않도록.
+      const y = kstYearOf(new Date(t.date));
       if (y !== filters.year) return false;
     }
     if (
@@ -90,14 +93,6 @@ export function getTransactions(
     }
     return true;
   });
-}
-
-export function clearExtra(): void {
-  clearSession();
-}
-
-export function addBatch(_exchange: ExchangeId, _count: number): Transaction[] {
-  return [];
 }
 
 export const exchangeLabel: Record<ExchangeId, string> = {

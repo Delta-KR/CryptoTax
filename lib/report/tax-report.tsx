@@ -9,6 +9,7 @@ import type {
   TaxResultWire,
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
+import { toKSTDateStr } from '@/lib/engine/exchange-rate';
 
 const BRAND = '#2563EB';
 const INK = '#0F172A';
@@ -183,8 +184,9 @@ function formatKRW(n: number): string {
 }
 
 function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  // KST 기준 — Vercel UTC 서버에서 PDF 생성 시에도 동일 결과 보장.
+  // 'YYYY-MM-DD' 그대로 사용 (toKSTDateStr).
+  return toKSTDateStr(new Date(iso));
 }
 
 function formatNumber(n: number, digits = 8): string {
@@ -572,8 +574,28 @@ export function TaxReport({
                 </Text>
               </View>
 
-              {/* consumedLots 표 — totalAverage는 lot 없음 (avg와 동일 렌더링) */}
-              {method !== 'fifo' ? (
+              {/* totalAverage 는 consumedLots 가 비어있음 — 평균 단가는 costBasisKRW/sellAmount 로 도출. */}
+              {method === 'totalAverage' ? (
+                <View
+                  style={{
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ fontSize: 9, color: INK, flex: 1 }}>
+                    총평균법 (연 평균 단가)
+                  </Text>
+                  <Text style={{ fontSize: 9, color: MUTED, width: 110, textAlign: 'right' }}>
+                    평균 단가{' '}
+                    {formatKRW(g.sellAmount > 0 ? g.costBasisKRW / g.sellAmount : 0)}
+                  </Text>
+                  <Text style={{ fontSize: 9, color: INK, width: 110, textAlign: 'right' }}>
+                    취득 {formatKRW(g.costBasisKRW)}
+                  </Text>
+                </View>
+              ) : method === 'avg' ? (
                 <View
                   style={{
                     paddingVertical: 6,

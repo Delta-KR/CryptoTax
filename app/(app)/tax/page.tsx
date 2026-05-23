@@ -30,6 +30,13 @@ import {
   type RealizedGainClient,
   type TaxMethod,
 } from '@/lib/mock/tax';
+import { toKSTDateStr } from '@/lib/engine/exchange-rate';
+
+const TAX_METHOD_LABEL: Record<TaxMethod, string> = {
+  totalAverage: '총평균법 (시행령 §88①)',
+  fifo: '선입선출법',
+  avg: '이동평균법',
+};
 
 function CalcRow({
   label,
@@ -85,12 +92,9 @@ function Divider({ thick }: { thick?: boolean }) {
 
 function PremiumBanner() {
   return (
+    // DESIGN.md §7/§8: brand→purple 그라디언트 안티패턴 제거. 단일 brand 색 + brand-glow.
     <div
-      className="mb-6 flex flex-col items-start justify-between gap-4 overflow-hidden rounded-[14px] px-7 py-6 shadow-[0_10px_30px_-12px_rgba(37,99,235,0.5)] sm:flex-row sm:items-center"
-      style={{
-        background:
-          'linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(37,99,235) 60%, rgb(124,58,237) 100%)',
-      }}
+      className="mb-6 flex flex-col items-start justify-between gap-4 overflow-hidden rounded-[14px] bg-brand px-7 py-6 shadow-brand-glow sm:flex-row sm:items-center"
     >
       <div className="min-w-0 text-white">
         <div className="mb-1.5 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-1 text-[10.5px] font-bold uppercase tracking-[0.08em] backdrop-blur-sm">
@@ -106,7 +110,7 @@ function PremiumBanner() {
       <Link href="/billing" className="flex-shrink-0">
         <button
           type="button"
-          className="group relative whitespace-nowrap rounded-md bg-white px-5 py-3 text-[14px] font-extrabold text-brand shadow-[0_4px_14px_rgba(0,0,0,0.15)] transition-transform hover:scale-105"
+          className="group relative whitespace-nowrap rounded-md bg-white px-5 py-3 text-[14px] font-extrabold text-brand shadow-md transition-colors hover:bg-bg-soft"
         >
           <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/60 blur-md" />
           유료 플랜 보기 →
@@ -297,8 +301,9 @@ function ExchangeCoinMatrix({
 }
 
 function formatShortDate(iso: string): string {
-  const d = new Date(iso);
-  return `${String(d.getFullYear()).slice(2)}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  // KST 기준 — UTC 환경 분기 차이로 인한 표시 오류 방지.
+  const kst = toKSTDateStr(new Date(iso)); // 'YYYY-MM-DD'
+  return `${kst.slice(2, 4)}.${kst.slice(5, 7)}.${kst.slice(8, 10)}`;
 }
 
 function formatAmount(n: number): string {
@@ -503,8 +508,7 @@ function BlurOverlay({
       </div>
       <div className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-gradient-to-br from-brand/15 via-transparent to-brand/15 transition-colors group-hover:from-brand/25 group-hover:to-brand/25">
         <div
-          className="rounded-full px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-[0_4px_14px_rgba(37,99,235,0.45)] transition-transform group-hover:scale-110"
-          style={{ background: 'rgb(var(--brand))' }}
+          className="rounded-full bg-brand px-3.5 py-1.5 text-[11.5px] font-extrabold text-white shadow-brand-glow transition-colors hover:bg-brand-2"
         >
           프리미엄 전용
         </div>
@@ -520,7 +524,10 @@ export default function TaxPage() {
   const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [txs, setTxs] = useState<Transaction[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
-  const recalcTriggered = useRef(false);
+  const [recalcing, setRecalcing] = useState(false);
+  // 자동 재계산은 free→premium 전환 직후 1회만 — 실패해도 다시 시도하지 않는다 (사용자가
+  // 수동 버튼으로 재시도 가능).
+  const autoRecalcTriedRef = useRef(false);
 
   useEffect(() => {
     setMethod(getTaxMethod());
@@ -532,28 +539,55 @@ export default function TaxPage() {
     [txs, method, year, refreshKey]
   );
 
-  useEffect(() => {
-    if (recalcTriggered.current) return;
-    if (!user || user.plan !== 'premium') return;
-    if (!result.masked) return;
-
+  // 자동 + 수동 재계산이 공유하는 핵심 흐름. in-flight guard 와 abort 시 stale 결과
+  // 무시 처리까지 한 곳에서.
+  const runRecalc = async (opts: { showToast: boolean }): Promise<void> => {
+    if (recalcing) return;
     const session = loadSession();
-    if (!session?.allParsed?.length) return;
-
-    recalcTriggered.current = true;
-
-    const formData = new FormData();
-    formData.append('previousParsed', JSON.stringify(session.allParsed));
-    formData.append('method', method);
-
-    calculateTaxFromFiles(formData).then((res) => {
+    if (!session?.allParsed?.length) {
+      if (opts.showToast) {
+        setRefreshKey((k) => k + 1);
+        toast.show('세금 계산이 재실행되었습니다.', 'success');
+      }
+      return;
+    }
+    setRecalcing(true);
+    try {
+      const formData = new FormData();
+      formData.append('previousParsed', JSON.stringify(session.allParsed));
+      formData.append('method', method);
+      const res = await calculateTaxFromFiles(formData);
       if (res.ok) {
         replaceCalculation(res.payload);
         setTxs(getTransactions());
         setRefreshKey((k) => k + 1);
+        if (opts.showToast) {
+          toast.show('세금 계산이 재실행되었습니다.', 'success');
+        }
+      } else if (opts.showToast) {
+        toast.show(res.error ?? '재계산에 실패했습니다.', 'error');
       }
-    });
-  }, [user, result.masked, method]);
+    } catch (e) {
+      if (opts.showToast) {
+        toast.show(
+          e instanceof Error ? e.message : '재계산에 실패했습니다.',
+          'error',
+        );
+      }
+    } finally {
+      setRecalcing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (autoRecalcTriedRef.current) return;
+    if (!user || user.plan !== 'premium') return;
+    if (!result.masked) return;
+    autoRecalcTriedRef.current = true;
+    void runRecalc({ showToast: false });
+    // runRecalc 는 함수 참조 — deps 에 포함하면 매 렌더 마다 effect 가 재실행되므로 제외.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, result.masked]);
 
   const masked = result.masked;
 
@@ -561,7 +595,7 @@ export default function TaxPage() {
     <>
       <PageHeader
         title="세금 계산"
-        description={`${year}년 양도소득 · ${method === 'totalAverage' ? '총평균법 (시행령 §88①)' : method === 'fifo' ? '선입선출법' : '이동평균법'} 적용`}
+        description={`${year}년 양도소득 · ${TAX_METHOD_LABEL[method]} 적용`}
         right={
           <div className="flex items-center gap-2">
             <Select
@@ -574,9 +608,12 @@ export default function TaxPage() {
             </Select>
             <Button
               variant="secondary"
-              onClick={() => toast.show('세금 계산이 재실행되었습니다.', 'success')}
+              disabled={recalcing}
+              onClick={() => {
+                void runRecalc({ showToast: true });
+              }}
             >
-              재계산
+              {recalcing ? '재계산 중…' : '재계산'}
             </Button>
           </div>
         }
@@ -680,7 +717,7 @@ export default function TaxPage() {
               >
                 <button
                   type="button"
-                  className="relative whitespace-nowrap rounded-md bg-white px-5 py-2.5 text-[13px] font-extrabold text-brand shadow-[0_8px_24px_rgba(0,0,0,0.25)] transition-transform group-hover:scale-110"
+                  className="relative whitespace-nowrap rounded-md bg-white px-5 py-2.5 text-[13px] font-extrabold text-brand shadow-md transition-colors hover:bg-bg-soft"
                 >
                   <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/70 blur-lg" />
                   유료 플랜 보기 →
@@ -754,17 +791,9 @@ export default function TaxPage() {
                   </div>
                   <button
                     type="button"
-                    className="relative whitespace-nowrap rounded-md px-6 py-3 text-[14px] font-extrabold text-white shadow-[0_10px_28px_-8px_rgba(37,99,235,0.65)] transition-transform group-hover:scale-105"
-                    style={{
-                      background:
-                        'linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(124,58,237) 100%)',
-                    }}
+                    className="relative whitespace-nowrap rounded-md bg-brand px-6 py-3 text-[14px] font-extrabold text-white shadow-brand-glow transition-colors hover:bg-brand-2"
                   >
-                    <span
-                      className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
-                      style={{ background: 'rgb(37,99,235)' }}
-                    />
-                    유료 플랜 보기 →
+                    프리미엄 시작 →
                   </button>
                 </Link>
               )}

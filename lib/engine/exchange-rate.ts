@@ -30,6 +30,22 @@ export function toKSTDateStr(date: Date): string {
   return kst.toISOString().slice(0, 10);
 }
 
+// KST 기준 연도/월/일 — 클라이언트/서버 UTC 환경 모두에서 일관된 결과.
+// new Date(iso).getFullYear() 를 그대로 쓰면 UTC 환경에서 KST 새해 거래가 누락됨 (P1-2).
+// 핫패스 (10k tx filter) 에서 호출되므로 ISO 문자열 할당 없이 getUTC* 만으로 계산.
+export function kstYearOf(date: Date): number {
+  return new Date(date.getTime() + KST_OFFSET_MS).getUTCFullYear();
+}
+
+export function kstMonthOf(date: Date): number {
+  // 1~12
+  return new Date(date.getTime() + KST_OFFSET_MS).getUTCMonth() + 1;
+}
+
+export function kstDayOf(date: Date): number {
+  return new Date(date.getTime() + KST_OFFSET_MS).getUTCDate();
+}
+
 export type StaticRateEntry = readonly [string, Currency, Currency, number];
 
 export class StaticExchangeRateProvider implements ExchangeRateProvider {
