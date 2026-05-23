@@ -118,7 +118,7 @@ export function Roadmap() {
           </p>
         </div>
 
-        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 lg:grid-cols-4 lg:gap-5">
+        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 md:grid-cols-2 lg:grid-cols-4 lg:gap-5">
           {STEPS.map((step) => (
             <StepCard key={step.id} step={step} />
           ))}

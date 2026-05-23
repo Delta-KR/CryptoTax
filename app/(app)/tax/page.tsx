@@ -852,17 +852,9 @@ export default function TaxPage() {
                 </div>
                 <button
                   type="button"
-                  className="relative whitespace-nowrap rounded-md px-6 py-3 text-[14px] font-extrabold text-white shadow-[0_10px_28px_-8px_rgba(37,99,235,0.65)] transition-transform group-hover:scale-105"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(124,58,237) 100%)',
-                  }}
+                  className="relative whitespace-nowrap rounded-md bg-brand px-6 py-3 text-[14px] font-extrabold text-white shadow-brand-glow transition-colors hover:bg-brand-2"
                 >
-                  <span
-                    className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
-                    style={{ background: 'rgb(37,99,235)' }}
-                  />
-                  유료 플랜 보기 →
+                  프리미엄 시작 →
                 </button>
               </div>
             </Link>
@@ -915,17 +907,9 @@ export default function TaxPage() {
                 </div>
                 <button
                   type="button"
-                  className="relative whitespace-nowrap rounded-md px-6 py-3 text-[14px] font-extrabold text-white shadow-[0_10px_28px_-8px_rgba(37,99,235,0.65)] transition-transform group-hover:scale-105"
-                  style={{
-                    background:
-                      'linear-gradient(135deg, rgb(var(--brand)) 0%, rgb(124,58,237) 100%)',
-                  }}
+                  className="relative whitespace-nowrap rounded-md bg-brand px-6 py-3 text-[14px] font-extrabold text-white shadow-brand-glow transition-colors hover:bg-brand-2"
                 >
-                  <span
-                    className="absolute inset-0 -z-10 animate-pulse rounded-md blur-md"
-                    style={{ background: 'rgb(37,99,235)' }}
-                  />
-                  유료 플랜 보기 →
+                  프리미엄 시작 →
                 </button>
               </div>
             </Link>

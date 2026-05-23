@@ -170,7 +170,7 @@ export function Pricing() {
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 lg:grid-cols-[1fr_1.18fr_1fr]">
+        <div className="mx-auto grid max-w-[1140px] grid-cols-1 items-stretch gap-4 md:grid-cols-3 lg:grid-cols-[1fr_1.18fr_1fr]">
           {TIERS.map((t) => (
             <PricingCard key={t.name} tier={t} />
           ))}

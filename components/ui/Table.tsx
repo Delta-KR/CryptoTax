@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils';
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-hidden rounded-lg border border-line">
+    // overflow-x-auto: 모바일에서 8 컬럼 거래 테이블이 짓눌리는 대신 가로 스크롤되도록.
+    <div className="overflow-x-auto rounded-lg border border-line">
       <table
         className={cn('w-full border-collapse text-[13px]', className)}
         {...props}

@@ -27,7 +27,8 @@ const items = [
         <path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
-    color: '#7C3AED',
+    // DESIGN.md §3: 보라(#7C3AED) 금지. brand blue 통일.
+    color: '#2563EB',
   },
 ];
 

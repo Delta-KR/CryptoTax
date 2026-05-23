@@ -40,10 +40,12 @@ export default function BillingPage() {
               style={
                 isEmphasis
                   ? {
-                      background: 'linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)',
-                      borderColor: '#1E3A8A',
+                      // DESIGN.md §8: 다크 그라디언트 카드 (#1E3A8A → #0F1B3D) 안티패턴.
+                      // 단일 brand 색 + brand-glow 로 통일.
+                      background: 'rgb(var(--brand))',
+                      borderColor: 'rgb(var(--brand))',
                       color: '#fff',
-                      boxShadow: '0 24px 48px -12px rgba(30,58,138,0.45)',
+                      boxShadow: '0 24px 48px -12px rgba(37,99,235,0.40)',
                     }
                   : undefined
               }
@@ -130,7 +132,7 @@ export default function BillingPage() {
                       variant={isEmphasis ? 'secondary' : 'primary'}
                       className={
                         isEmphasis
-                          ? 'border-transparent bg-white text-[#1E3A8A] hover:bg-white/90'
+                          ? 'border-transparent bg-white text-brand hover:bg-white/90'
                           : ''
                       }
                     >

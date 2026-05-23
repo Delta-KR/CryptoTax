@@ -132,10 +132,8 @@ function Chip({ children, light }: { children: React.ReactNode; light?: boolean 
 function FloatingCardUpbit() {
   return (
     <div className="nowrap absolute -top-14 right-6 z-30 hidden items-center gap-2.5 rounded-md border border-line-2 bg-card px-3.5 py-3 shadow-md md:flex">
-      <div
-        className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-sm"
-        style={{ background: '#EEF3FF' }}
-      >
+      {/* brand-soft 토큰 사용 — 다크 모드에서 자동 어두운 톤으로 매핑됨. */}
+      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-sm bg-brand-soft">
         <Image
           src="/logos/upbit.png"
           alt="업비트"
