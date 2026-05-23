@@ -217,19 +217,19 @@ Bento grid: `1.4fr 1fr 1fr` × 2 rows. The big card spans both rows on the left;
 
 Icons are inline SVGs (`compare` / `shield` / `globe` / `doc`) defined in `FeatureIcon`.
 
-### 8. Pricing (`parts/pricing.jsx`)
-Title + monthly/annual toggle (pill segmented control with `−66%` chip on annual). 3 cards:
-- **무료** — ₩0, 4 features
-- **프리미엄** — emphasized: dark gradient `linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)`, white text, `translateY(-12px)` to lift, brand-glow shadow, BEST VALUE pill absolutely-positioned at top-center
-- **원타임** — ₩49,900, 단일 과세연도 (확정 전략 2026-05-21)
+### 8. Pricing (`components/sections/pricing.tsx`)
+Title + 3-card grid (no monthly/annual toggle — 월 결제 없음). 3 cards in order:
+- **무료** — ₩0 · 4 features (결제 전 결과 미리보기 funnel)
+- **구독 (premium)** — emphasized: `bg-card shadow-sm ring-1 ring-brand/10` (brand ring, **no dark gradient · no BEST VALUE pill — DESIGN.md §8 안티패턴 회피**). Brand pill `2026.Q4 출시 예정` absolutely-positioned at top-center. CTA `출시 알림 받기` (premium 은 MVP 미판매 — Phase 2: 2026.Q4 이후).
+- **원타임** — ₩49,900 · 단일 과세연도 1회 결제 (확정 전략 2026-05-21).
 
-Annual subscription ₩89,000/년 (연중 절세 도구 — Phase 2: 2026.Q4 출시 예정). 월 결제는 없음. Each card: tag eyebrow, name 24/800, price row (40/800 figure + sub in muted), divider, feature list with brand-tinted checks, full-width CTA button.
+Annual subscription ₩89,000/년 (연중 절세 도구 — Phase 2 출시 예정). 단일 source: `lib/pricing/plans.ts` (가격·features 모두 여기서 가져다 씀). Each card: tag eyebrow, name 24/800, price row (40/800 figure + sub in muted), divider, feature list with brand-tinted checks, full-width CTA button.
 
-### 9. CTA (`parts/cta.jsx`)
-Strong glass card centered on layered blobs (3 additional blobs in brand/violet/cyan) plus the notebook grid. Card padding `64px 56px`, `border-radius: 28px`, heavy backdrop-blur. Contents:
-- Brand pill: "첫 신고까지 D-237"
-- Headline 56/800 with gradient-clipped "시작하세요" using `linear-gradient(120deg, var(--brand), #7C3AED)`
-- Lead, two buttons (primary brand + ghost), and a **stats strip**: 1,550만 한국 가상자산 투자자 / 20% 양도소득세율 (지방세 별도) / 250만원 기본공제 — middle stat has vertical dividers.
+### 9. CTA (`components/sections/cta.tsx`)
+Solid card on neutral background (**no blobs · no gradients · no violet — DESIGN.md §8 안티패턴 회피**). Card padding 넉넉 (section-pad), `border-radius: 28px`. Contents:
+- Brand pill: "첫 신고까지 D-{N}" (동적 계산, 차분한 톤 — DESIGN.md §4)
+- Headline 56/800 with **solid brand blue** text (그라디언트·보라 X). 단문 한 문장 + 마침표.
+- Lead, two buttons (primary brand + ghost), and a **stats strip**: 1,150~1,250만 한국 가상자산 보유자 (2026 추정, 금융위 실태조사 연율화) / 22% 양도소득세율 (소득세 20% + 지방세 2%) / 250만원 기본공제 — middle stat has vertical dividers.
 
 ### 10. Footer (`parts/chrome.jsx` → `Footer`)
 `--bg-soft` background, 4-column grid (`1.4fr 1fr 1fr 1fr`):
