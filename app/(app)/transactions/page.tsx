@@ -231,7 +231,17 @@ export default function TransactionsPage() {
                   <Fragment key={tx.id}>
                     <TableRow
                       onClick={() => toggleExpand(tx.id)}
-                      className="cursor-pointer transition-colors hover:bg-bg-soft"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          toggleExpand(tx.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isOpen}
+                      aria-label={`거래 상세 ${isOpen ? '접기' : '펼치기'}`}
+                      className="cursor-pointer transition-colors hover:bg-bg-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1"
                     >
                       <TableCell className="!pr-0">
                         <svg

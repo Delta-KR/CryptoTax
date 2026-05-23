@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AuthCard, AuthDivider } from '@/components/auth/AuthCard';
 import { SocialButtons } from '@/components/auth/SocialButtons';
+import { FormErrorBanner } from '@/components/ui/FormErrorBanner';
 import {
   TurnstileWidget,
   TURNSTILE_ENABLED,
@@ -82,14 +83,8 @@ export default function LoginPage() {
         </>
       }
     >
-      {oauthError && (
-        <div
-          role="alert"
-          className="mb-4 rounded-md border border-bad/40 bg-bad-soft px-4 py-3 text-[13px] text-bad"
-        >
-          {oauthError}
-        </div>
-      )}
+      <FormErrorBanner message={oauthError} />
+      <FormErrorBanner message={error} />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="이메일"
@@ -108,7 +103,6 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
-          error={error ?? undefined}
         />
         <div className="-mt-1 flex justify-end">
           <Link

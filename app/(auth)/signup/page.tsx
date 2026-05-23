@@ -14,6 +14,7 @@ import {
 import { PasswordStrength } from '@/components/auth/PasswordStrength';
 import { signUpWithPassword } from '@/lib/auth';
 import { isPasswordValid } from '@/lib/auth/password-rules';
+import { FormErrorBanner } from '@/components/ui/FormErrorBanner';
 
 // Pricing 섹션 CTA에서 ?plan=free|subscription|annual로 의도가 전달됨.
 // 결제(Phase 7) 출시 전까지는 sessionStorage에 보관해 추후 checkout에서 사용.
@@ -163,6 +164,7 @@ export default function SignupPage() {
           </span>
         </div>
       )}
+      <FormErrorBanner message={error} />
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="이름"
@@ -189,7 +191,6 @@ export default function SignupPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           disabled={submitting}
-          error={error ?? undefined}
         />
         <PasswordStrength password={password} />
         <Checkbox
