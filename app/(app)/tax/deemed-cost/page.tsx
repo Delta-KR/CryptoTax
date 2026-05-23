@@ -105,23 +105,29 @@ export default function DeemedCostPage() {
       setAllTradedCoins(tradedCoins);
 
       const supabase = createSupabaseBrowserClient();
-      // 필요경비 의제 코인 조회 — 거래내역과 무관하게 사용자가 적용 중인 코인 모두 가져옴.
-      const imputedRes = await supabase
+
+      // imputed 조회는 거래내역(coins) 과 무관 — 다른 두 쿼리와 같은 Promise.all 에
+      // 묶어 RTT 1회 절감 (3 round trip → 2). 빈 case 도 imputed 는 동일하게 처리.
+      const imputedQuery = supabase
         .from('user_imputed_expense_coins')
         .select('coin');
-      if (!cancelled) {
-        const set = new Set<string>(
-          (imputedRes.data ?? []).map((r: { coin: string }) => r.coin),
-        );
-        setImputedCoins(set);
-      }
 
       if (coins.length === 0) {
-        setRows([]);
-        setLoading(false);
+        const imputedRes = await imputedQuery;
+        if (!cancelled) {
+          setImputedCoins(
+            new Set<string>(
+              (imputedRes.data ?? []).map((r: { coin: string }) => r.coin),
+            ),
+          );
+          setRows([]);
+          setLoading(false);
+        }
         return;
       }
-      const [globalRes, overrideRes] = await Promise.all([
+
+      const [imputedRes, globalRes, overrideRes] = await Promise.all([
+        imputedQuery,
         supabase
           .from('deemed_cost_snapshots')
           .select('coin, price_krw, source_type')
@@ -135,6 +141,12 @@ export default function DeemedCostPage() {
       ]);
 
       if (cancelled) return;
+
+      setImputedCoins(
+        new Set<string>(
+          (imputedRes.data ?? []).map((r: { coin: string }) => r.coin),
+        ),
+      );
 
       const globalMap = new Map<
         string,
