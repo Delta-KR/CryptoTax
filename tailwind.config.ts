@@ -34,31 +34,6 @@ const config: Config = {
         'bad-soft': 'rgb(var(--bad-soft) / <alpha-value>)',
         warn: 'rgb(var(--warn) / <alpha-value>)',
         'warn-soft': 'rgb(var(--warn-soft) / <alpha-value>)',
-
-        // Static accent palettes — NOT theme-aware (same in light & dark).
-        // Used for step accents, feature card icons, and exchange branding.
-        step: {
-          1: '#2563EB',
-          2: '#7C3AED',
-          3: '#16A34A',
-        },
-        accent: {
-          violet: '#8B5CF6',
-          cyan: '#06B6D4',
-          'globe-alt': '#0891B2',
-          doc: '#D97706',
-        },
-        exchange: {
-          upbit: '#0E48F0',
-          bithumb: '#F37321',
-          binance: '#F0B90B',
-          'binance-ink': '#1E2329',
-        },
-        coin: {
-          btc: '#F7931A',
-          eth: '#627EEA',
-          sol: '#9945FF',
-        },
       },
       fontFamily: {
         sans: ['var(--font-pretendard)', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
