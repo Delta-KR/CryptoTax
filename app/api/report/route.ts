@@ -6,7 +6,11 @@ import { ensureFontRegistered } from '@/lib/report/font-config';
 import { TaxReport } from '@/lib/report/tax-report';
 import { reportRequestSchema } from '@/lib/validation/report';
 import { SITE_URL } from '@/lib/site';
-import { checkRateLimit, getReportRateLimit } from '@/lib/rate-limit';
+import {
+  checkRateLimit,
+  getReportRateLimit,
+  rateLimitResponse,
+} from '@/lib/rate-limit';
 import { calculateTax } from '@/lib/engine/tax-calculator';
 import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
 import {
@@ -14,22 +18,11 @@ import {
   resolveImputedExpenseCoins,
 } from '@/lib/engine/resolvers';
 import { resultToWire, unifiedFromWire } from '@/lib/engine/wire';
+import { getClientIp } from '@/lib/auth/client-ip';
 
 export const maxDuration = 60;
 
-// Rate limit (P4-R1): Upstash Redis sliding window, IP 기반 분당 10회.
-// 무거운 PDF 생성 작업 보호 + DoS 방어. fail-closed.
-
-function getClientIp(request: NextRequest): string {
-  // Vercel/Cloudflare 등 proxy 환경에서는 x-forwarded-for 첫 항목이 client IP.
-  // 로컬 dev나 proxy 없는 환경에서는 fallback.
-  const fwd = request.headers.get('x-forwarded-for');
-  if (fwd) {
-    const first = fwd.split(',')[0]?.trim();
-    if (first) return first;
-  }
-  return request.headers.get('x-real-ip') ?? 'unknown';
-}
+// Rate limit (P4-R1): Upstash Redis sliding window. 무거운 PDF 생성 보호 + DoS 방어. fail-closed.
 
 function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
@@ -66,28 +59,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Rate limit (P4-R1): IP 기반 분당 10회. PDF 생성 비용이 크므로 무거운 보호.
-    // Auth 전에 체크하여 무차별 호출을 빠르게 차단.
+    // 1차 rate limit (IP 기반) — auth 전. 익명 폭주 차단.
     const ip = getClientIp(request);
-    const { ok: rateLimitOk, limit, remaining, reset } = await checkRateLimit(
-      ip,
-      getReportRateLimit(),
-    );
-    if (!rateLimitOk) {
-      return NextResponse.json(
-        { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': String(limit),
-            'X-RateLimit-Remaining': String(remaining),
-            'X-RateLimit-Reset': String(reset),
-            'Retry-After': String(
-              Math.max(1, Math.ceil((reset - Date.now()) / 1000)),
-            ),
-          },
-        },
-      );
+    const ipResult = await checkRateLimit(`ip:${ip}`, getReportRateLimit());
+    if (!ipResult.ok) {
+      return rateLimitResponse(ipResult, '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.');
     }
 
     const guard = await requirePremium('PDF 리포트 다운로드');
@@ -100,18 +76,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error }, { status });
     }
 
-    // 다운로드 메타데이터(파일명 생성)에 user 객체가 필요해 한 번 더 가져옴.
-    // requirePremium 내부에서 이미 검증된 user — 여기서는 null 가드만.
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json(
-        { error: '로그인이 필요합니다.' },
-        { status: 401 },
+    // 2차 rate limit (user 기반) — corporate NAT 의 타 사용자가 같은 IP 한도를 소진하지 않도록.
+    const userResult = await checkRateLimit(
+      `user:${guard.userId}`,
+      getReportRateLimit(),
+    );
+    if (!userResult.ok) {
+      return rateLimitResponse(
+        userResult,
+        'PDF 다운로드 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
       );
     }
+
+    // 다운로드 메타데이터(파일명 생성) — requirePremium 가 이미 가져온 정보 재사용 (P1-3).
+    const supabase = createSupabaseServerClient();
 
     let raw: unknown;
     try {
@@ -159,25 +137,36 @@ export async function POST(request: NextRequest) {
         preCoinsSet.add(tx.coin);
       }
     }
-    const [deemedRes, imputedExpenseCoins] = await Promise.all([
+    // rateMeta 쿼리는 deemed/imputed resolver 와 함께 병렬 (E#1 — 70~120ms 절감).
+    // calculateTax 결과나 resolver 출력에 의존하지 않으므로 같은 Promise.all 에서 안전.
+    const [deemedRes, imputedExpenseCoins, rateMetaRow] = await Promise.all([
       resolveDeemedCostPrices(preCoinsSet),
       resolveImputedExpenseCoins(),
+      supabase
+        .from('daily_rates')
+        .select('fetched_at')
+        .order('fetched_at', { ascending: false })
+        .limit(1)
+        .maybeSingle<{ fetched_at: string }>()
+        .then((r) => r.data),
     ]);
 
     const serverResult = calculateTax({
       transactions,
       year: body.year,
-      method: 'totalAverage', // C4 가드로 인해 여기까지 오면 항상 totalAverage.
+      method: 'totalAverage', // C4 가드로 여기까지 오면 항상 totalAverage.
       deemedCostPrices: deemedRes.prices,
       imputedExpenseCoins,
     });
 
-    // wire 변환 + 출처 메타데이터 부여 (PDF audit trail용).
-    // rateSource는 클라이언트가 보낸 값을 그대로 신뢰 — pricePerUnitKRW 자체는
-    // 검증된 transactions에 박혀 있고, rateSource는 표시용 메타에 불과.
-    // 잘못 표시될 경우 audit trail이 부정확해지지만 세액 자체는 영향 없음.
+    // wire 변환 + 출처 메타. rateSource 는 server-controlled (P1-3 client trust 제거).
     const wire = resultToWire(serverResult, 'premium');
-    wire.rateSource = body.result.rateSource;
+    wire.rateSource = {
+      primary: '내부 DB 시세 (서버 재검증)',
+      fallbackUsed: false,
+      lastFetchedAt: rateMetaRow?.fetched_at ?? null,
+      fallbackName: '정적 분기별 환율 (fallback)',
+    };
     wire.deemedCostSource = {
       realCoins: deemedRes.realCoins,
       estimateCoins: deemedRes.estimateCoins,
@@ -188,10 +177,7 @@ export async function POST(request: NextRequest) {
 
     ensureFontRegistered();
 
-    const userName =
-      (user.user_metadata?.name as string | undefined) ??
-      user.email?.split('@')[0] ??
-      '사용자';
+    const userName = guard.userName;
 
     const pdfBuffer = await renderToBuffer(
       TaxReport({

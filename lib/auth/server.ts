@@ -14,6 +14,9 @@ export interface ProfileRow {
 export interface PremiumGuardOk {
   ok: true;
   userId: string;
+  // 표시용 — 호출자가 한 번 더 getUser 호출하지 않도록 미리 도출. user_metadata
+  // 원본을 통째로 노출하면 leaky abstraction 이라 필요한 표시명만 추출.
+  userName: string;
   profile: ProfileRow;
 }
 
@@ -98,5 +101,15 @@ export async function requirePremium(featureLabel?: string): Promise<PremiumGuar
     };
   }
 
-  return { ok: true, userId: user.id, profile };
+  const metaName =
+    (user.user_metadata?.name as string | undefined) ??
+    (user.user_metadata?.full_name as string | undefined);
+  const userName = metaName ?? user.email?.split('@')[0] ?? '사용자';
+
+  return {
+    ok: true,
+    userId: user.id,
+    userName,
+    profile,
+  };
 }

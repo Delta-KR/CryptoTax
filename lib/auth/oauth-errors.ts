@@ -9,6 +9,7 @@ export type OAuthErrorCode =
   | 'session_expired'
   | 'otp_expired'
   | 'already_registered_other_provider'
+  | 'rate_limited'
   | 'unknown';
 
 // otp_expired는 메일 링크(비번 재설정·가입 인증·매직 링크)가 만료되거나 이미 사용된 케이스.
@@ -17,6 +18,7 @@ export type OAuthErrorCode =
 // 다른 provider로 가입된 email 차단 시 발급 (C2 takeover 방지).
 const RAW_TO_CODE: Array<[RegExp, OAuthErrorCode]> = [
   [/already[ _]registered[ _]other[ _]provider/i, 'already_registered_other_provider'],
+  [/rate[ _]limited|too[ _]many[ _]requests/i, 'rate_limited'],
   [/otp_expired|email[ _]link[ _]is[ _]invalid|email[ _]link[ _]has[ _]expired/i, 'otp_expired'],
   [/cancel|user.?denied/i, 'cancelled'],
   [/access[ _]denied/i, 'access_denied'],
@@ -42,6 +44,7 @@ const MESSAGES: Record<OAuthErrorCode, string> = {
   otp_expired: '메일 링크가 만료됐거나 이미 사용됐어요. 비밀번호 찾기를 다시 요청해주세요.',
   already_registered_other_provider:
     '이미 다른 방식(이메일/Google/Kakao 등)으로 가입된 이메일입니다. 원래 가입한 방식으로 로그인해주세요.',
+  rate_limited: '잠시 후 다시 시도해주세요.',
   unknown: '소셜 로그인 중 오류가 발생했습니다.',
 };
 
