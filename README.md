@@ -221,9 +221,9 @@ Icons are inline SVGs (`compare` / `shield` / `globe` / `doc`) defined in `Featu
 Title + monthly/annual toggle (pill segmented control with `−66%` chip on annual). 3 cards:
 - **무료** — ₩0, 4 features
 - **프리미엄** — emphasized: dark gradient `linear-gradient(165deg, #1E3A8A 0%, #0F1B3D 100%)`, white text, `translateY(-12px)` to lift, brand-glow shadow, BEST VALUE pill absolutely-positioned at top-center
-- **원타임** — ₩29,900, 4 features
+- **원타임** — ₩49,900, 단일 과세연도 (확정 전략 2026-05-21)
 
-Annual price ₩19,900 (월 ₩1,650) with green ✓ savings line; monthly ₩4,900. Each card: tag eyebrow, name 24/800, price row (40/800 figure + sub in muted), divider, feature list with brand-tinted checks, full-width CTA button.
+Annual subscription ₩89,000/년 (연중 절세 도구 — Phase 2: 2026.Q4 출시 예정). 월 결제는 없음. Each card: tag eyebrow, name 24/800, price row (40/800 figure + sub in muted), divider, feature list with brand-tinted checks, full-width CTA button.
 
 ### 9. CTA (`parts/cta.jsx`)
 Strong glass card centered on layered blobs (3 additional blobs in brand/violet/cyan) plus the notebook grid. Card padding `64px 56px`, `border-radius: 28px`, heavy backdrop-blur. Contents:

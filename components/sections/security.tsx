@@ -56,7 +56,7 @@ const ITEMS: readonly Item[] = [
   },
   {
     title: '결제정보 비저장',
-    desc: '카드번호·CVC는 PG사(Toss)에서 직접 토큰화합니다. 결제 정보는 우리 데이터베이스에 들어오지 않습니다.',
+    desc: '카드번호·CVC는 PG사(포트원)에서 직접 토큰화합니다. 결제 정보는 우리 데이터베이스에 들어오지 않습니다.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect

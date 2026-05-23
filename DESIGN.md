@@ -206,7 +206,7 @@ className="rounded-lg border border-line bg-card p-6 shadow-sm"
 
 ### 한국어 특수
 - 거래소·기능명은 한·영 혼용 OK ("Bybit", "FIFO", "Server Action").
-- 숫자는 `1,550만` / `₩29,900` 단위 명확. 약식 K·M 혼용 금지.
+- 숫자는 `1,550만` / `₩49,900` 단위 명확. 약식 K·M 혼용 금지.
 
 ---
 
