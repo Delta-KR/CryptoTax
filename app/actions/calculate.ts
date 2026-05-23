@@ -12,8 +12,7 @@ import { toKSTDateStr, kstYearOf } from '@/lib/engine/exchange-rate';
 import { isPreDeemedDate } from '@/lib/engine/deemed-cost';
 import { dedupeParsedTransactions } from '@/lib/engine/dedupe';
 import type { ParsedTransaction } from '@/lib/engine/types';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { getEffectivePlan } from '@/lib/auth/server';
+import { getAuthedUser, getEffectivePlan } from '@/lib/auth/server';
 import { checkRateLimit, getCalculateRateLimit } from '@/lib/rate-limit';
 import {
   MAX_PREV_STRING,
@@ -50,15 +49,10 @@ function currentTargetYear(): number {
 }
 
 async function getRateLimitIdentifier(): Promise<string> {
-  try {
-    const supabase = createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) return `user:${user.id}`;
-  } catch (e) {
-    console.error('[getRateLimitIdentifier] auth lookup failed:', e);
-  }
+  // getAuthedUser 는 React.cache — 같은 요청 안에서 getEffectivePlan 가 재호출 시 dedup.
+  const user = await getAuthedUser();
+  if (user) return `user:${user.id}`;
+
   // 익명 fallback — server action에서는 NextRequest 객체가 없어 next/headers의
   // x-forwarded-for를 사용.
   const h = headers();
