@@ -77,8 +77,8 @@
 - [x] **MVP 노출 정책 결정 + 적용** — ✅ 옵션 (b) 채택: premium 카드에 `comingSoon: true` + "2026.Q4 출시 예정" 배지 + CTA "출시 알림 받기".
 - [x] **포트원 placeholder 정리** — ✅ `app/(app)/billing/checkout/page.tsx` 에 "포트원(PortOne) 통합 진행 중" 명시.
 
-**잔여 outdated (다음 PR 에서 정리)**:
-- [ ] README.md 디자인 핸드오프 옛 시안 (monthly/annual toggle · BEST VALUE pill · dark gradient 카드) — 가격 숫자는 별 PR 에서 정정, 시안 구조 sync 는 별도 작업
+**잔여 outdated**:
+- [x] **README.md 디자인 핸드오프 옛 시안** — ✅ Section 8 (toggle / dark gradient / BEST VALUE pill 제거 + comingSoon 반영 + `lib/pricing/plans.ts` source 명시) + Section 9 (blob / gradient-clipped / 보라 #7C3AED / 정적 D-237 / TAM 1,550만 → 1,150~1,250만 / 세율 20→22% 정확화). DESIGN.md §8 안티패턴 회피 명시.
 - [ ] docs/audit/* (5건) — Toss webhook 시그니처 등 audit 시점 보고서. 시간 freeze 라 손대지 않는 게 정석.
 
 ### P1 — 가치 노출 UX (sync 후 후속)
