@@ -21,7 +21,7 @@ import {
   exchangeLabel,
   type Transaction,
   type ExchangeId,
-} from '@/lib/mock/transactions';
+} from '@/lib/client/transactions';
 import {
   exportToJSON,
   importFromJSON,

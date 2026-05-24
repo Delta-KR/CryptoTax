@@ -11,7 +11,7 @@ import {
   TableCell,
   TableHeaderCell,
 } from '@/components/ui/Table';
-import { getPaymentHistory, type PaymentRecord } from '@/lib/mock/billing';
+import { getPaymentHistory, type PaymentRecord } from '@/lib/client/billing';
 
 const statusTone: Record<PaymentRecord['status'], 'good' | 'bad' | 'warn'> = {
   완료: 'good',

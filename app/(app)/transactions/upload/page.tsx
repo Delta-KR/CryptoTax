@@ -10,8 +10,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
-import { type ExchangeId } from '@/lib/mock/transactions';
-import { getTaxMethod } from '@/lib/mock/tax';
+import { type ExchangeId } from '@/lib/client/transactions';
+import { getTaxMethod } from '@/lib/client/tax';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import { appendUpload, loadSession, clearSession } from '@/lib/storage/session';
 

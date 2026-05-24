@@ -20,8 +20,8 @@ import {
   getTransactions,
   exchangeLabel,
   type Transaction,
-} from '@/lib/mock/transactions';
-import { calculateTax, getTaxMethod, formatKrw, type TaxMethod } from '@/lib/mock/tax';
+} from '@/lib/client/transactions';
+import { calculateTax, getTaxMethod, formatKrw, type TaxMethod } from '@/lib/client/tax';
 import { kstYearOf } from '@/lib/engine/exchange-rate';
 
 function PageHeader({

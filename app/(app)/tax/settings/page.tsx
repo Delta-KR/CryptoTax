@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
-import { getTaxMethod, setTaxMethod, type TaxMethod } from '@/lib/mock/tax';
+import { getTaxMethod, setTaxMethod, type TaxMethod } from '@/lib/client/tax';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import {
   loadSession,

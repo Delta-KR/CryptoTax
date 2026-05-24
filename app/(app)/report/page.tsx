@@ -8,13 +8,13 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
-import { getTransactions, type Transaction } from '@/lib/mock/transactions';
+import { getTransactions, type Transaction } from '@/lib/client/transactions';
 import {
   calculateTax,
   formatKrw,
   getTaxMethod,
   type TaxMethod,
-} from '@/lib/mock/tax';
+} from '@/lib/client/tax';
 import { useCurrentUser } from '@/lib/auth';
 import { loadSession } from '@/lib/storage/session';
 

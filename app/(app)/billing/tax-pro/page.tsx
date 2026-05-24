@@ -13,7 +13,7 @@ import {
   getTaxProRequest,
   submitTaxProRequest,
   type TaxProRequest,
-} from '@/lib/mock/billing';
+} from '@/lib/client/billing';
 
 export default function TaxProPage() {
   const toast = useToast();
