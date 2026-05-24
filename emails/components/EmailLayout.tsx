@@ -18,6 +18,7 @@ import {
   KONTAXT_LOGO_HEIGHT,
   KONTAXT_LOGO_WIDTH,
 } from './kontaxt-logo';
+import { SUPPORT_EMAIL } from '@/lib/email/contact';
 
 export interface EmailLayoutProps {
   preview: string;
@@ -166,11 +167,11 @@ export function EmailLayout({ preview, children }: EmailLayoutProps) {
               }}
             >
               <Link
-                href="mailto:support@kontaxt.kr"
+                href={`mailto:${SUPPORT_EMAIL}`}
                 className="footer-link"
                 style={{ color: colors.muted2, textDecoration: 'none' }}
               >
-                support@kontaxt.kr
+                {SUPPORT_EMAIL}
               </Link>
             </Text>
           </Section>

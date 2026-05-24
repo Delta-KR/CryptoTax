@@ -8,6 +8,7 @@ import {
   EmailLayout,
 } from './components/EmailLayout';
 import { colors } from './components/tokens';
+import { SUPPORT_EMAIL } from '@/lib/email/contact';
 
 export interface VerifyEmailProps {
   /** Supabase Custom SMTP에선 `{{ .ConfirmationURL }}` 그대로 들어감.
@@ -81,5 +82,5 @@ ${confirmUrl}
 
 —
 Kontaxt · 가상자산 양도세 정산 · 발신 전용
-support@kontaxt.kr
+${SUPPORT_EMAIL}
 `;

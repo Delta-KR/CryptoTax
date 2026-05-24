@@ -20,6 +20,7 @@
 import { Resend } from 'resend';
 import { render } from '@react-email/render';
 
+import { SUPPORT_EMAIL } from './contact';
 import VerifyEmail, {
   verifyEmailPlainText,
   type VerifyEmailProps,
@@ -53,7 +54,7 @@ function getResend(): Resend {
 
 const FROM =
   process.env.RESEND_FROM_EMAIL ?? 'Kontaxt <noreply@kontaxt.kr>';
-const REPLY_TO = 'support@kontaxt.kr';
+const REPLY_TO = SUPPORT_EMAIL;
 
 // ---------------------------------------------------------------------------
 // 공통 발송 래퍼
