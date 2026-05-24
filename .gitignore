@@ -16,3 +16,13 @@ recovery-codes.txt
 
 # graphify knowledge graph — regenerable via `graphify update` or git post-commit hook
 graphify-out/
+
+# Local-only workspace state (Claude Code skills, MCP config, planner cache)
+.agents/
+.mcp.json
+skills-lock.json
+
+# Source assets (logo design files, legal reference PDFs) — local archive,
+# committed assets live under `public/` and `docs/`.
+logo-file/
+law/

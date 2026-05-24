@@ -6,6 +6,7 @@ import {
   EmailLayout,
 } from './components/EmailLayout';
 import { colors } from './components/tokens';
+import { SUPPORT_EMAIL } from '@/lib/email/contact';
 
 export interface WelcomeEmailProps {
   /** 사용자 이름 — Naver OAuth는 full_name 채워짐, 일반 signup은 비어있음. */
@@ -79,5 +80,5 @@ Welcome to Kontaxt.
 
 —
 Kontaxt · 가상자산 양도세 정산 · 발신 전용
-support@kontaxt.kr
+${SUPPORT_EMAIL}
 `;
