@@ -20,7 +20,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useCurrentUser } from '@/lib/auth';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import { loadSession, replaceCalculation } from '@/lib/storage/session';
-import { getTransactions, type Transaction } from '@/lib/mock/transactions';
+import { getTransactions, type Transaction } from '@/lib/client/transactions';
 import {
   calculateTax,
   formatKrw,
@@ -29,7 +29,7 @@ import {
   type HoldingsByCoinClient,
   type RealizedGainClient,
   type TaxMethod,
-} from '@/lib/mock/tax';
+} from '@/lib/client/tax';
 import { toKSTDateStr } from '@/lib/engine/exchange-rate';
 
 const TAX_METHOD_LABEL: Record<TaxMethod, string> = {

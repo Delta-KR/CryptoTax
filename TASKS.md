@@ -137,7 +137,7 @@
 
 - [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
 - [ ] README 갱신 — marketing-only → SaaS 전체 (code-quality P1)
-- [ ] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용)
+- [x] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용). 4 파일 + 13 import + `@vitest/coverage-v8` 설치 묶음 PR
 - [ ] `@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합
 - [ ] doge.svg 압축 — 56 KB, 다른 코인 로고의 30× (perf P1-6)
 - [ ] mark.svg 인라인 SVG 화 — `<img>` 대신
