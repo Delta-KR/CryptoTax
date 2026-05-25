@@ -260,12 +260,12 @@ export function Hero() {
         <div>
           <Badge />
           <h1 className="mb-7 mt-7 text-[40px] font-extrabold leading-[1.05] tracking-tightest text-ink lg:text-[68px]">
-            가상자산 양도세,
+            내 가상자산 양도세,
             <br />
-            <span className="text-brand">정확하게.</span>
+            <span className="text-brand">한 번에 정리해요.</span>
           </h1>
           <p className="mb-10 max-w-[520px] text-[18px] leading-[1.6] text-muted">
-            거래소 데이터를 통합해 한국 세법 기준으로 자동 계산하고, 세무사 전달용 PDF까지 만들어드립니다.
+            Upbit·Bithumb·Binance 다 한 번에. 5월 신고할 때 PDF 한 장만 챙기면 돼요.
           </p>
 
           <div className="mb-7 flex flex-wrap items-center gap-2.5">
@@ -302,9 +302,9 @@ export function Hero() {
           </div>
 
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-muted-2">
-            <Check>신용카드 불필요</Check>
-            <Check>결제 전 미리보기 무료</Check>
-            <Check>2분만에 첫 결과</Check>
+            <Check>신용카드 필요 없어요</Check>
+            <Check>결과 먼저 보고 결정</Check>
+            <Check>2분이면 끝</Check>
           </div>
         </div>
 

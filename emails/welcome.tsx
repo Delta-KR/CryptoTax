@@ -54,7 +54,7 @@ export default function WelcomeEmail({
           color: colors.ink2,
         }}
       >
-        거래소 자동 합산과 시뮬레이션으로 본인의 예상 세액을 미리 확인하세요. 결제는 곧 출시되며, 가입자에게 우선 알림이 갑니다.
+        거래소 자동 합산과 시뮬레이션으로 예상 세액 미리 확인해 보세요. 결제는 곧 출시돼요. 가입자에게 우선 알림이 가요.
       </Text>
 
       <EmailCtaButton href={dashboardUrl} label="대시보드로 이동" />
@@ -73,8 +73,8 @@ export const welcomePlainText = ({
 Welcome to Kontaxt.
 
 가상자산 양도소득 과세 시행까지 D-${daysUntilLaw}.
-거래소 자동 합산과 시뮬레이션으로 본인의 예상 세액을 미리 확인하세요.
-결제는 곧 출시되며, 가입자에게 우선 알림이 갑니다.
+거래소 자동 합산과 시뮬레이션으로 예상 세액 미리 확인해 보세요.
+결제는 곧 출시돼요. 가입자에게 우선 알림이 가요.
 
 대시보드: ${dashboardUrl}
 

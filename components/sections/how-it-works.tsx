@@ -129,10 +129,10 @@ export function HowItWorks() {
         <div className="mb-[72px] text-center">
           <SectionEyebrow>HOW IT WORKS</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            단 3단계, <span className="text-brand">약 2분</span>이면 끝납니다.
+            <span className="text-brand">3단계, 2분</span>이면 끝나요.
           </h2>
           <p className="mx-auto max-w-[540px] text-[17px] leading-[1.6] text-muted">
-            복잡한 계산은 Kontaxt가 대신 합니다. 파일만 올리세요.
+            계산은 Kontaxt가 대신 해요. 파일만 올려 주시면 돼요.
           </p>
         </div>
 
