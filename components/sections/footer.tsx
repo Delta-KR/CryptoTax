@@ -70,7 +70,7 @@ export function Footer() {
               { label: '보안 개요', href: '/#security' },
               {
                 label: '취약점 신고',
-                href: 'mailto:security@kontaxt.kr?subject=취약점 신고',
+                href: 'mailto:support@kontaxt.kr?subject=취약점 신고',
                 external: true,
               },
               { label: '개인정보처리방침', href: '/legal/privacy' },
@@ -81,7 +81,7 @@ export function Footer() {
             items={[
               {
                 label: '문의하기',
-                href: 'mailto:hello@kontaxt.kr?subject=문의',
+                href: 'mailto:support@kontaxt.kr?subject=문의',
                 external: true,
               },
               { label: '이용약관', href: '/legal/terms' },
