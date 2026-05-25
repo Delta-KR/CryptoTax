@@ -713,8 +713,11 @@ export function TaxReport({
               이월 보유 자산 ({year + 1}년 신고 시작점)
             </Text>
             <Text style={{ fontSize: 9, color: MUTED, marginBottom: 8, lineHeight: 1.5 }}>
-              {year}년 종료 시점 잔여 lots. 다음 해 매도 시 이 lot들이 우선 소비됩니다 (FIFO).
-              각 lot의 매수일·거래소·의제 여부는 매도 발생 후에도 추적이 유지됩니다.
+              {method === 'totalAverage'
+                ? `${year}년 종료 시점 잔여 보유분. 다음 해 총평균 단가의 기초 보유분으로 이월됩니다 (시행령 §92②4호). 각 lot의 매수일·거래소·의제 여부는 추적이 유지됩니다.`
+                : method === 'fifo'
+                ? `${year}년 종료 시점 잔여 lots. 다음 해 매도 시 이 lot들이 우선 소비됩니다 (FIFO). 각 lot의 매수일·거래소·의제 여부는 매도 발생 후에도 추적이 유지됩니다.`
+                : `${year}년 종료 시점 잔여 lots. 다음 해 매도 시 이 lot들의 평균 단가가 기준이 됩니다 (이동평균). 각 lot의 매수일·거래소·의제 여부는 추적이 유지됩니다.`}
             </Text>
 
             {holdingsEntries.map((h) => {

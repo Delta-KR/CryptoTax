@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     '양도소득세 계산기',
     '비트코인 세금 계산기',
     '가상자산 양도소득세',
-    'FIFO 계산기',
+    '암호화폐 양도소득세 계산기',
     '의제취득가액',
     '2027 가상자산 세금',
     '코인 세금 계산',
@@ -50,7 +50,7 @@ export default function SimulatorPage() {
           한 번 더 정확하게.
         </h2>
         <p className="mx-auto mt-3 max-w-[520px] text-[14px] leading-[1.65] text-muted lg:text-[15px]">
-          거래내역 전체를 업로드하면 FIFO / 총평균법 · 의제취득가액 · 환율 변환을
+          거래내역 전체를 업로드하면 거주자 법정 총평균법(시행령 §88①) · 의제취득가액 · 환율 변환을
           자동 적용해서 한국 세법 양식의 PDF 신고서까지 생성한다.
         </p>
         <Link

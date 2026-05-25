@@ -83,7 +83,8 @@ export default function UploadPage() {
         'previousParsed',
         JSON.stringify(session?.allParsed ?? []),
       );
-      // 사용자가 Tax 페이지에서 선택한 방식(FIFO/MA)을 localStorage에서 읽어 적용.
+      // 거주자 디폴트는 시행령 §88① 총평균법. 설정 페이지에서 비거주자 모드(FIFO/MA)를
+      // 선택한 경우에만 localStorage에 다른 값이 저장되며, 그 값을 그대로 적용.
       formData.append('method', getTaxMethod());
 
       const result = await calculateTaxFromFiles(formData);
