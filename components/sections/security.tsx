@@ -35,7 +35,7 @@ const ITEMS: readonly Item[] = [
   },
   {
     title: '본인 데이터만 접근',
-    desc: 'Supabase Row Level Security로 본인 계정의 row만 조회·수정 가능합니다. 운영자도 임의 조회할 수 없습니다.',
+    desc: 'Supabase Row Level Security로 본인 계정만 조회·수정 가능합니다. 운영자도 임의 조회 불가.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -56,7 +56,7 @@ const ITEMS: readonly Item[] = [
   },
   {
     title: '결제정보 비저장',
-    desc: '카드번호·CVC는 PG사(포트원)에서 직접 토큰화합니다. 결제 정보는 우리 데이터베이스에 들어오지 않습니다.',
+    desc: '카드번호·CVC는 PG사(포트원)에서 토큰화합니다. 결제 정보는 데이터베이스에 들어오지 않습니다.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect
