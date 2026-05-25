@@ -132,7 +132,7 @@ export function HowItWorks() {
             단 3단계, <span className="text-brand">약 2분</span>이면 끝납니다.
           </h2>
           <p className="mx-auto max-w-[540px] text-[17px] leading-[1.6] text-muted">
-            복잡한 계산은 Kontaxt가 대신 합니다. 당신은 파일만 올리세요.
+            복잡한 계산은 Kontaxt가 대신 합니다. 파일만 올리세요.
           </p>
         </div>
 

@@ -101,7 +101,7 @@ export function Security() {
         <div className="mb-14 text-center">
           <SectionEyebrow>SECURITY</SectionEyebrow>
           <SectionTitle className="mx-auto">
-            당신의 데이터는
+            데이터는
             <br />
             어떻게 보호되나요?
           </SectionTitle>
