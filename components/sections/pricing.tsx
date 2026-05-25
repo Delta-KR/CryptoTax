@@ -107,7 +107,7 @@ function PricingCard({ tier }: { tier: TierMeta }) {
           </span>
           <span className="text-[13px] text-muted">{tier.sub}</span>
         </div>
-        <p className="mt-2.5 text-[12.5px] leading-[1.55] text-muted">{tier.description}</p>
+        <p className="mt-2.5 text-[12.5px] leading-[1.55] text-muted text-pretty">{tier.description}</p>
       </div>
 
       <ul className="mb-7 flex flex-1 list-none flex-col gap-3">
@@ -143,7 +143,7 @@ export function Pricing() {
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
             상황에 맞게 골라 보세요.
           </h2>
-          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
+          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted text-pretty">
             5월 신고 시즌만 쓸 거면 <strong className="font-semibold text-ink">단일 연도</strong>.
             연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>(2026.Q4 출시)이에요.
             둘 다 결제 전에 미리 결과 볼 수 있어요.
@@ -160,10 +160,10 @@ export function Pricing() {
           ))}
         </div>
 
-        <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
+        <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted text-pretty">
           <strong className="font-semibold text-ink-2">단일과 구독의 차이</strong>{' '}
           단일은 5월 신고 시즌 1회 결제용이에요. 구독은 PDF 무제한에 상시 손익 대시보드,
-          절세 매도 알림 (Tax-Loss Harvesting), 거래소 API 자동 연동까지 포함된 연중 절세 도구예요
+          절세 매도 알림 (<span className="whitespace-nowrap">Tax-Loss Harvesting</span>), 거래소 API 자동 연동까지 포함된 연중 절세 도구예요
           (2026.Q4 출시 시 상세 안내).
         </div>
 

@@ -18,7 +18,7 @@ export function SectionTitle({ children, className }: { children: ReactNode; cla
   return (
     <h2
       className={cn(
-        'max-w-[760px] text-[32px] font-extrabold leading-[1.18] tracking-tighter3 text-ink lg:text-[44px]',
+        'max-w-[760px] text-[32px] font-extrabold leading-[1.18] tracking-tighter3 text-ink text-balance lg:text-[44px]',
         className
       )}
     >
@@ -31,7 +31,7 @@ export function SectionLead({ children, className }: { children: ReactNode; clas
   return (
     <p
       className={cn(
-        'mt-[18px] max-w-[620px] text-[17px] leading-[1.6] text-muted',
+        'mt-[18px] max-w-[620px] text-[17px] leading-[1.6] text-muted text-pretty',
         className
       )}
     >

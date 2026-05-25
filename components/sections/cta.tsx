@@ -54,7 +54,7 @@ export function CTA() {
           <br />
           <span className="text-brand">시작해 보세요.</span>
         </h2>
-        <p className="mx-auto mb-9 max-w-[520px] text-[17px] leading-[1.6] text-muted">
+        <p className="mx-auto mb-9 max-w-[520px] text-[17px] leading-[1.6] text-muted text-pretty">
           신용카드 없어도 1분이면 끝나요. 결과 먼저 보고 결정해도 돼요.
         </p>
 
