@@ -89,7 +89,7 @@ function SecurityCard({ item }: { item: Item }) {
       <h3 className="mb-2.5 text-[18px] font-bold tracking-tightish text-ink">
         {item.title}
       </h3>
-      <p className="text-sm leading-[1.65] text-muted">{item.desc}</p>
+      <p className="text-sm leading-[1.65] text-muted text-pretty">{item.desc}</p>
     </HoverCard>
   );
 }

@@ -109,7 +109,7 @@ function FeatureBig({ data }: { data: BigData }) {
         <h3 className="mb-2.5 text-[22px] font-bold tracking-tightish text-ink">
           {data.title}
         </h3>
-        <p className="max-w-[360px] text-sm leading-[1.7] text-muted">{data.desc}</p>
+        <p className="max-w-[360px] text-sm leading-[1.7] text-muted text-pretty">{data.desc}</p>
       </div>
 
       {/* 247건 visual */}
@@ -146,7 +146,7 @@ function FeatureCard({ data }: { data: SmallData }) {
       <h3 className="mb-2 text-base font-bold tracking-[-0.015em] text-ink">
         {data.title}
       </h3>
-      <p className="text-[13px] leading-[1.6] text-muted">{data.desc}</p>
+      <p className="text-[13px] leading-[1.6] text-muted text-pretty">{data.desc}</p>
     </HoverCard>
   );
 }

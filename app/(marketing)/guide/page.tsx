@@ -244,7 +244,7 @@ export default function GuidePage() {
             처음 쓰는 분을 위한 <br className="hidden sm:block" />
             <span className="text-brand">단계별 안내예요.</span>
           </h1>
-          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.65] text-muted">
+          <p className="mx-auto max-w-[640px] text-[17px] leading-[1.65] text-muted text-pretty">
             파일 받는 법부터 결과 해석까지, 한 화면에 모아 뒀어요.
           </p>
         </div>
@@ -366,7 +366,7 @@ export default function GuidePage() {
             <h3 className="mb-3 text-[24px] font-extrabold tracking-tighter3 text-ink lg:text-[30px]">
               준비됐으면 지금 시작해 보세요.
             </h3>
-            <p className="mx-auto mb-6 max-w-[440px] text-[14px] leading-[1.6] text-muted">
+            <p className="mx-auto mb-6 max-w-[440px] text-[14px] leading-[1.6] text-muted text-pretty">
               회원가입 없이 바로 파일 올려서 계산해 볼 수 있어요.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">

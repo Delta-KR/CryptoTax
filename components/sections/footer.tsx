@@ -48,7 +48,7 @@ export function Footer() {
                 kontaxt.
               </span>
             </div>
-            <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted">
+            <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted text-pretty">
               한국 가상자산 투자자를 위한 세금 정산 도구예요.
               <br />
               여러 거래소 자료를 한 번에, 한국 세법 그대로.
