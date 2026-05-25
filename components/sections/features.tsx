@@ -158,7 +158,7 @@ export function Features() {
         <div className="mb-14 text-center">
           <SectionEyebrow>FEATURES</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            한국 세법, 빠짐없이 반영
+            한국 세법, 빠짐없이 반영.
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
             세무사가 검수하고, 개발자가 만든 계산 엔진. 누락 없이 정확하게.

@@ -233,7 +233,7 @@ export function Problem() {
         <SectionTitle>
           같은 BTC 매수인데, 거래소마다
           <br />
-          <span className="text-muted">형식이 전부 다릅니다</span>
+          <span className="text-muted">형식이 전부 다릅니다.</span>
         </SectionTitle>
         <SectionLead>
           한국 투자자 평균 2.4개 거래소 사용. 파일 형식·날짜·통화 단위가 모두 달라

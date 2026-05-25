@@ -52,7 +52,7 @@ export function CTA() {
         <h2 className="mb-5 text-[36px] font-extrabold leading-[1.12] tracking-tightest text-ink lg:text-[52px]">
           지금 무료로
           <br />
-          <span className="text-brand">시작하세요</span>
+          <span className="text-brand">시작하세요.</span>
         </h2>
         <p className="mx-auto mb-9 max-w-[520px] text-[17px] leading-[1.6] text-muted">
           신용카드 없이 1분 가입. 결제 전 결과 미리보기까지 무료입니다.
@@ -83,7 +83,10 @@ export function CTA() {
           </a>
         </div>
 
-        {/* Stats strip */}
+        {/* Stats strip — 출처:
+            · 1,550만 = 5대 거래소 투자자 합산 1,559만 (중복 포함). docs/business-plan.md §3, 2024.11 기준
+            · TAM (중복 제거 보유자)은 1,150~1,250만 — 별도 지표
+            · 20% / 2% = 소득세법 §64의3② (지방세는 별도 신고) */}
         <div className="mt-14 grid grid-cols-1 gap-4 border-t border-line pt-8 lg:grid-cols-3 lg:gap-0">
           <Stat2 num="1,550만" label="한국 가상자산 투자자" />
           <Stat2
