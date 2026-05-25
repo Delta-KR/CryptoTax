@@ -46,7 +46,7 @@ const TIERS: readonly TierMeta[] = [
     planId: 'onetime',
     tag: '한 해만 신고',
     sub: '1개 연도 · 영구 접근',
-    description: '5월 신고 시즌에 한 번만 쓰는 분에게. 지금 결제할 수 있어요.',
+    description: '5월 신고 시즌 1회용. 지금 결제 가능해요.',
     cta: '단일 연도 사전 등록',
     href: '/signup?plan=annual',
     emphasis: false,
@@ -146,7 +146,7 @@ export function Pricing() {
           <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted text-pretty">
             5월 신고 시즌만 쓸 거면 <strong className="font-semibold text-ink">단일 연도</strong>.
             연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>(2026.Q4 출시)이에요.
-            둘 다 결제 전에 미리 결과 볼 수 있어요.
+            <span className="whitespace-nowrap">둘 다</span> 결제 전에 미리 결과 볼 수 있어요.
           </p>
           <div className="mx-auto mt-5 inline-flex max-w-[640px] items-center gap-2 rounded-full border border-warn/40 bg-warn-soft px-3.5 py-1.5 text-[12.5px] font-medium text-warn">
             <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warn" />
