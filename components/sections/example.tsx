@@ -165,10 +165,10 @@ export function Example() {
         <div className="mb-14 text-center">
           <SectionEyebrow>TAX CALCULATION</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            실제 계산은 <span className="text-brand">이렇게</span> 됩니다.
+            계산은 <span className="text-brand">이렇게</span> 돼요.
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            BTC 익절, ETH 손절, SOL 익절. 한국 세법 기준 어떻게 계산되는지 보세요.
+            BTC 익절, ETH 손절, SOL 익절. 한국 세법 기준으로 어떻게 풀리는지 한 번 보세요.
           </p>
         </div>
 

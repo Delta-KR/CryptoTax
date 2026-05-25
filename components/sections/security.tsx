@@ -101,12 +101,12 @@ export function Security() {
         <div className="mb-14 text-center">
           <SectionEyebrow>SECURITY</SectionEyebrow>
           <SectionTitle className="mx-auto">
-            데이터는
+            내 데이터는
             <br />
-            어떻게 보호되나요?
+            어떻게 보호돼요?
           </SectionTitle>
           <SectionLead className="mx-auto">
-            한국 핀테크 표준을 기본으로, 보관하지 않을 데이터는 처음부터 받지 않습니다.
+            한국 핀테크 표준 그대로. 안 받을 데이터는 처음부터 안 받아요.
           </SectionLead>
         </div>
 

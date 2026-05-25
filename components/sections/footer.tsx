@@ -49,9 +49,9 @@ export function Footer() {
               </span>
             </div>
             <p className="max-w-[320px] text-[13px] leading-[1.7] text-muted">
-              한국 가상자산 투자자를 위한 세금 정산 플랫폼.
+              한국 가상자산 투자자를 위한 세금 정산 도구예요.
               <br />
-              여러 거래소 데이터를 한 번에, 한국 세법 그대로.
+              여러 거래소 자료를 한 번에, 한국 세법 그대로.
             </p>
           </div>
           <FooterCol

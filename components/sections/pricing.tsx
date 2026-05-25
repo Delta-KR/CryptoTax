@@ -25,7 +25,7 @@ const TIERS: readonly TierMeta[] = [
     planId: 'free',
     tag: '체험·검증',
     sub: '영구 무료',
-    description: '결제 전 결과를 미리 확인할 수 있습니다.',
+    description: '결제 전에 결과 미리 볼 수 있어요.',
     cta: '무료로 시작',
     href: '/signup?plan=free',
     emphasis: false,
@@ -35,7 +35,7 @@ const TIERS: readonly TierMeta[] = [
     tag: '연중 절세 도구',
     sub: '/ 년 · 모든 과세연도',
     description:
-      '여러 해를 한꺼번에 정리하거나 연중 절세 기회를 포착하고 싶은 분에게. 2026.Q4 출시 예정.',
+      '여러 해를 한꺼번에 정리하거나 연중에 절세 기회를 잡고 싶은 분에게. 2026.Q4 출시 예정이에요.',
     cta: '출시 알림 받기',
     href: '/signup?plan=subscription',
     emphasis: true,
@@ -46,7 +46,7 @@ const TIERS: readonly TierMeta[] = [
     planId: 'onetime',
     tag: '한 해만 신고',
     sub: '1개 연도 · 영구 접근',
-    description: '매년 5월 신고 시즌에 한 번만 쓰는 분에게. 지금 결제 가능.',
+    description: '5월 신고 시즌에 한 번만 쓰는 분에게. 지금 결제할 수 있어요.',
     cta: '단일 연도 사전 등록',
     href: '/signup?plan=annual',
     emphasis: false,
@@ -141,16 +141,16 @@ export function Pricing() {
         <div className="mb-10 text-center">
           <SectionEyebrow>PRICING</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            상황에 맞게 한 번만 선택하세요.
+            상황에 맞게 골라 보세요.
           </h2>
           <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
-            먼저 <strong className="font-semibold text-ink">단일 과세연도</strong>로 신고 시즌을
-            해결하세요. 연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>이
-            2026.Q4 출시됩니다. 모두 결제 전에 무료로 결과를 미리 확인할 수 있습니다.
+            5월 신고 시즌만 쓸 거면 <strong className="font-semibold text-ink">단일 연도</strong>.
+            연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>(2026.Q4 출시)이에요.
+            둘 다 결제 전에 미리 결과 볼 수 있어요.
           </p>
           <div className="mx-auto mt-5 inline-flex max-w-[640px] items-center gap-2 rounded-full border border-warn/40 bg-warn-soft px-3.5 py-1.5 text-[12.5px] font-medium text-warn">
             <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warn" />
-            유료 플랜 결제는 곧 출시 — 지금 가입하면 무료 미리보기 + 출시 시 우선 알림
+            유료 플랜은 곧 출시 — 지금 가입하면 무료 미리보기 + 출시 알림
           </div>
         </div>
 
@@ -161,10 +161,10 @@ export function Pricing() {
         </div>
 
         <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
-          <strong className="font-semibold text-ink-2">단일 과세연도와 구독의 차이</strong>{' '}
-          단일은 매년 5월 신고 시즌 1회 결제용입니다. 구독은 PDF 무제한에 더해
-          상시 손익 대시보드 · 절세 매도 알림 (Tax-Loss Harvesting) · 거래소 API 자동 연동을 포함하는
-          연중 절세 도구입니다 (2026.Q4 출시 시 상세 안내).
+          <strong className="font-semibold text-ink-2">단일과 구독의 차이</strong>{' '}
+          단일은 5월 신고 시즌 1회 결제용이에요. 구독은 PDF 무제한에 상시 손익 대시보드,
+          절세 매도 알림 (Tax-Loss Harvesting), 거래소 API 자동 연동까지 포함된 연중 절세 도구예요
+          (2026.Q4 출시 시 상세 안내).
         </div>
 
         <p className="mt-6 text-center text-[12.5px] text-muted-2">

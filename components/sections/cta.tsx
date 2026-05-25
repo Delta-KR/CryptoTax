@@ -52,11 +52,10 @@ export function CTA() {
         <h2 className="mb-5 text-[36px] font-extrabold leading-[1.12] tracking-tightest text-ink lg:text-[52px]">
           지금 무료로
           <br />
-          <span className="text-brand">시작하세요.</span>
+          <span className="text-brand">시작해 보세요.</span>
         </h2>
         <p className="mx-auto mb-9 max-w-[520px] text-[17px] leading-[1.6] text-muted">
-          신용카드 없이 1분 가입. 결제 전 결과 미리보기까지 무료입니다.
-          첫 결과를 받아본 뒤 결정해도 늦지 않습니다.
+          신용카드 없어도 1분이면 끝나요. 결과 먼저 보고 결정해도 돼요.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -92,7 +91,7 @@ export function CTA() {
           <Stat2
             num="20%"
             label="양도소득세율"
-            sub="지방세 2% 별도 신고"
+            sub="지방세 2%는 따로 신고"
             border
           />
           <Stat2 num="250만원" label="기본공제" sub="연 1회 자동 적용" />

@@ -110,10 +110,10 @@ export function Exchanges() {
         <div className="mb-14 text-center">
           <SectionEyebrow>SUPPORTED EXCHANGES</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            국내외 주요 거래소 지원.
+            국내외 주요 거래소, 다 돼요.
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            초기 출시 시 2개 거래소. 매월 새 거래소가 추가됩니다.
+            지금은 업비트·바이낸스 두 곳. 매월 한 곳씩 추가하고 있어요.
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export function Exchanges() {
         <div>
           <div className="mb-4 flex items-center justify-center gap-2.5">
             <StatusPillSoon />
-            <span className="nowrap text-[13px] text-muted">2026년 7월 ~ 9월 순차 추가</span>
+            <span className="nowrap text-[13px] text-muted">2026년 7월부터 9월까지 차례로 추가</span>
           </div>
           <div className="mx-auto flex max-w-[880px] flex-wrap justify-center gap-3">
             {soon.map((e) => (

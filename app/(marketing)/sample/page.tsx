@@ -47,10 +47,10 @@ export default function SamplePage() {
             샘플 미리보기 · 로그인 없이 확인 가능
           </Pill>
           <h1 className="text-[32px] font-extrabold tracking-tighter3 text-ink sm:text-[44px]">
-            홍길동님의 <span className="text-brand">2027년 양도소득세.</span>
+            홍길동님의 <span className="text-brand">2027년 양도세.</span>
           </h1>
           <p className="max-w-[640px] text-body-lead text-muted">
-            247건의 거래를 통합해서 한국 세법 기준으로 계산한 결과입니다. 가입하시면 본인 데이터로 동일한 리포트를 받아볼 수 있습니다.
+            거래 247건을 한국 세법 기준으로 정리한 결과예요. 가입하시면 본인 자료로 똑같은 리포트 받아 보실 수 있어요.
           </p>
         </div>
 
@@ -146,7 +146,7 @@ export default function SamplePage() {
             지금 가입하면 <span className="text-brand">내 데이터로.</span>
           </h2>
           <p className="mx-auto mt-3 max-w-[480px] text-body-lead text-muted">
-            거래소 파일만 올리면 동일한 리포트를 무료로 받아볼 수 있습니다.
+            거래소 파일만 올리면 똑같은 리포트 무료로 받아 보실 수 있어요.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <Link

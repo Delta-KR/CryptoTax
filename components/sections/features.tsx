@@ -15,29 +15,29 @@ interface SmallData {
 }
 
 const big: BigData = {
-  title: '다중 거래소 데이터 통합',
-  desc: '국내외 어떤 거래소든 파일만 올리면 자동으로 형식을 통일하고 시간순 병합. 같은 코인 다른 거래소 입출금도 추적합니다.',
+  title: '여러 거래소, 한 번에 통합',
+  desc: '국내외 어떤 거래소든 파일만 올리면 자동으로 형식을 맞춰서 시간순으로 합쳐 줘요. 같은 코인을 다른 거래소로 옮긴 것도 알아서 추적해요.',
 };
 
 const items: readonly SmallData[] = [
   {
-    title: '계산 방식 선택',
+    title: '계산 방식 자동 선택',
     desc: '총평균법 (시행령 §88①) 자동 적용. 시행 전 보유분에는 의제취득가액 자동 비교.',
     icon: 'compare',
   },
   {
     title: '의제취득가액 자동 적용',
-    desc: '2026년 12월 31일 이전 보유분은 시가 자동 조회 → 실제 매수가와 큰 금액으로 적용해 세금을 줄여드립니다.',
+    desc: '2026년 12월 31일 이전에 사 둔 거는 그날 시가를 자동으로 조회해서 더 큰 금액으로 적용해요. 세금이 줄어들어요.',
     icon: 'shield',
   },
   {
     title: '해외 거래 환율 변환',
-    desc: '바이낸스 등 USDT 거래는 거래 시점 KRW 환율로 자동 변환. 한국은행 고시 환율 기준으로 정확하게.',
+    desc: '바이낸스 같은 USDT 거래는 거래 시점 KRW 환율로 자동 변환해요. 한국은행 고시 환율 기준이라 정확해요.',
     icon: 'globe',
   },
   {
     title: '세무사 전달용 PDF',
-    desc: '종합소득세 신고서 양식에 맞춘 항목별 정리 PDF. 거래 원본 + 계산 근거 + 산출 내역까지 포함.',
+    desc: '종합소득세 신고서 양식에 맞춘 항목별 정리 PDF예요. 거래 원본·계산 근거·산출 내역까지 다 들어가요.',
     icon: 'doc',
   },
 ];
@@ -158,10 +158,10 @@ export function Features() {
         <div className="mb-14 text-center">
           <SectionEyebrow>FEATURES</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            한국 세법, 빠짐없이 반영.
+            한국 세법, 빠짐없이.
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
-            세무사가 검수하고, 개발자가 만든 계산 엔진. 누락 없이 정확하게.
+            세무사가 검수했고, 개발자가 만들었어요. 빠지는 것 없이 정확하게.
           </p>
         </div>
 

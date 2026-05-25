@@ -42,7 +42,7 @@ export default function VerifyEmail({
           color: colors.ink2,
         }}
       >
-        Kontaxt 가입을 시작하셨습니다.
+        Kontaxt 가입을 시작하셨네요.
       </Text>
       <Text
         className="ink-2"
@@ -73,7 +73,7 @@ export const verifyEmailPlainText = ({
 }: VerifyEmailProps = {}): string => `이메일 주소를 확인해 주세요.
 Please verify your email.
 
-Kontaxt 가입을 시작하셨습니다.
+Kontaxt 가입을 시작하셨네요.
 아래 링크를 눌러 ${email} 주소가 본인 것인지 확인해 주세요.
 
 ${confirmUrl}

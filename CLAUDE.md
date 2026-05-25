@@ -78,8 +78,8 @@ prod 영향이라 사용자 명시 허락 후만. `apply_migration`은 reversibl
 
 새 카피·기존 카피 수정 시:
 
-1. **작성 전** — VOICE.md §10 컨텍스트 매트릭스에서 해당 위치(Hero/Section Title/FAQ/Button/Email H1/Legal Clause 등) 표준 길이·종결어 확인
-2. **작성 중** — §3 종결어 (-습니다 통일, 해요체 금지), §6 마침표 (SectionTitle도 마침표·물음표), §5 한·영 병기, §7 숫자 한국식, §8 금지어 회피
+1. **작성 전** — VOICE.md §10 컨텍스트 매트릭스에서 해당 위치(Hero/Section Title/FAQ/Button/Email H1/Legal Clause 등) 표준 길이·종결어·**톤(친밀/격식)** 확인
+2. **작성 중** — §3 종결어 컨텍스트별 mix (마케팅 해요체 / Security·Legal·Email 격식), §2 인칭 (Hero·Sample = "내·나의", 본문 = 무인칭, 보안 = "본인", **"당신" 0건**), §6 마침표 (SectionTitle도 마침표·물음표), §5 한·영 병기, §7 숫자 한국식, §8 금지어 회피
 3. **작성 후 — grep 3종 필수 통과 (모두 0건)** — humanizer 신규 키워드 포함:
    ```bash
    # Soft 금지어 (§8 + humanizer puffing)
@@ -199,6 +199,12 @@ npm run email:dev         # http://localhost:3001 — 실시간 미리보기
 
 ## 변경 이력
 
+- **2026-05-25 (Tier 3 톤 mix 전환)** — VOICE.md 광범위 재작성 + 카피 15+ 파일 친밀 톤 전환
+  - 발단: `/humanizer /insights` 분석에서 토스·카카오뱅크 reference 대비 "soulless AI 톤" 인식 가능 발견 (sterile, voiceless writing — humanizer PERSONALITY AND SOUL 절). 광고 puffing 만 잡고 인간미 부재 사각지대 인지.
+  - VOICE.md Q2 (a) 격식 통일 → **(c) 컨텍스트별 mix** / Q3 (d) 사용 금지 → **(e) "당신" 금지 + 사용자 1인칭 "내·나의" 허용**. §0·§1·§2·§3·§10·§11·§12·§13·§14 광범위 재작성 (562 → 658 줄).
+  - 카피 fix: Hero "내 가상자산 양도세, 한 번에 정리해요." / Security "내 데이터는 어떻게 보호돼요?" / Problem·HowItWorks·Example·Exchanges·Features·Pricing·Roadmap·CTA·Footer·Guide·Sample·Email 전반 친밀 톤 (해요체)
+  - 격식 유지: Security 카드 body · Footer 법적 disclaimer · Email H1 · Legal (Q6)
+  - DESIGN.md §9 갱신, CLAUDE.md 작업 패턴 5) 갱신
 - **2026-05-25 (humanizer 통합)** — [blader/humanizer](https://github.com/blader/humanizer) Claude Code 스킬 vendor + VOICE.md §9 한국어 통합 + grep 3종 보강
   - `.claude/skills/humanizer/` project-local vendor (4 파일, .git 제거). 호출 `/humanizer` — Wikipedia "Signs of AI writing" 기반 29 패턴
   - VOICE.md §9: 12 → 28 패턴 (9-A Kontaxt 한국어 특화 12 + 9-B humanizer 통합 16). 영어 위주 13 패턴(title case·hyphenated word pairs·curly quotes 등) 제외, 한국어 적용 가능 16 패턴을 한국어 Before/After 예시로 재작성

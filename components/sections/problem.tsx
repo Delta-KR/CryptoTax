@@ -231,14 +231,14 @@ export function Problem() {
       <div className="mx-auto max-w-content">
         <SectionEyebrow>PROBLEM</SectionEyebrow>
         <SectionTitle>
-          같은 BTC 매수인데, 거래소마다
+          같은 BTC 매수인데,
           <br />
-          <span className="text-muted">형식이 전부 다릅니다.</span>
+          <span className="text-muted">거래소마다 형식이 달라도 너무 달라요.</span>
         </SectionTitle>
         <SectionLead>
-          한국 투자자 평균 2.4개 거래소 사용. 파일 형식·날짜·통화 단위가 모두 달라
+          한국 투자자는 평균 2.4개 거래소를 써요. 형식·날짜·통화가 다 달라서
           <br />
-          엑셀로 합치는 데만 반나절이 걸립니다.
+          엑셀로 합치다 보면 반나절은 그냥 가요.
         </SectionLead>
 
         {/* 3-card grid */}
