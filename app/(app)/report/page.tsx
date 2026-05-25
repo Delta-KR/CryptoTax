@@ -108,7 +108,7 @@ export default function ReportPage() {
     <>
       <PageHeader
         title="리포트"
-        description="신고용 PDF 리포트를 생성합니다. 세무사 전달 또는 홈택스 직접 입력에 사용."
+        description="신고용 PDF 리포트를 만들어 드려요. 세무사 전달 또는 홈택스 직접 입력에 사용."
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_1fr]">
@@ -197,7 +197,7 @@ export default function ReportPage() {
               variant="secondary"
               fullWidth
               onClick={() =>
-                toast.show('세무사 전달용 링크가 복사되었습니다.', 'info')
+                toast.show('세무사 전달용 링크가 복사됐어요.', 'info')
               }
             >
               세무사 전달용 링크

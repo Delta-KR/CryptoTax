@@ -105,7 +105,7 @@ export default function UploadPage() {
       if (payload.newParsed.length === 0) {
         setProgress((p) => ({ ...p, [exchangeId]: 0 }));
         toast.show(
-          `${file.name}에서 거래 행을 찾지 못했습니다. 올바른 거래내역 파일인지, 해당 기간에 거래가 있는지 확인해주세요.`,
+          `${file.name}에서 거래 행을 찾지 못했어요. 올바른 거래내역 파일인지, 해당 기간에 거래가 있는지 확인해주세요.`,
           'error',
         );
         return;
@@ -164,14 +164,14 @@ export default function UploadPage() {
     clearSession();
     setProgress({});
     setUploaded({});
-    toast.show('업로드 데이터가 초기화되었습니다.', 'success');
+    toast.show('업로드 데이터가 초기화됐어요.', 'success');
   }
 
   return (
     <>
       <PageHeader
         title="거래 데이터 통합"
-        description="거래소별 거래내역 파일을 업로드하면 자동으로 통합·정규화되어 세금이 계산됩니다."
+        description="거래소별 거래내역 파일을 업로드하면 자동으로 통합·정규화되어 세금이 계산돼요."
         right={
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={handleReset}>
@@ -294,8 +294,8 @@ export default function UploadPage() {
                   </li>
                 </ol>
                 <p className="mt-4 rounded-sm bg-bg-soft px-3 py-2 text-[12px] text-muted">
-                  업로드된 파일은 서버 메모리에서 처리 후 즉시 폐기됩니다.
-                  결과는 브라우저에만 저장됩니다.
+                  업로드된 파일은 서버 메모리에서 처리 후 즉시 폐기돼요.
+                  결과는 브라우저에만 저장돼요.
                 </p>
                 <Link
                   href="/guide#exchanges"

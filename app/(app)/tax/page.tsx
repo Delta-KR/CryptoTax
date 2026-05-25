@@ -547,7 +547,7 @@ export default function TaxPage() {
     if (!session?.allParsed?.length) {
       if (opts.showToast) {
         setRefreshKey((k) => k + 1);
-        toast.show('세금 계산이 재실행되었습니다.', 'success');
+        toast.show('세금 계산이 재실행됐어요.', 'success');
       }
       return;
     }
@@ -562,15 +562,15 @@ export default function TaxPage() {
         setTxs(getTransactions());
         setRefreshKey((k) => k + 1);
         if (opts.showToast) {
-          toast.show('세금 계산이 재실행되었습니다.', 'success');
+          toast.show('세금 계산이 재실행됐어요.', 'success');
         }
       } else if (opts.showToast) {
-        toast.show(res.error ?? '재계산에 실패했습니다.', 'error');
+        toast.show(res.error ?? '재계산에 실패했어요.', 'error');
       }
     } catch (e) {
       if (opts.showToast) {
         toast.show(
-          e instanceof Error ? e.message : '재계산에 실패했습니다.',
+          e instanceof Error ? e.message : '재계산에 실패했어요.',
           'error',
         );
       }
@@ -982,8 +982,8 @@ export default function TaxPage() {
           </div>
           {result.rateSource.fallbackUsed && (
             <div className="mt-1.5 text-warn">
-              ⚠ 일부 거래에 정적 분기별 fallback 환율이 사용됐습니다. 정확한 신고를
-              위해 시세 데이터 갱신 후 재계산을 권장합니다.
+              ⚠ 일부 거래에 정적 분기별 fallback 환율이 사용됐어요. 정확한 신고를
+              위해 시세 데이터 갱신 후 재계산을 권해 드려요.
             </div>
           )}
         </div>
@@ -1038,7 +1038,7 @@ export default function TaxPage() {
                 <span className="font-semibold">
                   {result.deemedCostSource.estimateCoins.join(', ')}
                 </span>
-                . {result.deemedCostSource.deemedDate} 종가 확정 후 재계산을 권장합니다.
+                . {result.deemedCostSource.deemedDate} 종가 확정 후 재계산을 권해 드려요.
               </div>
             )}
             {result.deemedCostSource.missingCoins.length > 0 && (

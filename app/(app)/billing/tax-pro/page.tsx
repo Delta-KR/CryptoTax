@@ -49,7 +49,7 @@ export default function TaxProPage() {
     setExisting(req);
     setConfirmOpen(false);
     setSubmitting(false);
-    toast.show('세무사 매칭 신청이 접수되었습니다.', 'success');
+    toast.show('세무사 매칭 신청이 접수됐어요.', 'success');
   }
 
   if (existing) {
@@ -57,7 +57,7 @@ export default function TaxProPage() {
       <>
         <PageHeader
           title="세무사 매칭"
-          description="제휴 세무사와 연결해드립니다."
+          description="제휴 세무사와 연결해 드려요."
         />
         <Card padding="lg">
           <div className="flex items-center justify-between">
@@ -105,7 +105,7 @@ export default function TaxProPage() {
             </div>
           )}
           <div className="mt-6 rounded-md border border-brand/30 bg-brand-faint px-4 py-3 text-[13px] text-brand-2">
-            영업일 기준 2일 이내에 매칭 결과를 이메일과 SMS로 안내드립니다.
+            영업일 기준 2일 이내에 매칭 결과를 이메일과 SMS로 안내드려요.
           </div>
         </Card>
       </>
@@ -116,14 +116,14 @@ export default function TaxProPage() {
     <>
       <PageHeader
         title="세무사 매칭"
-        description="가상자산 양도소득 신고 경험이 있는 제휴 세무사와 연결해드립니다."
+        description="가상자산 양도소득 신고 경험이 있는 제휴 세무사와 연결해 드려요."
       />
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_300px]">
         <Card padding="lg">
           <h2 className="text-[16px] font-bold text-ink">매칭 신청</h2>
           <p className="mt-1 text-[13px] text-muted">
-            아래 정보를 작성하시면 평일 기준 2일 이내에 연결해드립니다.
+            아래 정보를 작성하시면 평일 기준 2일 이내에 연결해 드려요.
           </p>
           <form onSubmit={openConfirm} className="mt-5 flex flex-col gap-4" noValidate>
             <Input
@@ -196,7 +196,7 @@ export default function TaxProPage() {
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
         title="매칭 신청을 제출하시겠어요?"
-        description="입력하신 정보로 제휴 세무사 풀에 신청이 등록됩니다."
+        description="입력하신 정보로 제휴 세무사 풀에 신청이 등록돼요."
         footer={
           <>
             <Button variant="secondary" onClick={() => setConfirmOpen(false)}>

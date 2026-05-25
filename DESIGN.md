@@ -190,13 +190,13 @@ className="rounded-lg border border-line bg-card p-6 shadow-sm"
 
 ## 9. 카피 톤 (요약 — 자세한 건 [VOICE.md](VOICE.md))
 
-언어 표준은 별도 문서 [VOICE.md](VOICE.md)에 분리되어 있습니다. 페르소나, 종결어 컨텍스트별 mix, 컨텍스트 톤 매트릭스(30+), 언어 차원 AI 안티패턴(29개), 어휘 금지·선호 사전, 작성 체크리스트가 모두 거기 있습니다.
+언어 표준은 별도 문서 [VOICE.md](VOICE.md)에 분리되어 있습니다. **Tier 3 톤 mix 가 Kontaxt 의 공식 브랜드 보이스로 확정** (2026-05-25). 마케팅·랜딩부터 인앱 UI·인증·이메일까지 모든 사용자-노출 텍스트가 이 표준을 따릅니다.
 
-핵심 5개만 여기에:
+핵심 5개:
 
 1. **마침표 있는 단문 헤드라인** — "내 가상자산 양도세, 한 번에 정리해요."
-2. **컨텍스트별 톤 mix** (Q2 (c) Tier 3) — 마케팅·CTA·Guide·FAQ·Sample = **해요체**, Security·Legal·Footer disclaimer·Email = **격식 -습니다**. 같은 페이지 안에서도 위치별 결정.
-3. **사용자 1인칭 + 무인칭 + Kontaxt mix** — Hero·Sample·CTA 헤드라인 "내·나의" 허용, 보안·소유는 "본인", 본문은 무인칭, "Kontaxt가" 는 행위 주체로만. **"당신" 금지**.
+2. **컨텍스트별 톤 mix** — 친밀 (해요체) 영역: 마케팅·CTA·Guide·FAQ·Sample·(marketing)/simulator·**(app)/* 인앱 UI**·**(auth)/* 인증**·Toast·Error·Empty state. 격식 절대 유지 (-습니다) 6 영역: Security 카드 body·Footer 법적 disclaimer·Email H1·Legal·Report 법적 disclaimer·Example 법조항 인용.
+3. **사용자 1인칭 + 무인칭 + Kontaxt mix** — Hero·Sample·CTA "내·나의" 허용, 보안·소유는 "본인", 본문 무인칭, "Kontaxt가" 는 행위 주체로만. **"당신" 금지**.
 4. **숫자는 한국식 만 단위 + ₩** — `1,550만` / `₩49,900`. K·M 약식 금지.
 5. **이모지·느낌표(!) 금지 + 광고 puffing 금지** — 친밀 톤이라도 §9 안티패턴 29개·금지어 ~30개 그대로 적용.
 

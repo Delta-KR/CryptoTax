@@ -13,7 +13,7 @@ const steps: readonly Step[] = [
   {
     n: 1,
     title: '거래내역 업로드',
-    desc: '거래소에서 다운받은 PDF · XLS · CSV 파일을 그대로 끌어다 놓으세요. 파일 형식은 자동 인식됩니다.',
+    desc: '거래소에서 다운받은 PDF · XLS · CSV 파일을 그대로 끌어다 놓으세요. 파일 형식은 자동으로 알아봐요.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path

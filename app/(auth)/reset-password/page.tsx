@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       return;
     }
     if (!matches) {
-      setError('비밀번호가 일치하지 않습니다.');
+      setError('비밀번호가 일치하지 않아요.');
       return;
     }
     setSubmitting(true);
@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
         }
       >
         <div className="rounded-md border border-bad/40 bg-bad-soft px-4 py-3 text-[13px] text-bad">
-          링크가 유효하지 않습니다. 비밀번호 찾기 페이지에서 새 메일을 요청해주세요.
+          링크가 유효하지 않아요. 비밀번호 찾기 페이지에서 새 메일을 요청해 주세요.
         </div>
       </AuthCard>
     );
@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
         }
       >
         <div className="rounded-md border border-good/40 bg-good-soft px-4 py-3 text-[13px] text-good">
-          비밀번호가 안전하게 저장되었습니다.
+          비밀번호가 안전하게 저장됐어요.
         </div>
       </AuthCard>
     );

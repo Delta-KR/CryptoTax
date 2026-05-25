@@ -127,7 +127,7 @@ export default function SignupPage() {
         <div className="rounded-md border border-warn/40 bg-warn-soft px-4 py-5 text-[13px] leading-[1.6] text-warn">
           <div className="mb-1 font-bold">이미 가입된 이메일입니다</div>
           <div className="mb-3">
-            <strong>{email}</strong>은 이미 Kontaxt 계정으로 등록되어 있습니다.
+            <strong>{email}</strong>은 이미 Kontaxt 계정으로 등록돼 있어요.
             기존 비밀번호로 로그인하거나, 비밀번호를 잊으셨다면 재설정하세요.
           </div>
           <div className="flex gap-2">
@@ -149,8 +149,8 @@ export default function SignupPage() {
         <div className="rounded-md border border-good/40 bg-good-soft px-4 py-5 text-[13px] leading-[1.6] text-good">
           <div className="mb-1 font-bold">인증 이메일 발송 완료</div>
           <div>
-            <strong>{email}</strong>로 인증 메일을 보냈습니다.
-            받은 메일의 링크를 클릭하면 가입이 완료되고 자동 로그인됩니다.
+            <strong>{email}</strong>로 인증 메일을 보냈어요.
+            받은 메일의 링크를 클릭하면 가입이 완료되고 자동 로그인돼요.
           </div>
         </div>
       ) : (
@@ -160,7 +160,7 @@ export default function SignupPage() {
           <strong className="font-semibold">선택한 플랜: {PLAN_LABEL[pendingPlan]}</strong>
           <span className="text-ink-2/80">
             {' '}— 결제는 곧 출시 예정. 지금 가입하면 결과를 무료로 미리보고 출시 시 우선
-            알림을 받습니다.
+            알림을 받아요.
           </span>
         </div>
       )}

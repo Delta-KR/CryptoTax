@@ -16,7 +16,7 @@ export default function BillingPage() {
     <>
       <PageHeader
         title="구독 및 결제"
-        description="지금은 단일 과세연도 결제로 신고 시즌을 해결하세요. 연간 구독은 2026.Q4 출시 예정입니다."
+        description="지금은 단일 과세연도 결제로 신고 시즌을 해결하세요. 연간 구독은 2026.Q4 출시 예정이에요."
         right={
           <Pill tone="brand" size="md">
             현재 {plans.find((p) => p.id === current)?.name}

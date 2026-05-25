@@ -81,7 +81,7 @@ export default function ProfilePage() {
       } catch {
         // refresh 실패해도 server-side 저장은 성공 — 다음 페이지 로드 시 반영됨.
       }
-      toast.show('이름이 저장되었습니다.', 'success');
+      toast.show('이름이 저장됐어요.', 'success');
     } else {
       toast.show(result.error ?? '저장 실패', 'error');
     }
@@ -114,7 +114,7 @@ export default function ProfilePage() {
       return;
     }
     if (newPw !== newPwConfirm) {
-      setConfirmError('새 비밀번호가 일치하지 않습니다.');
+      setConfirmError('새 비밀번호가 일치하지 않아요.');
       return;
     }
     if (TURNSTILE_ENABLED && !captchaToken) {
@@ -135,16 +135,16 @@ export default function ProfilePage() {
       setOldPw('');
       setNewPw('');
       setNewPwConfirm('');
-      toast.show('비밀번호가 변경되었습니다.', 'success');
+      toast.show('비밀번호가 변경됐어요.', 'success');
       return;
     }
     // 서버가 돌려준 code에 따라 적절한 입력란에 에러 표시.
     switch (result.code) {
       case 'wrong_password':
-        setOldPwError(result.error ?? '기존 비밀번호가 일치하지 않습니다.');
+        setOldPwError(result.error ?? '기존 비밀번호가 일치하지 않아요.');
         break;
       case 'weak':
-        setNewPwError(result.error ?? '새 비밀번호 조건을 충족하지 않습니다.');
+        setNewPwError(result.error ?? '새 비밀번호 조건을 충족하지 않아요.');
         break;
       case 'captcha_failed':
       case 'oauth_only':

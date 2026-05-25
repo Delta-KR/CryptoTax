@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
     return (
       <AuthCard
         title="이메일을 확인해주세요"
-        subtitle={`${email} 으로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하세요.`}
+        subtitle={`${email} 으로 비밀번호 재설정 링크를 보냈어요. 받은 편지함을 확인하세요.`}
         footer={
           <Link href="/login" className="font-medium text-brand underline">
             로그인으로 돌아가기
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthCard
       title="비밀번호 찾기"
-      subtitle="가입 시 사용한 이메일을 입력하면 재설정 링크를 보내드립니다."
+      subtitle="가입 시 사용한 이메일을 입력하면 재설정 링크를 보내드려요."
       footer={
         <Link href="/login" className="font-medium text-brand underline">
           로그인으로 돌아가기
