@@ -931,7 +931,11 @@ export default function TaxPage() {
                 이월 보유 자산 ({year + 1}년 신고 시작점)
               </h2>
               <p className="mt-0.5 text-[12px] text-muted">
-                {year}년 종료 시점 잔여 lots — 다음 해 매도 시 이 lot들이 우선 소비됩니다 (FIFO)
+                {method === 'totalAverage'
+                  ? `${year}년 종료 시점 잔여 보유분 — 다음 해 총평균 단가의 기초 보유분으로 이월됩니다 (시행령 §92②4호)`
+                  : method === 'fifo'
+                  ? `${year}년 종료 시점 잔여 lots — 다음 해 매도 시 이 lot들이 우선 소비됩니다 (FIFO)`
+                  : `${year}년 종료 시점 잔여 lots — 다음 해 매도 시 이 lot들의 평균 단가가 기준이 됩니다 (이동평균)`}
               </p>
             </div>
             <Pill tone="brand" size="sm">
