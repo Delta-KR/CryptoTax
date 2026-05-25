@@ -265,7 +265,7 @@ export function Hero() {
             <span className="text-brand">한 번에 정리해요.</span>
           </h1>
           <p className="mb-10 max-w-[520px] text-[18px] leading-[1.6] text-muted text-pretty">
-            Upbit·Bithumb·Binance 다 한 번에. 5월 신고할 때 PDF 한 장만 챙기면 돼요.
+            Upbit·Bithumb·Binance 다 한 번에. 5월엔 PDF 한 장이면 돼요.
           </p>
 
           <div className="mb-7 flex flex-wrap items-center gap-2.5">
