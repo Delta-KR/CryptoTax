@@ -238,7 +238,7 @@ export default function TermsPage() {
 
           <div className="mt-12 rounded-md border border-line-2 bg-bg-soft px-5 py-4 text-[13px] leading-[1.7] text-muted">
             <div className="mb-1 font-semibold text-ink-2">운영자 연락처</div>
-            <div>이메일: deltakr@icloud.com</div>
+            <div>이메일: support@kontaxt.kr</div>
           </div>
         </div>
       </section>

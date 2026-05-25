@@ -263,7 +263,7 @@ export default function PrivacyPage() {
               <p>
                 <span className="font-semibold text-ink">개인정보 보호책임자</span>
               </p>
-              <p>이메일: deltakr@icloud.com</p>
+              <p>이메일: support@kontaxt.kr</p>
               <p className="mt-2 text-[13px] text-muted">
                 ※ 사업자 등록 후 상호·사업자등록번호·소재지 정보가 추가될 예정입니다.
               </p>
