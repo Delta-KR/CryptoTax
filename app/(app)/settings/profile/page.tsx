@@ -176,7 +176,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <PageHeader title="프로필 관리" description="개인 정보와 비밀번호를 관리합니다." />
+      <PageHeader title="프로필 관리" description="개인 정보와 비밀번호를 관리해요." />
 
       <div className="flex flex-col gap-5">
         {/* 기본 정보 */}
@@ -268,8 +268,8 @@ export default function ProfilePage() {
           <Card padding="lg">
             <h2 className="mb-2 text-[16px] font-bold text-ink">비밀번호</h2>
             <p className="text-[13px] text-muted">
-              소셜 로그인으로 가입한 계정입니다. 비밀번호 관리는 연결된 소셜 제공자(예: Google,
-              Kakao)에서 진행해주세요.
+              소셜 로그인으로 가입한 계정이에요. 비밀번호 관리는 연결된 소셜 제공자(예: Google,
+              Kakao)에서 진행해 주세요.
             </p>
           </Card>
         )}
@@ -278,7 +278,7 @@ export default function ProfilePage() {
         <Card padding="lg" className="border-bad/30 bg-bad-soft/50">
           <h2 className="text-[16px] font-bold text-bad">위험 영역</h2>
           <p className="mt-1.5 text-[13px] text-ink-2">
-            회원 탈퇴 시 모든 거래 데이터와 계산 결과가 삭제되며 복구할 수 없습니다.
+            회원 탈퇴 시 모든 거래 데이터와 계산 결과가 삭제되고 복구할 수 없어요.
           </p>
           <div className="mt-4">
             <Button variant="danger" onClick={() => setDeleteOpen(true)} disabled={deleting}>
@@ -292,7 +292,7 @@ export default function ProfilePage() {
         open={deleteOpen}
         onClose={() => (!deleting ? setDeleteOpen(false) : undefined)}
         title="정말 탈퇴하시겠어요?"
-        description="이 작업은 되돌릴 수 없습니다. 모든 거래 데이터, 세금 계산 결과, 결제 내역이 영구 삭제됩니다."
+        description="이 작업은 되돌릴 수 없어요. 모든 거래 데이터, 세금 계산 결과, 결제 내역이 영구 삭제돼요."
         size="sm"
         footer={
           <>

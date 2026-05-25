@@ -248,7 +248,7 @@ export default function DashboardPage() {
           )
         ) : (
           <p className="py-6 text-center text-[13px] text-muted">
-            {year}년 매도 거래가 없습니다.
+            {year}년 매도 거래가 없어요.
           </p>
         )}
       </Card>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
           </Table>
         ) : (
           <p className="border-t border-line-2 px-6 py-12 text-center text-[13px] text-muted">
-            {year}년 거래가 없습니다.
+            {year}년 거래가 없어요.
           </p>
         )}
       </Card>

@@ -33,10 +33,10 @@ export default function SimulatorPage() {
       <h1 className="mt-3 text-[36px] font-extrabold leading-[1.12] tracking-tighter3 text-ink lg:text-[52px]">
         지금 팔면 세금 얼마.
       </h1>
-      <p className="mt-5 max-w-[640px] text-[16px] leading-[1.65] text-muted lg:text-[17px]">
-        한국 가상자산 양도소득세 (2027.01.01 시행, 2028.05 첫 확정신고) 자동 계산.
-        회원가입 없이 매수가·매도가·수량만 입력하면 산출세액 + 신고 누락 시
-        가산세까지 한 화면에서 확인한다.
+      <p className="mt-5 max-w-[640px] text-[16px] leading-[1.65] text-muted text-pretty lg:text-[17px]">
+        한국 가상자산 양도소득세(2027.01.01 시행, 2028.05 첫 확정신고) 자동 계산이에요.
+        회원가입 없이 매수가·매도가·수량만 넣으면 산출세액 + 신고 누락 시 가산세까지
+        한 화면에서 바로 확인할 수 있어요.
       </p>
 
       {/* Form + Result */}
@@ -49,9 +49,9 @@ export default function SimulatorPage() {
         <h2 className="text-[22px] font-extrabold tracking-tighter3 text-ink lg:text-[28px]">
           한 번 더 정확하게.
         </h2>
-        <p className="mx-auto mt-3 max-w-[520px] text-[14px] leading-[1.65] text-muted lg:text-[15px]">
-          거래내역 전체를 업로드하면 거주자 법정 총평균법(시행령 §88①) · 의제취득가액 · 환율 변환을
-          자동 적용해서 한국 세법 양식의 PDF 신고서까지 생성한다.
+        <p className="mx-auto mt-3 max-w-[520px] text-[14px] leading-[1.65] text-muted text-pretty lg:text-[15px]">
+          거래내역 전체를 올리면 거주자 법정 총평균법(시행령 §88①)·의제취득가액·환율 변환까지
+          자동 적용해서 한국 세법 양식의 PDF 신고서를 만들어 드려요.
         </p>
         <Link
           href="/signup"
@@ -62,9 +62,9 @@ export default function SimulatorPage() {
       </div>
 
       {/* Footer 안내 */}
-      <p className="mt-12 max-w-[720px] text-[12.5px] leading-[1.7] text-muted-2">
-        본 시뮬레이터는 단일 거래 추정치이며 실제 신고와 차이가 있을 수 있다. 정확한 세액은
-        전체 거래내역으로 산출된 PDF 리포트를 기준으로 한다. 가산세 비율은
+      <p className="mt-12 max-w-[720px] text-[12.5px] leading-[1.7] text-muted-2 text-pretty">
+        본 시뮬레이터는 단일 거래 추정치라 실제 신고와 차이가 있을 수 있어요. 정확한 세액은
+        전체 거래내역으로 만든 PDF 리포트가 기준이에요. 가산세 비율은
         국세기본법 §47의2~4 기준 — 무신고 일반 20%, 무신고 부정 40%, 과소신고 일반 10%,
         납부지연 일 0.022%(연 환산 약 8.03%).
       </p>

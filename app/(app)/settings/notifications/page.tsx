@@ -20,7 +20,7 @@ const items: NotificationItem[] = [
   {
     key: 'email',
     label: '이메일 알림 전체',
-    description: '아래 항목 중 활성화된 알림이 이메일로 전송됩니다.',
+    description: '아래 항목 중 활성화된 알림이 이메일로 전송돼요.',
   },
   {
     key: 'transactionAdded',
@@ -64,7 +64,7 @@ export default function NotificationsPage() {
     <>
       <PageHeader
         title="알림 설정"
-        description="원하는 알림만 받도록 세부적으로 조정할 수 있습니다."
+        description="원하는 알림만 받도록 세부 조정할 수 있어요."
       />
 
       <Card padding="none">
@@ -92,7 +92,7 @@ export default function NotificationsPage() {
       </Card>
 
       <p className="mt-4 text-[12px] text-muted">
-        변경사항은 자동으로 저장됩니다.
+        변경사항은 자동으로 저장돼요.
       </p>
     </>
   );
