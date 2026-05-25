@@ -80,19 +80,21 @@ prod 영향이라 사용자 명시 허락 후만. `apply_migration`은 reversibl
 
 1. **작성 전** — VOICE.md §10 컨텍스트 매트릭스에서 해당 위치(Hero/Section Title/FAQ/Button/Email H1/Legal Clause 등) 표준 길이·종결어 확인
 2. **작성 중** — §3 종결어 (-습니다 통일, 해요체 금지), §6 마침표 (SectionTitle도 마침표·물음표), §5 한·영 병기, §7 숫자 한국식, §8 금지어 회피
-3. **작성 후 — grep 3종 필수 통과 (모두 0건)**:
+3. **작성 후 — grep 3종 필수 통과 (모두 0건)** — humanizer 신규 키워드 포함:
    ```bash
-   # Soft 금지어
-   grep -En "솔루션|스마트한|원스톱|초간단|초고속|혁신|차원이 다른|걱정 없이|고민 끝|꿀팁|꿀템" <file>
-   # Hard 금지어
-   grep -En "고객님|여러분|단 한 번의 클릭|이제 더 이상|~에 지치셨나요|!" <file>
-   # AI 안티패턴
-   grep -En "강력하고|정확하며|신뢰할 수 있는|완벽한|최고의|압도적|매우|굉장히|정말로" <file>
+   # Soft 금지어 (§8 + humanizer puffing)
+   grep -En "솔루션|스마트한|원스톱|초간단|초고속|혁신|차원이 다른|걱정 없이|고민 끝|꿀팁|꿀템|역사적 전환점|기념비적|큰 도약|밝은 미래|성장의 길" <file>
+   # Hard 금지어 (§8 + humanizer 챗봇·아첨·signposting)
+   grep -En "고객님|여러분|단 한 번의 클릭|이제 더 이상|~에 지치셨나요|!|도움이 되셨길|도움이 되길 바랍|필요하시면 알려|추가 질문 있으|좋은 질문|정말 좋은|이제 살펴|한번 알아|다음으로 넘어" <file>
+   # AI 안티패턴 (§9 + humanizer copula·authority)
+   grep -En "강력하고|정확하며|신뢰할 수 있는|완벽한|최고의|압도적|매우|굉장히|정말로|역할을 합니다|자리잡고 있|기능합니다|본질적으로|핵심은|정말 중요한|결국 중요한|단순한 .* 아니라|뿐만 아니라" <file>
    ```
-4. **복잡한 카피·새 페이지/이메일 작성 시** — `brand-voice:enforce-voice` 스킬 호출 (자동으로 `.claude/brand-voice-guidelines.md` 발견 → 적용)
+4. **복잡한 카피·새 페이지/이메일 작성 시 — 스킬 호출 옵션 2가지**:
+   - **한국어 카피** → `brand-voice:enforce-voice` (자동으로 `.claude/brand-voice-guidelines.md` 발견 → Kontaxt 컨텍스트 적용)
+   - **영문 카피·문서 (README, business plan 등)** → `/humanizer` ([.claude/skills/humanizer/](.claude/skills/humanizer/SKILL.md) project-local vendor, Wikipedia "Signs of AI writing" 29 패턴)
 5. **새 안티패턴·드리프트 발견 시** — VOICE.md §8/§9 보강 + §14 변경 이력 한 줄 + 미러 sync (`cp VOICE.md .claude/brand-voice-guidelines.md`)
 
-미해결 drift (다음 PR 대상): SectionTitle 마침표 10개 · 해요체 3건(pricing:149·roadmap:117,128) · 이모지 1건(guide:325 ⚠) · Tax-Loss Harvesting 영문 단독(pricing:166) · README 1,550만 vs cta 1,550만 sync.
+**drift fix 완료**: [PR #57](https://github.com/Delta-KR/kontaxt/pull/57) (`f93e456`) — SectionTitle 마침표 12건 · 해요체 4건 · 이모지 1건 · Tax-Loss Harvesting 병기 · README 통계 sync.
 
 ---
 
@@ -197,6 +199,11 @@ npm run email:dev         # http://localhost:3001 — 실시간 미리보기
 
 ## 변경 이력
 
+- **2026-05-25 (humanizer 통합)** — [blader/humanizer](https://github.com/blader/humanizer) Claude Code 스킬 vendor + VOICE.md §9 한국어 통합 + grep 3종 보강
+  - `.claude/skills/humanizer/` project-local vendor (4 파일, .git 제거). 호출 `/humanizer` — Wikipedia "Signs of AI writing" 기반 29 패턴
+  - VOICE.md §9: 12 → 28 패턴 (9-A Kontaxt 한국어 특화 12 + 9-B humanizer 통합 16). 영어 위주 13 패턴(title case·hyphenated word pairs·curly quotes 등) 제외, 한국어 적용 가능 16 패턴을 한국어 Before/After 예시로 재작성
+  - §12 grep 3종 보강 — Soft·Hard·AI 각각에 humanizer 신규 키워드 추가 (역사적 전환점/기념비적/자리잡고 있/도움이 되셨길/본질적으로/단순한 X가 아니라 등)
+  - 작업 패턴 5) 업데이트 — 한국어 카피 → `brand-voice:enforce-voice`, 영문 카피 → `/humanizer` 라우팅 명시
 - **2026-05-25** — 브랜드 보이스 가이드 분리 + 작업 패턴 5번 추가
   - 신규 `VOICE.md` 562줄 — 페르소나·종결어·문장 길이·한·영 혼용·구두점·숫자·금지어 사전·AI 12가지 언어 안티패턴·28개 컨텍스트 톤 매트릭스·We Are/We Are Not·작성 체크리스트·9개 정책 결정 (Q1~Q9)
   - 미러: `.claude/brand-voice-guidelines.md` (brand-voice 스킬 자동 발견 경로)
@@ -204,7 +211,7 @@ npm run email:dev         # http://localhost:3001 — 실시간 미리보기
   - 작업 패턴 5) "사용자-노출 카피 작성·수정 — VOICE.md 강제 통과" 신설 — grep 3종 + brand-voice:enforce-voice 스킬 호출 패턴
   - 핵심 문서 섹션에 VOICE.md 추가
   - 카피 톤 규칙(이메일) VOICE.md 참조로 정합
-  - 남은 작업: drift fix PR (SectionTitle 마침표 10개·해요체 3건·이모지 1건·Tax-Loss Harvesting 병기·README 1,550만 sync)
+  - drift fix 완료: [PR #57](https://github.com/Delta-KR/kontaxt/pull/57) (`f93e456`)
 - **2026-05-23** — Working memory 현행화
   - 도메인 sync (`kontaxt.app` → `kontaxt.kr`)
   - graphify 사용 가이드 상단으로 이동·강조

@@ -162,9 +162,9 @@ export function Pricing() {
 
         <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
           <strong className="font-semibold text-ink-2">단일 과세연도와 구독의 차이</strong>{' '}
-          단일은 매년 5월 신고 시즌 1회 결제용입니다. 구독은 단순한 PDF 무제한이 아니라
-          상시 손익 대시보드 · 절세 매도 알림 (Tax-Loss Harvesting) · 거래소 API 자동 연동을 더한
-          &ldquo;연중 절세 도구&rdquo;입니다 (2026.Q4 출시 시 상세 안내).
+          단일은 매년 5월 신고 시즌 1회 결제용입니다. 구독은 PDF 무제한에 더해
+          상시 손익 대시보드 · 절세 매도 알림 (Tax-Loss Harvesting) · 거래소 API 자동 연동을 포함하는
+          연중 절세 도구입니다 (2026.Q4 출시 시 상세 안내).
         </div>
 
         <p className="mt-6 text-center text-[12.5px] text-muted-2">
