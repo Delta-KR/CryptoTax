@@ -110,7 +110,7 @@ export function Exchanges() {
         <div className="mb-14 text-center">
           <SectionEyebrow>SUPPORTED EXCHANGES</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            국내외 주요 거래소 지원
+            국내외 주요 거래소 지원.
           </h2>
           <p className="mx-auto max-w-[580px] text-[17px] leading-[1.6] text-muted">
             초기 출시 시 2개 거래소. 매월 새 거래소가 추가됩니다.

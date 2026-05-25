@@ -141,12 +141,12 @@ export function Pricing() {
         <div className="mb-10 text-center">
           <SectionEyebrow>PRICING</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            상황에 맞게 한 번만 선택하세요
+            상황에 맞게 한 번만 선택하세요.
           </h2>
           <p className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted">
             먼저 <strong className="font-semibold text-ink">단일 과세연도</strong>로 신고 시즌을
             해결하세요. 연중 절세 도구가 필요하면 <strong className="font-semibold text-ink">구독</strong>이
-            2026.Q4 출시됩니다. 모두 결제 전에 무료로 결과를 미리 확인할 수 있어요.
+            2026.Q4 출시됩니다. 모두 결제 전에 무료로 결과를 미리 확인할 수 있습니다.
           </p>
           <div className="mx-auto mt-5 inline-flex max-w-[640px] items-center gap-2 rounded-full border border-warn/40 bg-warn-soft px-3.5 py-1.5 text-[12.5px] font-medium text-warn">
             <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-warn" />
@@ -163,7 +163,7 @@ export function Pricing() {
         <div className="mx-auto mt-8 max-w-[760px] rounded-lg border border-line-2 bg-bg-soft px-5 py-4 text-center text-[13px] leading-[1.65] text-muted">
           <strong className="font-semibold text-ink-2">단일 과세연도와 구독의 차이</strong>{' '}
           단일은 매년 5월 신고 시즌 1회 결제용입니다. 구독은 단순한 PDF 무제한이 아니라
-          상시 손익 대시보드 · Tax-Loss Harvesting 알림 · 거래소 API 자동 연동을 더한
+          상시 손익 대시보드 · 절세 매도 알림 (Tax-Loss Harvesting) · 거래소 API 자동 연동을 더한
           &ldquo;연중 절세 도구&rdquo;입니다 (2026.Q4 출시 시 상세 안내).
         </div>
 

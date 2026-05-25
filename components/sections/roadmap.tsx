@@ -106,7 +106,7 @@ export function Roadmap() {
         <div className="mb-10 text-center">
           <SectionEyebrow>ROADMAP</SectionEyebrow>
           <h2 className="mb-4 text-[32px] font-extrabold leading-[1.15] tracking-tighter3 text-ink lg:text-[44px]">
-            지금 시작해야 하는 이유
+            지금 시작해야 하는 이유.
           </h2>
           <p
             className="mx-auto max-w-[640px] text-[17px] leading-[1.6] text-muted"
@@ -114,7 +114,7 @@ export function Roadmap() {
           >
             2027년 1월 1일부터 한국에서 가상자산 양도소득세가 시행됩니다.
             <br className="hidden sm:inline" />
-            {' '}첫 신고는 2028년 5월, 그 사이에 무엇이 어떻게 추가되는지 미리 보여드릴게요.
+            {' '}첫 신고는 2028년 5월, 그 사이에 무엇이 어떻게 추가되는지 미리 안내합니다.
           </p>
         </div>
 
@@ -125,7 +125,7 @@ export function Roadmap() {
         </div>
 
         <p className="mt-8 text-center text-[12.5px] text-muted-2">
-          일정은 진행 상황에 따라 조정될 수 있어요 · 본 정보는 세무 조언이 아닙니다
+          일정은 진행 상황에 따라 조정될 수 있습니다 · 본 정보는 세무 조언이 아닙니다.
         </p>
       </div>
     </section>

@@ -242,7 +242,7 @@ export default function GuidePage() {
           <SectionEyebrow>USER GUIDE</SectionEyebrow>
           <h1 className="mb-4 text-[36px] font-extrabold leading-[1.12] tracking-tighter3 text-ink lg:text-[52px]">
             처음 사용하는 분을 위한 <br className="hidden sm:block" />
-            <span className="text-brand">단계별 안내</span>
+            <span className="text-brand">단계별 안내.</span>
           </h1>
           <p className="mx-auto max-w-[640px] text-[17px] leading-[1.65] text-muted">
             거래내역 파일을 어떻게 받는지부터 결과를 어떻게 해석하는지까지, 전체 사용 흐름을 한 화면에 모았습니다.
@@ -293,7 +293,7 @@ export default function GuidePage() {
           <div className="mb-10 text-center">
             <SectionEyebrow>EXCHANGE GUIDES</SectionEyebrow>
             <h2 className="mb-3 text-[28px] font-extrabold leading-[1.2] tracking-tighter3 text-ink lg:text-[36px]">
-              거래소별 거래내역 다운로드 방법
+              거래소별 거래내역 다운로드 방법.
             </h2>
             <p className="mx-auto max-w-[560px] text-[15px] leading-[1.65] text-muted">
               현재 지원하는 거래소는 업비트와 바이낸스(현물)입니다. 빗썸 등은 순차 추가 예정.
@@ -322,7 +322,7 @@ export default function GuidePage() {
               steps={BINANCE_STEPS}
               note={{
                 tone: 'warn',
-                text: '⚠ Futures(선물) 거래내역은 미지원입니다. 한국 세법상 양도소득세 대상은 현물(Spot)만 해당하며, 선물은 파생상품 카테고리로 별도 처리됩니다.',
+                text: 'Futures(선물) 거래내역은 미지원입니다. 한국 세법상 양도소득세 대상은 현물(Spot)만 해당하며, 선물은 파생상품 카테고리로 별도 처리됩니다.',
               }}
             />
           </div>
@@ -335,7 +335,7 @@ export default function GuidePage() {
           <div className="mb-10 text-center">
             <SectionEyebrow>FAQ</SectionEyebrow>
             <h2 className="text-[28px] font-extrabold leading-[1.2] tracking-tighter3 text-ink lg:text-[36px]">
-              자주 묻는 질문
+              자주 묻는 질문.
             </h2>
           </div>
 
@@ -364,7 +364,7 @@ export default function GuidePage() {
         <div className="mx-auto max-w-content">
           <div className="mx-auto max-w-[720px] rounded-[18px] border border-brand/30 bg-brand-faint px-8 py-10 text-center">
             <h3 className="mb-3 text-[24px] font-extrabold tracking-tighter3 text-ink lg:text-[30px]">
-              준비됐다면 지금 시작하세요
+              준비됐다면 지금 시작하세요.
             </h3>
             <p className="mx-auto mb-6 max-w-[440px] text-[14px] leading-[1.6] text-muted">
               회원가입 없이 바로 파일을 업로드해서 계산해볼 수 있습니다.

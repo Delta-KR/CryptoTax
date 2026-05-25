@@ -103,7 +103,7 @@ export function Security() {
           <SectionTitle className="mx-auto">
             당신의 데이터는
             <br />
-            어떻게 보호되나요
+            어떻게 보호되나요?
           </SectionTitle>
           <SectionLead className="mx-auto">
             한국 핀테크 표준을 기본으로, 보관하지 않을 데이터는 처음부터 받지 않습니다.
