@@ -98,7 +98,7 @@ export function SimulatorForm() {
 
         {!hasInput ? (
           <p className="mt-6 text-[14px] leading-[1.65] text-muted">
-            세 값을 모두 입력하면 자동 계산된다.
+            세 값을 모두 넣으면 자동으로 계산돼요.
           </p>
         ) : (
           <div className="mt-6 space-y-5">
@@ -155,10 +155,10 @@ export function SimulatorForm() {
                 aria-live="polite"
                 className="flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-bg-soft px-4 py-2.5 text-[13.5px] font-semibold text-ink transition-colors hover:bg-brand-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
-                {copied ? '복사 완료 — 친구한테 보내자' : '이 시나리오 URL 복사'}
+                {copied ? '복사 완료 — 친구한테 보내세요' : '이 시나리오 URL 복사'}
               </button>
               <p className="mt-2 text-[11.5px] text-muted-2">
-                URL 클릭만으로 동일한 결과가 열린다. 카카오톡·디시·트위터 공유에 활용.
+                URL만 클릭하면 같은 결과가 열려요. 카카오톡·디시·트위터에 공유해 보세요.
               </p>
             </div>
           </div>

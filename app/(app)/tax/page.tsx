@@ -129,7 +129,7 @@ function HoldingsAfterTable({
   if (holdings.length === 0) {
     return (
       <p className="px-6 py-10 text-center text-[13px] text-muted">
-        해당 연도 종료 시점 보유 자산이 없습니다.
+        해당 연도 종료 시점 보유 자산이 없어요.
       </p>
     );
   }
@@ -235,7 +235,7 @@ function ExchangeCoinMatrix({
   if (rows.length === 0) {
     return (
       <p className="px-6 py-10 text-center text-[13px] text-muted">
-        해당 연도 거래가 없습니다.
+        해당 연도 거래가 없어요.
       </p>
     );
   }
@@ -320,7 +320,7 @@ function RealizedGainList({
   if (gains.length === 0) {
     return (
       <p className="px-6 py-10 text-center text-[13px] text-muted">
-        해당 연도 매도 거래가 없습니다.
+        해당 연도 매도 거래가 없어요.
       </p>
     );
   }
@@ -800,7 +800,7 @@ export default function TaxPage() {
             </div>
           ) : (
             <p className="border-t border-line-2 px-6 py-12 text-center text-[13px] text-muted">
-              {year}년 매도 거래가 없습니다.
+              {year}년 매도 거래가 없어요.
             </p>
           )}
           {result.perCoin.length > 0 && (

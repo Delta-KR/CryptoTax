@@ -399,12 +399,12 @@ function DataBackupCard() {
   function handleExport() {
     const json = exportToJSON();
     if (!json) {
-      setMessage({ type: 'info', text: '내보낼 거래 데이터가 없습니다.' });
+      setMessage({ type: 'info', text: '내보낼 거래 데이터가 없어요.' });
       return;
     }
     const date = new Date().toISOString().slice(0, 10);
     downloadAsFile(json, `kontaxt-backup-${date}.json`);
-    setMessage({ type: 'success', text: '백업 파일이 다운로드됐습니다.' });
+    setMessage({ type: 'success', text: '백업 파일이 다운로드됐어요.' });
   }
 
   function handleImportClick() {

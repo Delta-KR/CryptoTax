@@ -29,7 +29,7 @@ const options: MethodOption[] = [
     name: '총평균법',
     short: 'Total Average · 시행령 §88① · §92②4호',
     description:
-      '거주자 가상자산 양도소득의 법정 평가방법. 과세기간(1.1~12.31) 개시일 보유분과 연내 매수분의 총가액을 총수량으로 나눈 평균단가로 매도 손익을 산정합니다.',
+      '거주자 가상자산 양도소득의 법정 평가방법. 과세기간(1.1~12.31) 개시일 보유분과 연내 매수분의 총가액을 총수량으로 나눈 평균단가로 매도 손익을 산정해요.',
     pros: [
       '거주자 신고에 법정 적용 (시행령 §88①, 2025-02-28 개정)',
       '연 단위 평균이라 거래 순서 정밀도 의존이 낮음',
@@ -46,7 +46,7 @@ const options: MethodOption[] = [
     name: '선입선출법 (FIFO)',
     short: 'First-In First-Out — 참고용 시나리오',
     description:
-      '먼저 매수한 코인부터 매도된 것으로 계산하는 방식. 현행 시행령상 거주자 신고에는 적용되지 않으며, 참고용 시나리오 비교에만 사용됩니다.',
+      '먼저 매수한 코인부터 매도된 것으로 계산하는 방식. 현행 시행령상 거주자 신고에는 적용되지 않고, 참고용 시나리오 비교에만 사용돼요.',
     pros: ['매도-매수 lot 매칭으로 audit trail이 명확'],
     cons: ['거주자 신고에는 비표준 — 시행령 §88①과 불일치', '연내 거래 순서에 결과가 민감'],
     badge: '참고용',
@@ -56,7 +56,7 @@ const options: MethodOption[] = [
     name: '이동평균법 (MA)',
     short: 'Moving Average — 시행령 §183⑥ (비거주자)',
     description:
-      '매수 시마다 평균 취득가를 갱신하는 방식. 시행령 §183⑥에 따라 비거주자 가상자산 양도소득의 법정 평가방법입니다. 거주자는 적용 대상이 아닙니다.',
+      '매수 시마다 평균 취득가를 갱신하는 방식. 시행령 §183⑥에 따라 비거주자 가상자산 양도소득의 법정 평가방법이에요. 거주자는 적용 대상이 아니에요.',
     pros: ['비거주자 신고 법정 (§183⑥)', '평균 자체는 매수 시점에 확정'],
     cons: ['거주자에게는 비표준', '매수마다 평균 재계산 필요'],
     badge: '비거주자',
@@ -93,7 +93,7 @@ export default function TaxSettingsPage() {
         : '이동평균법';
     if (!hasData) {
       toast.show(
-        `계산 방식이 ${methodLabel}으로 변경되었습니다. 다음 업로드부터 적용됩니다.`,
+        `계산 방식이 ${methodLabel}으로 변경됐어요. 다음 업로드부터 적용돼요.`,
         'success',
       );
       router.push('/tax');
@@ -137,7 +137,7 @@ export default function TaxSettingsPage() {
     <>
       <PageHeader
         title="계산 방식 설정"
-        description="거주자 가상자산 양도소득은 시행령 §88①에 따라 총평균법이 법정 방식입니다. 다른 방식은 참고용·비거주자 시나리오 비교에만 사용하세요."
+        description="거주자 가상자산 양도소득은 시행령 §88①에 따라 총평균법이 법정 방식이에요. 다른 방식은 참고용·비거주자 시나리오 비교에만 사용하세요."
       />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -237,7 +237,7 @@ export default function TaxSettingsPage() {
           {submitting
             ? '재계산 중…'
             : dirty
-              ? '변경사항을 적용하면 기존 거래 내역이 새 방식으로 재계산됩니다.'
+              ? '변경사항을 적용하면 기존 거래 내역이 새 방식으로 재계산돼요.'
               : '변경할 방식을 선택해주세요.'}
         </p>
         <Button onClick={handleApply} disabled={!dirty || submitting}>

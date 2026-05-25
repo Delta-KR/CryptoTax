@@ -224,7 +224,7 @@ export default function DeemedCostPage() {
       ),
     );
     toast.show(
-      `${coin} 의제취득가액 저장됨. 세금 계산 페이지에서 자동 재계산됩니다.`,
+      `${coin} 의제취득가액 저장됨. 세금 계산 페이지에서 자동 재계산돼요.`,
       'success',
     );
   }
@@ -248,8 +248,8 @@ export default function DeemedCostPage() {
     setTogglingImputed(null);
     toast.show(
       nextActive
-        ? `${coin} 필요경비 의제 50% 적용됨. 세금 계산 페이지에서 자동 재계산됩니다.`
-        : `${coin} 필요경비 의제 해제됨. 일반 계산으로 복귀합니다.`,
+        ? `${coin} 필요경비 의제 50% 적용됨. 세금 계산 페이지에서 자동 재계산돼요.`
+        : `${coin} 필요경비 의제 해제됨. 일반 계산으로 돌아가요.`,
       'success',
     );
   }
@@ -280,7 +280,7 @@ export default function DeemedCostPage() {
     <>
       <PageHeader
         title="의제취득가액 직접 입력"
-        description="2026-12-31 종가가 부정확하거나 미상장 코인일 때 직접 입력할 수 있습니다. 본인 계산에만 반영됩니다."
+        description="2026-12-31 종가가 부정확하거나 미상장 코인일 때 직접 입력할 수 있어요. 본인 계산에만 반영돼요."
         right={
           <Link href="/tax">
             <Button variant="secondary">세금 계산으로</Button>
@@ -297,7 +297,7 @@ export default function DeemedCostPage() {
               </div>
               <p className="mt-1 text-[12.5px] text-ink-2">
                 자동 적재된 시가가 부정확하거나 미상장 코인의 경우 직접 입력
-                가능합니다. 결제 후 즉시 사용할 수 있어요.
+                가능해요. 결제 후 바로 사용할 수 있어요.
               </p>
             </div>
             <Link href="/billing">
@@ -309,7 +309,7 @@ export default function DeemedCostPage() {
 
       <Card padding="lg">
         <div className="mb-4 text-[13px] leading-[1.65] text-ink-2">
-          <strong className="text-ink">자동 적재가 우선입니다.</strong> 시스템이
+          <strong className="text-ink">자동 적재가 우선이에요.</strong> 시스템이
           매일 KST 01:00에 Upbit 종가를 자동 적재합니다 (Upbit KRW 마켓
           상장 코인 40개+). 다음 경우에만 직접 입력하세요:
           <ul className="ml-5 mt-2 list-disc space-y-1 text-muted">
@@ -326,7 +326,7 @@ export default function DeemedCostPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             title="해당 코인 없음"
-            description="2027-01-01 이전 매수 기록이 있는 코인이 없습니다. 거래내역을 업로드하면 여기에 표시됩니다."
+            description="2027-01-01 이전 매수 기록이 있는 코인이 없어요. 거래내역을 업로드하면 여기에 표시돼요."
           />
         ) : (
           <div className="flex flex-col divide-y divide-line-2">
@@ -374,7 +374,7 @@ export default function DeemedCostPage() {
                     )}
                     {isMissing && (
                       <div className="mt-0.5 text-[11px] text-muted-2">
-                        자동 적재 안 됨. 입력하지 않으면 실 매수가가 사용됩니다.
+                        자동 적재 안 됨. 입력하지 않으면 실 매수가가 쓰여요.
                       </div>
                     )}
                   </div>
@@ -418,7 +418,7 @@ export default function DeemedCostPage() {
           <div>
             <h2 className="text-[16px] font-bold text-ink">필요경비 의제 50%</h2>
             <p className="mt-0.5 text-[12.5px] text-muted">
-              취득가액 입증이 곤란한 코인은 양도가액의 50%를 필요경비로 의제합니다.
+              취득가액 입증이 곤란한 코인은 양도가액의 50%를 필요경비로 의제해요.
             </p>
           </div>
           <Pill tone="warn" size="sm">
@@ -437,14 +437,14 @@ export default function DeemedCostPage() {
           </ul>
           <div className="mt-2 text-[11.5px] text-bad">
             ⚠ 적용 시 그 코인 전체 매도가액의 50%가 양도소득. 평균단가·시가
-            의제·부대비용 모두 무시됩니다. 적용은 사용자 책임 하에 결정합니다.
+            의제·부대비용 모두 무시돼요. 적용은 사용자 책임으로 결정해요.
           </div>
         </div>
 
         {allTradedCoins.length === 0 ? (
           <EmptyState
             title="거래내역 없음"
-            description="거래내역을 업로드하면 여기에 표시됩니다."
+            description="거래내역을 업로드하면 여기에 표시돼요."
           />
         ) : (
           <div className="flex flex-col divide-y divide-line-2">
