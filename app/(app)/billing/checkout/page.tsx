@@ -59,7 +59,7 @@ export default function CheckoutPage() {
               <p className="max-w-[420px] text-[13px] leading-[1.65] text-muted">
                 안전한 결제 처리를 위해 포트원(PortOne) 통합을 진행 중이에요.
                 카카오페이·네이버페이·토스페이·신용카드를 모두 지원하며, 서비스 오픈 시
-                등록하신 이메일로 안내드립니다.
+                등록하신 이메일로 안내드려요.
               </p>
             </div>
             <div className="mt-2 flex gap-2">

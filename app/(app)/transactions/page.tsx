@@ -71,7 +71,7 @@ function TxRateDetail({ tx }: { tx: Transaction }) {
           </div>
           {tx.rateMeta.source === 'static' && (
             <div className="mt-1.5 text-[11px] text-warn">
-              정적 분기별 환율 적용 — 일별 시세 갱신 후 재계산을 권장합니다.
+              정적 분기별 환율 적용 — 일별 시세 갱신 후 재계산을 권해 드려요.
             </div>
           )}
         </>
@@ -359,7 +359,7 @@ export default function TransactionsPage() {
             title={all.length === 0 ? '아직 거래 내역이 없습니다' : '조건에 맞는 거래가 없습니다'}
             description={
               all.length === 0
-                ? '거래소 CSV/PDF/XLS 파일을 업로드하면 자동으로 통합됩니다.'
+                ? '거래소 CSV/PDF/XLS 파일을 업로드하면 자동으로 통합돼요.'
                 : '필터를 조정하거나 검색어를 변경해보세요.'
             }
             action={
@@ -428,7 +428,7 @@ function DataBackupCard() {
       if (result.ok) {
         setMessage({
           type: 'success',
-          text: `${result.transactionCount ?? 0}개 거래를 가져왔습니다. 페이지를 새로고침하면 반영됩니다.`,
+          text: `${result.transactionCount ?? 0}개 거래를 가져왔어요. 페이지를 새로고침하면 반영돼요.`,
         });
       } else {
         setMessage({ type: 'error', text: result.error ?? '가져오기 실패' });
@@ -444,7 +444,7 @@ function DataBackupCard() {
     <div className="mt-8 rounded-lg border border-line bg-card p-5">
       <h2 className="text-[14px] font-bold text-ink">거래 내역 백업</h2>
       <p className="mt-1 text-[12.5px] leading-[1.55] text-muted">
-        JSON 파일로 내보내거나 다른 디바이스에서 가져올 수 있습니다. 데이터는 브라우저에만 저장되어 있어, 다른 디바이스에서 사용하려면 백업 파일이 필요합니다.
+        JSON 파일로 내보내거나 다른 디바이스에서 가져올 수 있어요. 데이터는 브라우저에만 저장되어 있어, 다른 디바이스에서 사용하려면 백업 파일이 필요해요.
       </p>
       <div className="mt-3 flex gap-2">
         <Button variant="secondary" size="sm" onClick={handleExport}>

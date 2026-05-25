@@ -33,7 +33,7 @@ export function FileDrop({
       const file = files[0];
       if (file.size > MAX_FILE_BYTES) {
         onReject?.(
-          `파일이 너무 큽니다 (${(file.size / 1024 / 1024).toFixed(1)}MB). ${MAX_FILE_BYTES / 1024 / 1024}MB 이하만 가능합니다.`,
+          `파일이 너무 커요 (${(file.size / 1024 / 1024).toFixed(1)}MB). ${MAX_FILE_BYTES / 1024 / 1024}MB 이하만 가능해요.`,
         );
         return;
       }

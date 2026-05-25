@@ -85,7 +85,7 @@ export default function HistoryPage() {
               </svg>
             }
             title="결제 내역이 없습니다"
-            description="요금제를 업그레이드하면 결제 내역이 이곳에 표시됩니다."
+            description="요금제를 업그레이드하면 결제 내역이 이곳에 표시돼요."
           />
         </div>
       )}

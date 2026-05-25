@@ -58,7 +58,7 @@ export default function AuthFinishPage() {
         <div className="text-[13px] text-muted">
           {status === 'pending'
             ? '잠시만 기다려주세요.'
-            : '잠시 후 로그인 페이지로 이동합니다.'}
+            : '잠시 후 로그인 페이지로 이동해요.'}
         </div>
       </div>
     </div>

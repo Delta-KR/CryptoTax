@@ -23,7 +23,7 @@ export default function Error({
           예기치 못한 오류가 발생했어요
         </div>
         <p className="mb-5 text-[13px] leading-[1.6] text-muted">
-          페이지를 표시하는 중 문제가 발생했습니다. 다시 시도하거나 메인으로
+          페이지를 표시하는 중 문제가 발생했어요. 다시 시도하거나 메인으로
           돌아가주세요.
         </p>
         <div className="flex items-center justify-center gap-2">

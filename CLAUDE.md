@@ -74,7 +74,10 @@ prod 영향이라 사용자 명시 허락 후만. `apply_migration`은 reversibl
 
 ### 5) 사용자-노출 카피 작성·수정 — VOICE.md 강제 통과
 
-마케팅·앱·이메일·에러·법률 등 사용자 눈에 보이는 모든 한국어 텍스트는 [VOICE.md](VOICE.md)가 단일 source. DESIGN.md = 시각 시스템 / VOICE.md = 언어 시스템 — 두 문서 모두 같은 5대 원칙 공유.
+마케팅·앱·이메일·에러·법률 등 사용자 눈에 보이는 모든 한국어 텍스트는 [VOICE.md](VOICE.md)가 단일 source. **Tier 3 톤 mix 가 Kontaxt 의 공식 브랜드 보이스로 확정** (2026-05-25). DESIGN.md = 시각 시스템 / VOICE.md = 언어 시스템 — 두 문서 모두 같은 5대 원칙 공유.
+
+**친밀 영역** (해요체): 마케팅·CTA·Guide·FAQ·Sample·**(marketing)/simulator**·**(app)/* 인앱 UI**·**(auth)/* 인증**·Toast·Error·Empty state.
+**격식 절대 유지** (-습니다, 6 영역): Security 카드 body·Footer 법적 disclaimer·Email H1·Legal·Report 법적 disclaimer·Example 법조항 인용.
 
 새 카피·기존 카피 수정 시:
 
