@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { consumeFinishNonceAction } from './actions';
 
 // Naver OAuth 등 자체 flow의 magic link verify가 끝난 직후 도착하는 페이지.
 // Supabase admin generateLink로 발급된 link는 redirect_to URL fragment에
@@ -18,6 +19,15 @@ export function FinishClient() {
 
   useEffect(() => {
     async function finish() {
+      // 1회용 nonce consume + delete — server action 안에서만 실제 cookie
+      // delete 가 작동. 여기서 실패하면 phishing 또는 stale state — reject.
+      const { ok } = await consumeFinishNonceAction();
+      if (!ok) {
+        setStatus('error');
+        router.replace('/login?error=invalid_request');
+        return;
+      }
+
       const supabase = createSupabaseBrowserClient();
       const hash = window.location.hash.startsWith('#')
         ? window.location.hash.slice(1)

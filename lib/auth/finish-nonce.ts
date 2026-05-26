@@ -31,14 +31,11 @@ export function buildNonceCookieOptions() {
 }
 
 /**
- * `/auth/finish` server component 에서 1회용 검증.
- * cookie 존재하면 즉시 삭제 후 반환 — 재사용 차단.
+ * Server component 에서 cookie 존재만 sniff (read-only context).
+ * Next 15+ Server Component 는 cookies().delete() 가 작동 안 함 — 실제 1회용
+ * consume 은 별도 server action 에서 (`app/auth/finish/actions.ts`).
  */
-export async function consumeFinishNonce(): Promise<string | null> {
+export async function hasFinishNonce(): Promise<boolean> {
   const store = await cookies();
-  const v = store.get(FINISH_NONCE_COOKIE)?.value ?? null;
-  if (v) {
-    store.delete(FINISH_NONCE_COOKIE);
-  }
-  return v;
+  return store.has(FINISH_NONCE_COOKIE);
 }
