@@ -4,11 +4,6 @@ import { findUserByEmail } from '@/lib/supabase/admin-lookup';
 import { checkRateLimit, getOAuthStartRateLimit } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/auth/client-ip';
 import { NAVER_STATE_COOKIE } from '@/lib/auth/naver';
-import {
-  FINISH_NONCE_COOKIE,
-  buildNonceCookieOptions,
-  generateFinishNonce,
-} from '@/lib/auth/finish-nonce';
 
 // Naver OAuth 콜백:
 // 1. state 검증 (CSRF)
@@ -152,16 +147,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 7. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
-    //    /auth/finish 가 cookie 의 nonce 를 1회용 검증 (audit security P1-6).
-    //    공격자가 victim 한테 직접 /auth/finish#token=... phishing 보내도
-    //    nonce cookie 없으면 reject 됨.
     const response = NextResponse.redirect(linkData.properties.action_link);
     response.cookies.delete(NAVER_STATE_COOKIE);
-    response.cookies.set(
-      FINISH_NONCE_COOKIE,
-      generateFinishNonce(),
-      buildNonceCookieOptions(),
-    );
     return response;
   } catch (e) {
     console.error('[naver/callback] unexpected error:', e);
