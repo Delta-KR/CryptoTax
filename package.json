@@ -13,6 +13,9 @@
     "email:dev": "email dev --dir emails --port 3001",
     "email:build": "tsx scripts/build-emails.ts"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@react-email/components": "^1.0.12",
     "@react-email/render": "^2.0.8",
