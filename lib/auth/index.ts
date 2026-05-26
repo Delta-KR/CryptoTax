@@ -213,10 +213,26 @@ export async function signOut(): Promise<void> {
 }
 
 // 이메일+비번 provider가 연결돼 있는지. OAuth-only 계정에는 비밀번호 변경을 노출하지 않기 위한 가드.
+//
+// 2026-05-26 fix: Naver 가입자는 admin.generateLink 결과 identities='email' 가
+// 박혀서 단순 identities check 만으로는 이메일 가입자로 잘못 분류됨 → 비번 변경
+// 카드 노출되는 UX bug. app_metadata.provider / user_metadata.provider 가 OAuth
+// provider 면 우선 false 반환.
+const OAUTH_PROVIDERS = ['naver', 'google', 'kakao'];
+
 export function hasEmailIdentity(user: {
   identities?: Array<{ provider?: string }> | null;
-  app_metadata?: { providers?: string[] } | null;
+  app_metadata?: { providers?: string[]; provider?: string } | null;
+  user_metadata?: { provider?: string } | null;
 }): boolean {
+  const appProvider = user.app_metadata?.provider;
+  const userProvider = user.user_metadata?.provider;
+  // OAuth-only 사용자 (Naver/Google/Kakao 단독 가입) — generateLink 가 fake email
+  // identity 박은 경우 포함. app_metadata 또는 user_metadata 의 provider 우선.
+  if (appProvider && OAUTH_PROVIDERS.includes(appProvider)) return false;
+  if (userProvider && OAUTH_PROVIDERS.includes(userProvider)) return false;
+
+  // 그 외 — identities 의 'email' 확인 (email+OAuth multi-identity 케이스 포함).
   const providers =
     user.identities?.map((i) => i.provider).filter(Boolean) ??
     user.app_metadata?.providers ??
