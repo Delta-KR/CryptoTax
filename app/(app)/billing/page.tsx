@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/Button';
 import { Pill } from '@/components/ui/Pill';
 import { HoverCard } from '@/components/ui/HoverCard';
 import { plans, type PlanId } from '@/lib/pricing/plans';
-import { useCurrentUser } from '@/lib/auth';
+import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { cn } from '@/lib/utils';
 
 export default function BillingPage() {
-  const { user, loading: userLoading } = useCurrentUser();
+  const { user, loading: userLoading } = useUserContext();
   const current: PlanId = user?.plan ?? 'free';
 
   return (

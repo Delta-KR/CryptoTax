@@ -1,7 +1,9 @@
+'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MobileNav } from '@/components/sections/mobile-nav';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const navLinks = [
   { href: '/#how', label: '작동 방식' },
@@ -13,12 +15,33 @@ const navLinks = [
   { href: '/#pricing', label: '요금제' },
 ];
 
-export async function Nav() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const isAuthed = !!user;
+/**
+ * client component — auth state 만 클라이언트에서 읽어서
+ * marketing layout 전체를 static 으로 유지 (audit perf P1-2 Best 옵션).
+ * 로그인 사용자에게 한 frame "로그인" → "대시보드" 깜빡임이 발생하지만
+ * marketing 페이지 로그인 사용자 비중이 작아 수용 가능 (audit 권장).
+ */
+export function Nav() {
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      setIsAuthed(!!data.session);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+      setIsAuthed(!!session);
+    });
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <nav
