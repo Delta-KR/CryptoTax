@@ -174,6 +174,29 @@ const styles = StyleSheet.create({
     color: '#92400E',
     lineHeight: 1.4,
   },
+  // self-declared worksheet disclaimer — 첫 페이지 header 와 Summary 사이에 1회만.
+  // audit P0-4: server 가 client transactions 입력 신뢰 → amount/price 위조 가능.
+  // 근본 fix (server transactions 저장) 가 privacy 철학 충돌이라 disclaimer 강화로 대응.
+  disclaimerBox: {
+    marginTop: 12,
+    marginBottom: 6,
+    padding: 11,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: '#64748B',
+  },
+  disclaimerTitle: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  disclaimerText: {
+    fontSize: 8.5,
+    color: '#475569',
+    lineHeight: 1.45,
+  },
 });
 
 function formatKRW(n: number): string {
@@ -242,6 +265,15 @@ export function TaxReport({
             </Text>
             <Text style={styles.metaText}>발행일: {generatedAt}</Text>
           </View>
+        </View>
+
+        {/* Self-declared worksheet disclaimer (audit P0-4 — Kontaxt 가 거래소 원본을
+            별도 보관·검증하지 않음을 명시. 격식 톤 — VOICE.md Tier 3 Report 영역). */}
+        <View style={styles.disclaimerBox}>
+          <Text style={styles.disclaimerTitle}>자기 신고용 참고자료 (Self-declared Worksheet)</Text>
+          <Text style={styles.disclaimerText}>
+            본 자료는 회원이 직접 업로드한 거래 내역(거래소 PDF·CSV)을 기반으로 한국 세법(시행령 §88①)에 따라 자동 계산된 자기 신고용 참고자료입니다. Kontaxt는 회원의 거래내역 원본을 서버에 저장·검증하지 않으며, 거래내역의 진위·완전성은 회원 본인이 책임집니다. 최종 신고 시 거래소 원본 PDF, 세무사 검토, 또는 홈택스 직접 입력을 통한 교차 확인을 권장합니다.
+          </Text>
         </View>
 
         {/* Summary */}
@@ -502,7 +534,7 @@ export function TaxReport({
         <Text
           style={styles.footer}
           render={({ pageNumber, totalPages }) =>
-            `본 자료는 자기 신고용 참고자료이며, 최종 신고는 세무사 검토 또는 홈택스 직접 입력을 권장합니다.   ·   페이지 ${pageNumber} / ${totalPages}`
+            `회원 업로드 거래내역 기반 자기 신고용 참고자료 · Kontaxt는 거래소 원본 미검증 · 최종 신고는 세무사 검토 또는 홈택스 권장   ·   페이지 ${pageNumber} / ${totalPages}`
           }
           fixed
         />
@@ -688,7 +720,7 @@ export function TaxReport({
           <Text
             style={styles.footer}
             render={({ pageNumber, totalPages }) =>
-              `본 자료는 자기 신고용 참고자료이며, 최종 신고는 세무사 검토 또는 홈택스 직접 입력을 권장합니다.   ·   페이지 ${pageNumber} / ${totalPages}`
+              `회원 업로드 거래내역 기반 자기 신고용 참고자료 · Kontaxt는 거래소 원본 미검증 · 최종 신고는 세무사 검토 또는 홈택스 권장   ·   페이지 ${pageNumber} / ${totalPages}`
             }
             fixed
           />
@@ -824,7 +856,7 @@ export function TaxReport({
             <Text
               style={styles.footer}
               render={({ pageNumber, totalPages }) =>
-                `본 자료는 자기 신고용 참고자료이며, 최종 신고는 세무사 검토 또는 홈택스 직접 입력을 권장합니다.   ·   페이지 ${pageNumber} / ${totalPages}`
+                `회원 업로드 거래내역 기반 자기 신고용 참고자료 · Kontaxt는 거래소 원본 미검증 · 최종 신고는 세무사 검토 또는 홈택스 권장   ·   페이지 ${pageNumber} / ${totalPages}`
               }
               fixed
             />
@@ -929,7 +961,7 @@ export function TaxReport({
           <Text
             style={styles.footer}
             render={({ pageNumber, totalPages }) =>
-              `본 자료는 자기 신고용 참고자료이며, 최종 신고는 세무사 검토 또는 홈택스 직접 입력을 권장합니다.   ·   페이지 ${pageNumber} / ${totalPages}`
+              `회원 업로드 거래내역 기반 자기 신고용 참고자료 · Kontaxt는 거래소 원본 미검증 · 최종 신고는 세무사 검토 또는 홈택스 권장   ·   페이지 ${pageNumber} / ${totalPages}`
             }
             fixed
           />
