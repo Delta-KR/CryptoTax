@@ -17,7 +17,7 @@ import {
   resolveDeemedCostPrices,
   resolveImputedExpenseCoins,
 } from '@/lib/engine/resolvers';
-import { resultToWire, unifiedFromWire } from '@/lib/engine/wire';
+import { buildDeemedCostWire, resultToWire, unifiedFromWire } from '@/lib/engine/wire';
 import { getClientIp } from '@/lib/auth/client-ip';
 
 export const maxDuration = 60;
@@ -167,13 +167,7 @@ export async function POST(request: NextRequest) {
       lastFetchedAt: rateMetaRow?.fetched_at ?? null,
       fallbackName: '정적 분기별 환율 (fallback)',
     };
-    wire.deemedCostSource = {
-      realCoins: deemedRes.realCoins,
-      estimateCoins: deemedRes.estimateCoins,
-      userOverrideCoins: deemedRes.userOverrideCoins,
-      missingCoins: deemedRes.missingCoins,
-      deemedDate: deemedRes.deemedDate,
-    };
+    wire.deemedCostSource = buildDeemedCostWire(deemedRes);
 
     ensureFontRegistered();
 

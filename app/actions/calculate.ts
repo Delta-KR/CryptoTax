@@ -25,6 +25,7 @@ import type {
   ParsedTransactionWire,
 } from './calculate.types';
 import {
+  buildDeemedCostWire,
   maskForFree,
   parsedFromWire,
   parsedToWire,
@@ -210,13 +211,7 @@ export async function calculateTaxFromFiles(
       lastFetchedAt: sourceInfo.lastFetchedAt,
       fallbackName: sourceInfo.fallbackName,
     };
-    wire.deemedCostSource = {
-      realCoins: deemedRes.realCoins,
-      estimateCoins: deemedRes.estimateCoins,
-      userOverrideCoins: deemedRes.userOverrideCoins,
-      missingCoins: deemedRes.missingCoins,
-      deemedDate: deemedRes.deemedDate,
-    };
+    wire.deemedCostSource = buildDeemedCostWire(deemedRes);
 
     // 중복 자동 제거 알림 — 같은 파일을 두 번 올렸거나 기간이 겹치는 파일을 합친 케이스.
     if (duplicateCount > 0) {
