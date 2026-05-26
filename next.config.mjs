@@ -49,6 +49,9 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // workspace root inference warning 차단 — sibling lockfile (vault·worktrees)
+  // 으로 인한 잘못된 root 추정 방지. import.meta.dirname 은 Node 20.11+.
+  turbopack: { root: import.meta.dirname },
   // Next 16 에서 experimental.* 두 키가 top-level 로 이동.
   // pdf-parse / pdfjs-dist 가 server bundle 에서 빠져야 prod /api/report 정상.
   serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
