@@ -11,10 +11,12 @@ import type {
   UnifiedTransaction,
 } from './types';
 import type {
+  DeemedCostSourceWire,
   ParsedTransactionWire,
   TaxResultWire,
   UnifiedTransactionWire,
 } from '@/app/actions/calculate.types';
+import type { DeemedCostResolution } from './resolvers';
 
 export function parsedToWire(tx: ParsedTransaction): ParsedTransactionWire {
   return { ...tx, date: tx.date.toISOString() };
@@ -54,6 +56,22 @@ export function resultToWire(
     ),
     plan,
     masked: false,
+  };
+}
+
+/**
+ * audit reuse R#4: calculate.ts + /api/report/route.ts 가 같은 5-field
+ * deemedCostSource wire 객체를 빌드. helper 로 추출해 drift 위험 차단.
+ */
+export function buildDeemedCostWire(
+  deemedRes: DeemedCostResolution,
+): DeemedCostSourceWire {
+  return {
+    realCoins: deemedRes.realCoins,
+    estimateCoins: deemedRes.estimateCoins,
+    userOverrideCoins: deemedRes.userOverrideCoins,
+    missingCoins: deemedRes.missingCoins,
+    deemedDate: deemedRes.deemedDate,
   };
 }
 
