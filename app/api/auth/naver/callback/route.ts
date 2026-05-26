@@ -14,6 +14,21 @@ import { NAVER_STATE_COOKIE } from '@/lib/auth/naver';
 
 export const runtime = 'nodejs';
 
+// Wave 1 사후 review F2 — 모든 failure branch 에서 NAVER_STATE_COOKIE 삭제.
+// 이전: 성공 path 만 cleanup. 실패 branch 들이 cookie 남겨서 10분 maxAge 동안
+// replay window 존재. state 가 random hex + httpOnly 라 실제 exploit 어려움
+// 이지만 defense-in-depth.
+function redirectLoginWithCookieCleanup(
+  origin: string,
+  errorCode: string,
+): NextResponse {
+  const response = NextResponse.redirect(
+    new URL(`/login?error=${errorCode}`, origin),
+  );
+  response.cookies.delete(NAVER_STATE_COOKIE);
+  return response;
+}
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const code = url.searchParams.get('code');
@@ -27,16 +42,16 @@ export async function GET(request: NextRequest) {
     const ip = getClientIp(request);
     const { ok: rlOk } = await checkRateLimit(`oauth-cb:${ip}`, getOAuthStartRateLimit());
     if (!rlOk) {
-      return NextResponse.redirect(new URL('/login?error=rate_limited', url.origin));
+      return redirectLoginWithCookieCleanup(url.origin, 'rate_limited');
     }
-    return NextResponse.redirect(new URL('/login?error=invalid_request', url.origin));
+    return redirectLoginWithCookieCleanup(url.origin, 'invalid_request');
   }
 
   const clientId = process.env.NAVER_CLIENT_ID;
   const clientSecret = process.env.NAVER_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
     console.error('[naver/callback] missing NAVER_CLIENT_ID/SECRET env');
-    return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+    return redirectLoginWithCookieCleanup(url.origin, 'server_error');
   }
 
   try {
@@ -59,7 +74,7 @@ export async function GET(request: NextRequest) {
     };
     if (!tokenData.access_token) {
       console.error('[naver/callback] token exchange failed');
-      return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+      return redirectLoginWithCookieCleanup(url.origin, 'server_error');
     }
 
     // 3. access_token → 사용자 정보
@@ -73,7 +88,7 @@ export async function GET(request: NextRequest) {
     const naverUser = userData.response;
     if (!naverUser?.email) {
       console.error('[naver/callback] no email from Naver — required scope missing?');
-      return NextResponse.redirect(new URL('/login?error=access_denied', url.origin));
+      return redirectLoginWithCookieCleanup(url.origin, 'access_denied');
     }
 
     // 4. 기존 사용자 식별자(identity) 검증 — C2 account takeover 방지.
@@ -83,7 +98,7 @@ export async function GET(request: NextRequest) {
     const lookup = await findUserByEmail(naverUser.email);
     if (lookup.error) {
       // REST 호출 실패 시 fail-closed.
-      return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+      return redirectLoginWithCookieCleanup(url.origin, 'server_error');
     }
     if (lookup.user) {
       // admin.generateLink 는 identities[].provider 를 'email' 로 세팅하므로
@@ -112,11 +127,9 @@ export async function GET(request: NextRequest) {
           '[naver/callback] account-takeover blocked — userId=%s',
           lookup.user.id,
         );
-        return NextResponse.redirect(
-          new URL(
-            '/login?error=already_registered_other_provider',
-            url.origin,
-          ),
+        return redirectLoginWithCookieCleanup(
+          url.origin,
+          'already_registered_other_provider',
         );
       }
     }
@@ -141,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     if (linkError || !linkData?.properties?.action_link) {
       console.error('[naver/callback] generateLink failed');
-      return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+      return redirectLoginWithCookieCleanup(url.origin, 'server_error');
     }
 
     // 6. app_metadata에 provider=naver 박기. Supabase native OAuth는 자동으로
@@ -163,6 +176,6 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (e) {
     console.error('[naver/callback] unexpected error:', e);
-    return NextResponse.redirect(new URL('/login?error=server_error', url.origin));
+    return redirectLoginWithCookieCleanup(url.origin, 'server_error');
   }
 }
