@@ -89,12 +89,23 @@ export async function GET(request: NextRequest) {
       // admin.generateLink 는 identities[].provider 를 'email' 로 세팅하므로
       // app_metadata.providers / app_metadata.provider 까지 확인해야 Naver 로그인
       // 재진입 시 본인을 잘못 차단하지 않는다 (재로그인 lockout 회귀 방지).
+      //
+      // 2026-05-26: 추가 — user_metadata.provider 도 검증. 첫 가입 시 우리
+      // callback 의 updateUserById (app_metadata.provider='naver') 가 Supabase
+      // verify 단계에서 'email' 로 reset 되는 케이스 관측 (deltavlrt7@naver.com).
+      // user_metadata.provider 는 generateLink 의 options.data 가 박는 값이며
+      // verify 후에도 유지됨. takeover 우려 (다른 provider 사용자가 user_metadata
+      // 수정 후 Naver 로그인) 가 있지만 일반 사용자 API 로 본인 metadata 만
+      // 수정 가능 + attacker 가 victim 의 account 접근 못 함 → 시나리오 어려움.
+      // 정공법 (identities 'naver' row 직접 insert) 는 별도 의사결정.
       const identities = lookup.user.identities ?? [];
       const appMeta = lookup.user.app_metadata ?? {};
+      const userMeta = lookup.user.user_metadata ?? {};
       const naverLinked =
         identities.some((i) => i.provider === 'naver') ||
         (Array.isArray(appMeta.providers) && appMeta.providers.includes('naver')) ||
-        appMeta.provider === 'naver';
+        appMeta.provider === 'naver' ||
+        userMeta.provider === 'naver';
       if (!naverLinked) {
         // 로그에는 user.id 만 — email/provider 목록은 로그 분석자에게 가입 사실을 노출하므로 제외.
         console.error(
