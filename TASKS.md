@@ -119,8 +119,8 @@
 
 - [ ] **Naver 재로그인 lockout 해소** (PR #35) — Naver signup → logout → Naver 재로그인 시 `?error=already_registered_other_provider` 발생 안 함
 - [ ] **changePassword brute-force RL** (PR #35) — 잘못된 oldPassword 6회 연속 → 6번째에 "15분 후 다시 시도" + `code: 'rate_limited'`
-- [ ] **/tax 재계산 race** (PR #36) — 재계산 더블클릭 → 한 번만 실행, "재계산 중…" 라벨 노출
-- [ ] **/report year 동기** (PR #36) — year 2026 선택 후 PDF → 파일명/내용이 2026
+- [x] **/tax 재계산 race** (PR #36) — 2026-05-26 /qa 검증. `if (recalcing) return` ([app/(app)/tax/page.tsx:545](app/(app)/tax/page.tsx:545)) + `disabled={recalcing}` (L611) 2중 방어. 더블클릭 → "재계산 중…" + button disabled 즉시 노출
+- [ ] **/report year 동기** (PR #36) — 검증 차단 — 🚨 **prod incident** ([[project_api_report_incident_2026_05_26]]): `/api/report` 500 `RangeError: Offset is outside the bounds of the DataView`. fontkit woff2 decompressor 가 next 16 default Node 24 환경에서 깨짐. PR #86 진단 + #87 (vercel.json runtime invalid format → build fail) + #88 (engines.node 20.x) 머지 후도 여전히 500. 다음: Vercel Project Settings → Node Version 20.x 수동 변경 (engines.node 가 function runtime 까지 영향 안 줄 가능성) 또는 ttf fallback PR
 - [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능 (2026-05-26 /qa 자동화 한계로 deferred — Chrome ext MCP `resize_window` 가 viewport emulation 안 함. DevTools 디바이스 모드 5초 필요)
 - [x] **theme toggle 깜빡임** (PR #37) — 2026-05-26 /qa 검증. bootScript ([app/layout.tsx:70](app/layout.tsx:70)) + getInitialTheme + visibility:hidden 3중 방어 정상 동작 확인. data-theme=dark reload 후 persist, head 6.4KB 안에 inline blocking script 2개
 - [x] **404 페이지** — 2026-05-26 /qa 검증. `/nonexistent-page-qa-test` → "404 페이지를 찾을 수 없습니다 / 메인으로" 링크 (href="/") 정상
