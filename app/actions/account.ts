@@ -7,6 +7,7 @@ import {
   createSupabaseServerClient,
 } from '@/lib/supabase/server';
 import { isPasswordValid } from '@/lib/auth/password-rules';
+import { hasEmailIdentity } from '@/lib/auth/oauth-providers';
 import { checkRateLimit, getAuthReauthRateLimit } from '@/lib/rate-limit';
 
 export type ChangePasswordCode =
@@ -45,12 +46,12 @@ export async function changePassword(input: {
       code: 'missing_email',
     };
   }
-  const providers = user.app_metadata?.providers as string[] | undefined;
-  const hasEmailProvider =
-    providers?.includes('email') ??
-    user.identities?.some((i) => i.provider === 'email') ??
-    false;
-  if (!hasEmailProvider) {
+  // Wave 1 사후 review (PR #80~#84) 후속 — server check 가 hasEmailIdentity helper
+  // 와 sync 되도록 통합. 이전 inline check 는 OAUTH_PROVIDERS 우선 검증 누락 →
+  // Naver 사용자의 raw_app_meta_data 가 어떤 이유로 'email' 으로 reset 된 케이스
+  // (PR #83 root cause) 에서 server 가 비번 변경 허용했음 (signInWithPassword
+  // re-auth 가 진짜 gate 라 immediate exploit 아니지만 sync 가치).
+  if (!hasEmailIdentity(user)) {
     return {
       ok: false,
       error: '소셜 로그인 계정은 비밀번호 변경을 지원하지 않습니다.',
@@ -134,6 +135,11 @@ export async function updateDisplayName(
   if (!user) {
     return { ok: false, error: '로그인이 필요합니다.' };
   }
+  // Wave 1 사후 review LOW finding — Supabase auth.updateUser({data}) 는
+  // shallow-merge. 여기서 'name' 만 명시 (다른 key 안 박힘). 미래에 이 호출에
+  // 'provider' 같은 key 추가 절대 금지 — naverLinked check / hasEmailIdentity
+  // 가 user_metadata.provider 를 신뢰 source 로 사용하므로 server 가 임의로
+  // 덮으면 보안 effect (자기 OAuth-only flag 변경) 발생.
   const { error } = await supabase.auth.updateUser({
     data: { name: trimmed },
   });
