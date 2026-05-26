@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     'Kontaxt가 처리하는 개인정보 항목, 처리 목적, 보유 기간, 제3자 제공·위탁, 정보주체의 권리 등을 안내합니다.',
 };
 
+export const revalidate = 86400;
+
 const EFFECTIVE_DATE = '2026년 5월 22일';
 
 function Article({
