@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { useCurrentUser, type User } from '@/lib/auth';
 
 type UserContextValue = { user: User | null; loading: boolean };
@@ -24,7 +24,10 @@ export function UserContextProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const value = useCurrentUser();
+  const { user, loading } = useCurrentUser();
+  // value identity 안정 — useCurrentUser 가 매 렌더 새 객체 반환해도
+  // user/loading 실값이 안 바뀌면 consumer 재렌더 없음 (code-review nit).
+  const value = useMemo(() => ({ user, loading }), [user, loading]);
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }
 
