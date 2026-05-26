@@ -14,7 +14,16 @@ import { randomBytes } from 'node:crypto';
  * phishing link 만 따라간 victim 은 cookie 가 없어서 reject 됨.
  */
 export const FINISH_NONCE_COOKIE = 'auth_finish_nonce';
-const MAX_AGE_SEC = 600; // 10분 — magic link 도착 충분, stale 회피.
+// 60초 — Naver OAuth → Supabase verify → /auth/finish 정상 흐름은 2-5초.
+// 1분 maxAge 면 99% 사용자 보호 + stale phishing window 최소화.
+// audit Wave 1 (PR #72): 10분이면 victim 의 미완료 flow nonce 가 attacker
+// phishing fragment 와 함께 통과될 수 있는 window 가 너무 큼 — 1/10 로 축소.
+//
+// HMAC binding (nonce ↔ token cryptographic) 은 별도 의사결정 PR — Supabase
+// generateLink 시점에 access_token 미발급 (callback 이 token 모름) 이라 직접
+// binding 어려움. URL query nonce 박는 alternative 는 Supabase verify 의 query
+// 보존 동작 확인 필요 (prod risky).
+const MAX_AGE_SEC = 60;
 
 export function generateFinishNonce(): string {
   return randomBytes(32).toString('hex');
