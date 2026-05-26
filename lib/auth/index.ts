@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { safeNext } from '@/lib/auth/safe-next';
 import {
@@ -56,6 +56,10 @@ async function buildUser(sessionUser: SessionUser): Promise<User> {
 export function useCurrentUser(): { user: User | null; loading: boolean } {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  // audit perf P1-1 후속: TOKEN_REFRESHED 같은 onAuthStateChange 이벤트가
+  // refresh() 를 재호출할 때 같은 user.id 면 loadSnapshot 재실행 skip.
+  // sign-out 시 reset 해서 다음 sign-in 에 다시 hydrate.
+  const snapshotHydratedRef = useRef<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -70,15 +74,19 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
         if (!cancelled) {
           setUser(null);
           setLoading(false);
+          snapshotHydratedRef.current = null;
         }
         return;
       }
 
-      // server-side snapshot 동기 — fire-and-forget.
+      // server-side snapshot 동기 — fire-and-forget. user.id 별 1회만
+      // (token refresh 등 재발 이벤트 시 재실행 차단 — audit P1-1 후속).
       // - server payload 있으면 → localStorage 덮어쓰기 (다른 디바이스 변경 반영)
       // - server 비어있고 localStorage 있으면 → server 로 자동 백업
       //   (첫 로그인 마이그레이션 — server-side backup 도입 전 데이터 보존)
-      void loadSnapshot()
+      if (snapshotHydratedRef.current !== sessionUser.id) {
+        snapshotHydratedRef.current = sessionUser.id;
+        void loadSnapshot()
         .then((result) => {
           if (cancelled) return;
           if (!result.ok) return;
@@ -97,6 +105,7 @@ export function useCurrentUser(): { user: User | null; loading: boolean } {
         .catch((err) => {
           console.warn('[useCurrentUser] snapshot load failed:', err);
         });
+      }
 
       const next = await buildUser(sessionUser);
       if (!cancelled) {
