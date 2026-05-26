@@ -121,9 +121,9 @@
 - [ ] **changePassword brute-force RL** (PR #35) — 잘못된 oldPassword 6회 연속 → 6번째에 "15분 후 다시 시도" + `code: 'rate_limited'`
 - [ ] **/tax 재계산 race** (PR #36) — 재계산 더블클릭 → 한 번만 실행, "재계산 중…" 라벨 노출
 - [ ] **/report year 동기** (PR #36) — year 2026 선택 후 PDF → 파일명/내용이 2026
-- [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능
-- [ ] **theme toggle 깜빡임** (PR #37) — 다크 모드 새로고침 시 sun 아이콘이 moon으로 1-2 frame 깜빡임 없음
-- [ ] **404 페이지** — 존재하지 않는 URL → 404 + "메인으로" 버튼
+- [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능 (2026-05-26 /qa 자동화 한계로 deferred — Chrome ext MCP `resize_window` 가 viewport emulation 안 함. DevTools 디바이스 모드 5초 필요)
+- [x] **theme toggle 깜빡임** (PR #37) — 2026-05-26 /qa 검증. bootScript ([app/layout.tsx:70](app/layout.tsx:70)) + getInitialTheme + visibility:hidden 3중 방어 정상 동작 확인. data-theme=dark reload 후 persist, head 6.4KB 안에 inline blocking script 2개
+- [x] **404 페이지** — 2026-05-26 /qa 검증. `/nonexistent-page-qa-test` → "404 페이지를 찾을 수 없습니다 / 메인으로" 링크 (href="/") 정상
 
 ### P2 — 보류한 audit 후속 (별도 PR 후보)
 
