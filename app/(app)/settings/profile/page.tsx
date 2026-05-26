@@ -12,7 +12,8 @@ import {
   TurnstileWidget,
   TURNSTILE_ENABLED,
 } from '@/components/auth/TurnstileWidget';
-import { useCurrentUser, hasEmailIdentity } from '@/lib/auth';
+import { hasEmailIdentity } from '@/lib/auth';
+import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { isPasswordValid } from '@/lib/auth/password-rules';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
@@ -24,7 +25,7 @@ import {
 export default function ProfilePage() {
   const router = useRouter();
   const toast = useToast();
-  const { user, loading } = useCurrentUser();
+  const { user, loading } = useUserContext();
 
   const [name, setName] = useState('');
   const [oldPw, setOldPw] = useState('');

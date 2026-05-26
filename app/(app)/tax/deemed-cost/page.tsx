@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Pill } from '@/components/ui/Pill';
 import { useToast } from '@/components/ui/Toast';
-import { useCurrentUser } from '@/lib/auth';
+import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { loadSession } from '@/lib/storage/session';
 import {
@@ -86,7 +86,7 @@ function extractAllTradedCoins(): string[] {
 
 export default function DeemedCostPage() {
   const toast = useToast();
-  const { user, loading: userLoading } = useCurrentUser();
+  const { user, loading: userLoading } = useUserContext();
   const [rows, setRows] = useState<CoinRowState[]>([]);
   const [loading, setLoading] = useState(true);
   // 시행령 §88④⑤ — 필요경비 의제 50% 적용 코인 (사용자 토글)

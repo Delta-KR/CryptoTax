@@ -17,7 +17,7 @@ import {
   TableHeaderCell,
 } from '@/components/ui/Table';
 import { useToast } from '@/components/ui/Toast';
-import { useCurrentUser } from '@/lib/auth';
+import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
 import { loadSession, replaceCalculation } from '@/lib/storage/session';
 import { getTransactions, type Transaction } from '@/lib/client/transactions';
@@ -519,7 +519,7 @@ function BlurOverlay({
 
 export default function TaxPage() {
   const toast = useToast();
-  const { user } = useCurrentUser();
+  const { user } = useUserContext();
   const [year, setYear] = useState(2027);
   const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [txs, setTxs] = useState<Transaction[]>([]);

@@ -15,7 +15,7 @@ import {
   getTaxMethod,
   type TaxMethod,
 } from '@/lib/client/tax';
-import { useCurrentUser } from '@/lib/auth';
+import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { loadSession } from '@/lib/storage/session';
 
 interface IncludeOpts {
@@ -27,7 +27,7 @@ interface IncludeOpts {
 
 export default function ReportPage() {
   const toast = useToast();
-  const { user, loading: userLoading } = useCurrentUser();
+  const { user, loading: userLoading } = useUserContext();
   const [year, setYear] = useState(2027);
   const [method, setMethod] = useState<TaxMethod>('totalAverage');
   const [include, setInclude] = useState<IncludeOpts>({
