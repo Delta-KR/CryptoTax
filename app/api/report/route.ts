@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 다운로드 메타데이터(파일명 생성) — requirePremium 가 이미 가져온 정보 재사용 (P1-3).
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
 
     let raw: unknown;
     try {

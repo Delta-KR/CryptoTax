@@ -40,7 +40,7 @@ export async function saveSnapshot(
     return { ok: false, error: 'invalid payload (schema mismatch)' };
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -65,7 +65,7 @@ export async function saveSnapshot(
 }
 
 export async function loadSnapshot(): Promise<SnapshotLoadResult> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
