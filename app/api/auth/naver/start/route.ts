@@ -38,11 +38,15 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(authorizeUrl.toString());
   // state cookie로 CSRF 방어 — callback에서 검증.
   // __Host- prefix 가 path=/, secure, no domain 을 강제 → 서브도메인에서 fixation 불가.
-  // sameSite: strict — start endpoint 는 사용자 navigation 으로만 진입, third-party 호출 없음.
+  // sameSite: lax — OAuth standard. Naver login 완료 후 nid.naver.com 에서
+  // kontaxt.kr/api/auth/naver/callback 으로 top-level GET redirect 시 cookie
+  // 전송 보장. strict 으로 두면 cross-site redirect 에서 cookie 차단되어
+  // 100% callback state mismatch (PR #79 root cause). CSRF 방어는 state 값
+  // 의 server-side 비교 (callback line 25) 가 핵심이므로 lax 로 충분.
   response.cookies.set(NAVER_STATE_COOKIE, state, {
     httpOnly: true,
     secure: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 600,
     path: '/',
   });
