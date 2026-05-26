@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/report/route.ts": {
+      "runtime": "nodejs20.x"
+    }
+  }
+}
