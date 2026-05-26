@@ -30,7 +30,7 @@ export async function changePassword(input: {
   newPassword: string;
   captchaToken?: string;
 }): Promise<ChangePasswordResult> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -127,7 +127,7 @@ export async function updateDisplayName(
   if (trimmed.length === 0 || trimmed.length > 50) {
     return { ok: false, error: '이름은 1~50자 사이여야 합니다.' };
   }
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -147,7 +147,7 @@ export async function deleteAccount(): Promise<{
   ok: boolean;
   error?: string;
 }> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -197,7 +197,7 @@ export async function deleteAccount(): Promise<{
   // 4) sb-* auth 쿠키 명시 cleanup — signOut 의 cookieStore mutation 이
   //    server-action 환경에서 best-effort 라 orphan 쿠키가 남을 수 있음.
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     for (const c of cookieStore.getAll()) {
       if (c.name.startsWith('sb-')) cookieStore.delete(c.name);
     }

@@ -25,7 +25,7 @@ export async function saveImputedExpenseCoin(
     const guard = await requirePremium('필요경비 의제 적용');
     if (!guard.ok) return { ok: false, error: guard.error };
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from('user_imputed_expense_coins').upsert(
       { user_id: guard.userId, coin },
       { onConflict: 'user_id,coin' },
@@ -53,7 +53,7 @@ export async function deleteImputedExpenseCoin(
     const guard = await requirePremium('필요경비 의제 적용');
     if (!guard.ok) return { ok: false, error: guard.error };
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase
       .from('user_imputed_expense_coins')
       .delete()

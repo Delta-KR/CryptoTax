@@ -39,7 +39,7 @@ export type PremiumGuard = PremiumGuardOk | PremiumGuardErr;
 // React.cache 의 인자 비교는 Object.is — 인자 없으니 항상 cache hit.
 export const getAuthedUser = cache(async (): Promise<User | null> => {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -53,7 +53,7 @@ export const getAuthedUser = cache(async (): Promise<User | null> => {
 // Profile 조회 (per-request, userId 별 dedup). primitive 인자라 cache hit 안전.
 const getUserProfile = cache(async (userId: string): Promise<ProfileRow | null> => {
   try {
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data } = await supabase
       .from('profiles')
       .select('plan, premium_until')

@@ -31,7 +31,7 @@ export interface DeemedCostResolution {
 export async function resolveDeemedCostPrices(
   preCoins: ReadonlySet<string>,
 ): Promise<DeemedCostResolution> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   // v2 #3: 사용자 override 우선 조회. RLS로 본인 row만 반환됨.
   // 글로벌 deemed_cost_snapshots는 fallback. user_override가 있는 코인은 그쪽 값 사용.
@@ -109,7 +109,7 @@ export async function resolveDeemedCostPrices(
 // 시행령 §88④⑤ — 사용자가 토글한 필요경비 의제 50% 적용 코인. RLS로 본인 row만 반환.
 // 테이블이 prod에 아직 없는 경우(마이그레이션 미적용) 빈 Set로 fallback.
 export async function resolveImputedExpenseCoins(): Promise<Set<string>> {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('user_imputed_expense_coins')
     .select('coin');

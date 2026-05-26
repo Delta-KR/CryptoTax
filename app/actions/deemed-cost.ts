@@ -39,7 +39,7 @@ export async function saveUserDeemedCostOverride(
     const guard = await requirePremium('의제취득가액 매뉴얼 입력');
     if (!guard.ok) return { ok: false, error: guard.error };
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from('user_deemed_cost_overrides').upsert(
       {
         user_id: guard.userId,
@@ -72,7 +72,7 @@ export async function deleteUserDeemedCostOverride(
     const guard = await requirePremium('의제취득가액 매뉴얼 입력');
     if (!guard.ok) return { ok: false, error: guard.error };
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { error } = await supabase
       .from('user_deemed_cost_overrides')
       .delete()

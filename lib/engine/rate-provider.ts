@@ -76,7 +76,7 @@ export class DBExchangeRateProvider implements ExchangeRateProvider {
 
     if (dateStrs.length === 0 || fromList.length === 0) return;
 
-    const supabase = createSupabaseServerClient();
+    const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
       .from('daily_rates')
       .select('date, from_currency, to_currency, rate, source, fetched_at')

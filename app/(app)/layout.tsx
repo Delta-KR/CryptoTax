@@ -9,12 +9,12 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    const pathname = headers().get('x-pathname') ?? '/dashboard';
+    const pathname = (await headers()).get('x-pathname') ?? '/dashboard';
     redirect(`/login?next=${encodeURIComponent(pathname)}`);
   }
 

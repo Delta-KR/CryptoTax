@@ -55,7 +55,7 @@ async function getRateLimitIdentifier(): Promise<string> {
 
   // 익명 fallback — server action에서는 NextRequest 객체가 없어 next/headers의
   // x-forwarded-for를 사용.
-  const h = headers();
+  const h = await headers();
   const fwd = h.get('x-forwarded-for');
   if (fwd) {
     const first = fwd.split(',')[0]?.trim();
