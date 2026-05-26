@@ -32,25 +32,6 @@ const providers: ProviderConfig[] = [
     ),
   },
   {
-    // Kakao 로그인 일시 비활성 (KOE205 임시 조치 2026-05-26).
-    // 원인: Supabase 가 default scope 으로 account_email/profile_image/profile_nickname
-    // 요청하는데 Kakao Console 에 동의항목 등록 안 됨. account_email 은 비즈 앱 전용
-    // (사업자등록 필요). 다음 세션에서 의사결정 — (a) 비즈 앱 전환 (Phase 7 포트원
-    // 가입과 묶음) 또는 (b) signInWithOAuth 에 scopes='profile_nickname,profile_image'
-    // 명시 + email 없이 진행 (UX/운영 제약).
-    id: 'kakao',
-    name: '카카오',
-    bg: '#FEE500',
-    text: '#1F2937',
-    border: '0',
-    enabled: false,
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
-        <path d="M9 1.5C4.86 1.5 1.5 4.16 1.5 7.43c0 2.13 1.41 3.99 3.52 5.04l-.9 3.27c-.08.28.24.5.48.34l3.93-2.6c.15.01.31.02.47.02 4.14 0 7.5-2.65 7.5-5.92S13.14 1.5 9 1.5z" />
-      </svg>
-    ),
-  },
-  {
     id: 'naver',
     name: '네이버',
     bg: '#03C75A',
@@ -61,6 +42,23 @@ const providers: ProviderConfig[] = [
     icon: (
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
         <path d="M10.18 8.55 5.5 1.6H1.83v12.8h4V7.45l4.68 6.95h3.66V1.6h-3.99v6.95z" />
+      </svg>
+    ),
+  },
+  {
+    // Kakao 로그인 일시 비활성 (KOE205 임시 조치 2026-05-26) — 비활성이라 맨 밑 배치.
+    // 원인: Supabase 가 default scope 으로 account_email/profile_image/profile_nickname
+    // 요청하는데 Kakao Console 에 동의항목 등록 안 됨. account_email 은 비즈 앱 전용
+    // (사업자등록 필요 — 2026-06 중순 모두의 창업 진출 후 진행).
+    id: 'kakao',
+    name: '카카오',
+    bg: '#FEE500',
+    text: '#1F2937',
+    border: '0',
+    enabled: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true">
+        <path d="M9 1.5C4.86 1.5 1.5 4.16 1.5 7.43c0 2.13 1.41 3.99 3.52 5.04l-.9 3.27c-.08.28.24.5.48.34l3.93-2.6c.15.01.31.02.47.02 4.14 0 7.5-2.65 7.5-5.92S13.14 1.5 9 1.5z" />
       </svg>
     ),
   },
