@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
 > 마지막 갱신: 2026-05-26 (D-220 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 후속 처리 중 — **P0 prod DB 적용 완료** (5/23) · P1 prod 실측 미진행 · P2 1건 (marketing nav 정적화) 적용. Phase 7 진입 전 P1 수동 검증 필요.
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 후속 처리 중 — **P0 prod DB 적용 완료** (5/23) · P1 prod 실측 미진행 · P2 6/7건 적용 — next@16+react@19 / useCurrentUser context+Nav client / nonce binding / report disclaimer / wire helper dedup (PR #68·70·71·72·73·74). R#3 만 별도 의사결정. Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -126,13 +126,13 @@
 
 ### P2 — 보류한 audit 후속 (별도 PR 후보)
 
-- [ ] **next@16 major bump** — `npm audit` 14건 (Next.js DoS / XSS / cache poisoning / SSRF via WebSocket). breaking change라 별도 의사결정 PR
-- [ ] **`useCurrentUser` React Context 화** (perf P1-1) — AppShell + 5 child page 각각이 독립 listener → context 1회로 통합. ~200-500ms 절감/페이지
+- [x] **next@16 major bump** — 2026-05-26 [PR #70](https://github.com/Delta-KR/kontaxt/pull/70). React 18→19 + cookies async + middleware→proxy. 9 next advisory 해결. 잔여: postcss transitive (별도 PR), turbopack.root nit, forwardRef→ref-as-prop (별도 PR).
+- [x] **`useCurrentUser` React Context 화** (perf P1-1) — 2026-05-26 [PR #71](https://github.com/Delta-KR/kontaxt/pull/71). UserContextProvider + AppShell 분할 + 5 child page 마이그 + Nav client 화 (P1-2 Best). 페이지당 supabase 4× → 1×. marketing 트리 fully static.
 - [x] **marketing nav 정적화** (perf P1-2) — 2026-05-26 [PR #68](https://github.com/Delta-KR/kontaxt/pull/68) cheapest 옵션 적용. legal/sample/guide/simulator 4 페이지 + simulator 에 `revalidate=86400` 추가. Nav client 화 (Best 옵션) 는 useCurrentUser context 화 (P1-1) 와 같이 묶을 때 진행.
-- [ ] **`/auth/finish` nonce binding** (security P1-6) — magic link fragment만으로 setSession → phishing 가능. nonce cookie + redirectTo 쿼리로 검증 추가
-- [ ] **`/api/report` PDF route 가 client transactions 신뢰** (P0-4 partial fix only) — 5% → 0.5% tolerance refine으로 trivial 공격은 차단, amount+price 동시 위조 여지 남음. 근본 fix: parsed 거래 server-side 보관 또는 PDF "self-declared worksheet" disclaimer 강화
-- [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — rate provider 재실행해서 진짜 audit-trail metadata 사용. 현재는 generic "내부 DB 시세 (서버 재검증)" 라벨
-- [ ] **deemedCostSource wire 객체 dedup** (reuse R#4) — `calculate.ts` + `/api/report` 둘 다 동일한 5-field 객체 빌드. `buildDeemedCostWire(deemedRes)` helper로 추출
+- [x] **`/auth/finish` nonce binding** (security P1-6) — 2026-05-26 [PR #72](https://github.com/Delta-KR/kontaxt/pull/72). httpOnly nonce cookie (Naver callback 발급) + server action consume (Next 16 RSC 제약 회피). phishing fragment 차단.
+- [x] **`/api/report` self-declared worksheet disclaimer** (P0-4 mitigation) — 2026-05-26 [PR #73](https://github.com/Delta-KR/kontaxt/pull/73). PDF 첫 페이지 disclaimer 박스 + footer 4곳 카피 강화. 근본 fix (server transactions DB) 는 privacy 철학 충돌이라 미채택, defense-in-depth.
+- [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — 별도 의사결정 (rate provider 재실행 효과 작음, transactions 이미 환산된 wire).
+- [x] **deemedCostSource wire 객체 dedup** (reuse R#4) — 2026-05-26 [PR #74](https://github.com/Delta-KR/kontaxt/pull/74). `lib/engine/wire.ts buildDeemedCostWire()` helper 추출. calculate.ts + /api/report dedup.
 
 ### P3 — code quality 폴리시
 
