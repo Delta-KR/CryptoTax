@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
-> 마지막 갱신: 2026-05-23 (D-223 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 (2026-05-22, 23) 후속 처리 중 → Phase 7 진입 전 P0 prod DB apply 필수.
+> 마지막 갱신: 2026-05-26 (D-220 to 2027.1.1 신고 시행)
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 후속 처리 중 — **P0 prod DB 적용 완료** (5/23) · P1 prod 실측 미진행 · P2 1건 (marketing nav 정적화) 적용. Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -103,13 +103,14 @@
 > 코드는 main 반영 완료. **prod DB / 수동 검증 / 큰 refactor 가 후속**.
 > 5 감사 보고서: `docs/audit/{security,ux,logic-bugs,code-quality,perf}-2026-05-23.md`
 
-### P0 — prod DB 동기 (지금 시급) 🚨
+### ✅ P0 — prod DB 동기 (2026-05-23 적용 완료)
 
-- [ ] **Supabase 마이그레이션 prod apply** — PR #33의 SQL 2개가 main에 있지만 prod DB 미적용
-  - `supabase/migrations/20260523030000_optimize_rls_initplan.sql`
-  - `supabase/migrations/20260523040000_lockdown_profiles_and_cron_secret.sql`
-  - 적용 방법: `mcp__supabase__apply_migration` (사용자 직접 호출 필요) / Supabase Dashboard SQL editor / `supabase db push`
-  - 적용 후 `mcp__supabase__get_advisors`로 `auth_rls_initplan` 10건 → 0건 확인
+- [x] **Supabase 마이그레이션 prod apply** — 5/23 적용 완료 (3 마이그). `mcp__supabase__list_migrations` 로 verify
+  - `20260523010537_optimize_rls_initplan` ✅
+  - `20260523010606_lockdown_profiles_and_cron_secret` ✅
+  - `20260523010932_revoke_security_definer_exposure` ✅
+  - `mcp__supabase__get_advisors performance` → `lints: []` (auth_rls_initplan 0건)
+  - 2026-05-26 verify ([[feedback_tasks_verify_first]] 패턴 — TASKS.md stale 발견)
 
 ### P1 — 수동 검증 (30분 내)
 
@@ -127,7 +128,7 @@
 
 - [ ] **next@16 major bump** — `npm audit` 14건 (Next.js DoS / XSS / cache poisoning / SSRF via WebSocket). breaking change라 별도 의사결정 PR
 - [ ] **`useCurrentUser` React Context 화** (perf P1-1) — AppShell + 5 child page 각각이 독립 listener → context 1회로 통합. ~200-500ms 절감/페이지
-- [ ] **marketing nav 정적화** (perf P1-2) — Nav가 `cookies()` 호출해서 marketing 트리 전체 dynamic. 옵션: nav를 client comp 화 OR `revalidate=86400` 추가
+- [x] **marketing nav 정적화** (perf P1-2) — 2026-05-26 [PR #68](https://github.com/Delta-KR/kontaxt/pull/68) cheapest 옵션 적용. legal/sample/guide/simulator 4 페이지 + simulator 에 `revalidate=86400` 추가. Nav client 화 (Best 옵션) 는 useCurrentUser context 화 (P1-1) 와 같이 묶을 때 진행.
 - [ ] **`/auth/finish` nonce binding** (security P1-6) — magic link fragment만으로 setSession → phishing 가능. nonce cookie + redirectTo 쿼리로 검증 추가
 - [ ] **`/api/report` PDF route 가 client transactions 신뢰** (P0-4 partial fix only) — 5% → 0.5% tolerance refine으로 trivial 공격은 차단, amount+price 동시 위조 여지 남음. 근본 fix: parsed 거래 server-side 보관 또는 PDF "self-declared worksheet" disclaimer 강화
 - [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — rate provider 재실행해서 진짜 audit-trail metadata 사용. 현재는 generic "내부 DB 시세 (서버 재검증)" 라벨
