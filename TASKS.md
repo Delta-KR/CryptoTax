@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
 > 마지막 갱신: 2026-05-26 (D-220 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 후속 처리 중 — **P0 prod DB 적용 완료** (5/23) · P1 prod 실측 미진행 · P2 6/7건 적용 — next@16+react@19 / useCurrentUser context+Nav client / nonce binding / report disclaimer / wire helper dedup (PR #68·70·71·72·73·74). R#3 만 별도 의사결정. Phase 7 진입 전 P1 수동 검증 필요.
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 — 추가 P2-rem 4건 (postcss/turbopack · snapshotHydratedRef · nonce maxAge · ref-as-prop) + prod hotfix 4건 (PR #79~#81). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -92,7 +92,8 @@
 
 - [ ] **LOI 페이지** — 2026.07~12 운영, ₩39,900 (20% 얼리), 100명, 30일 환불 보증 (전략 §6.6)
 - [x] **양도 시뮬레이터 무료 페이지** — ✅ `/simulator` 구현 (PR #47 · #48 · #49). 회원가입 없이 매수/매도/수량 입력 → 산출세액 + 가산세 시나리오. querystring 공유 URL (SNS hook) + Nav/Footer 진입 동선.
-- [ ] **포트원 가입 + 결제 페이지 구현** — 카카오·네이버·토스페이 + 카드 일괄 (전략 §6.5)
+- [ ] **포트원 가입 + 결제 페이지 구현** — 카카오·네이버·토스페이 + 카드 일괄 (전략 §6.5). **6월 중순 사업자등록·법인설립 후 진행** ([[project_business_registration_timing]] — 모두의 창업 1라운드 진출 후 timing)
+- [ ] **Kakao OAuth 비즈 앱 전환 + 재활성** — 6월 중순 사업자등록 후. 현재 [PR #81](https://github.com/Delta-KR/kontaxt/pull/81) (`ce990c9`) 으로 enabled:false 임시 비활성 ([KOE205 — account_email scope 가 비즈 전용](.claude/projects/.../reference_kakao_oauth_disabled.md))
 
 ---
 
@@ -133,6 +134,12 @@
 - [x] **`/api/report` self-declared worksheet disclaimer** (P0-4 mitigation) — 2026-05-26 [PR #73](https://github.com/Delta-KR/kontaxt/pull/73). PDF 첫 페이지 disclaimer 박스 + footer 4곳 카피 강화. 근본 fix (server transactions DB) 는 privacy 철학 충돌이라 미채택, defense-in-depth.
 - [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — 별도 의사결정 (rate provider 재실행 효과 작음, transactions 이미 환산된 wire).
 - [x] **deemedCostSource wire 객체 dedup** (reuse R#4) — 2026-05-26 [PR #74](https://github.com/Delta-KR/kontaxt/pull/74). `lib/engine/wire.ts buildDeemedCostWire()` helper 추출. calculate.ts + /api/report dedup.
+
+### 2026-05-26 prod hotfix (P1 prod 실측 중 발견)
+
+- [x] **Naver OAuth state cookie sameSite strict → lax** — [PR #80](https://github.com/Delta-KR/kontaxt/pull/80) (`b75ce61`). 5/23 PR #35 의 strict 도입 → 5/23~5/26 prod Naver 로그인 항상 broken (cross-site cookie 차단). investigate skill 으로 root cause 발견. [[reference_naver_oauth_state_cookie]]
+- [x] **Kakao OAuth 일시 비활성** — [PR #81](https://github.com/Delta-KR/kontaxt/pull/81) (`ce990c9`). KOE205 (account_email scope 가 비즈 앱 전용) → enabled:false. 6월 중순 사업자등록 후 비즈앱 전환·복구. [[reference_kakao_oauth_disabled]]
+- [x] **revert nonce binding (#72 + rem-C)** — [PR #79](https://github.com/Delta-KR/kontaxt/pull/79) (`30614d2`). nonce cookie 가 Supabase cross-site verify chain 에서 끊김 가설로 revert. (실제 root cause 는 Naver sameSite — PR #80 적용 후 nonce binding 재시도 가능)
 
 ### P3 — code quality 폴리시
 
