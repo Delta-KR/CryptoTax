@@ -49,13 +49,13 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverComponentsExternalPackages: ['pdf-parse', 'pdfjs-dist'],
-    outputFileTracingIncludes: {
-      '/api/report': [
-        './node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
-      ],
-    },
+  // Next 16 에서 experimental.* 두 키가 top-level 로 이동.
+  // pdf-parse / pdfjs-dist 가 server bundle 에서 빠져야 prod /api/report 정상.
+  serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
+  outputFileTracingIncludes: {
+    '/api/report': [
+      './node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
+    ],
   },
   async headers() {
     return [
