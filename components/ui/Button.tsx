@@ -1,5 +1,5 @@
 'use client';
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { cn } from '@/lib/utils';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -11,6 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   leftIcon?: ReactNode;
   rightIcon?: ReactNode;
   fullWidth?: boolean;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const variants: Record<Variant, string> = {
@@ -27,21 +28,19 @@ const sizes: Record<Size, string> = {
   lg: 'px-5 py-3 text-[15px]',
 };
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  (
-    {
-      variant = 'primary',
-      size = 'md',
-      leftIcon,
-      rightIcon,
-      fullWidth,
-      className,
-      children,
-      type = 'button',
-      ...props
-    },
-    ref
-  ) => (
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  leftIcon,
+  rightIcon,
+  fullWidth,
+  className,
+  children,
+  type = 'button',
+  ref,
+  ...props
+}: ButtonProps) {
+  return (
     <button
       ref={ref}
       type={type}
@@ -58,6 +57,5 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       {children}
       {rightIcon}
     </button>
-  )
-);
-Button.displayName = 'Button';
+  );
+}
