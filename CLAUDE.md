@@ -22,9 +22,20 @@ Next.js 14 (App Router) · React 18 · Tailwind · Supabase (Auth + Postgres + R
 
 ---
 
-## 코드 탐색은 graphify 우선
+## 탐색 — graphify (코드) + gbrain (문서) 우선
 
-이 레포는 `graphify-out/`에 knowledge graph가 빌드돼 있다. **새 세션에서 코드 탐색 시 grep/glob보다 graphify를 먼저 시도**할 것 — 관련 노드만 좁혀 보여줘서 컨텍스트 점유가 작고 정확하다.
+이 레포는 **두 knowledge base** 가 빌드돼 있다. 새 세션에서 탐색 시 grep/glob 보다 먼저 시도할 것 — 컨텍스트 점유가 작고 정확하다. **2026-05-26 결정**: 두 도구 역할 분리 (코드 = graphify / 문서 = gbrain). 중복 아님.
+
+### 역할 매트릭스
+
+| 탐색 대상 | 도구 | 이유 |
+|----------|------|------|
+| 코드 함수·심볼·관계 | **graphify** | AST 기반 (무료, 정확) |
+| 마크다운 문서·노트·audit·plan·VOICE/DESIGN/CLAUDE.md | **gbrain** | tsvector keyword + RRF hybrid search |
+| 거래소 파서·세법 엔진 같은 도메인 코드 | **graphify** | 심볼 정의·호출 관계 |
+| "왜 총평균법?" 같은 결정 컨텍스트 | **gbrain** | 문서·노트 검색 |
+
+### graphify 명령 (코드)
 
 | 목적 | 명령 |
 |------|------|
@@ -32,9 +43,22 @@ Next.js 14 (App Router) · React 18 · Tailwind · Supabase (Auth + Postgres + R
 | 두 심볼/모듈 사이 관계 | `graphify path "<A>" "<B>"` |
 | 개별 개념 설명 | `graphify explain "<concept>"` |
 | 넓은 아키텍처 리뷰 | `graphify-out/GRAPH_REPORT.md` |
-| 도메인 위키 | `graphify-out/wiki/index.md` |
 
-코드 변경 후: `graphify update .` (AST 기반, API 비용 없음)로 그래프 최신화.
+코드 변경 후: `graphify update .` (AST 기반, API 비용 없음).
+
+### gbrain 명령 (문서)
+
+| 목적 | 명령 |
+|------|------|
+| 키워드 검색 (BM25) | `gbrain search "<terms>"` |
+| 자연어 질문 (hybrid RRF) | `gbrain query "<질문>"` 또는 `gbrain ask "<질문>"` |
+| 페이지 읽기 | `gbrain get <slug>` |
+| 전체 stats | `gbrain stats` |
+| **MCP 호출** (새 세션부터) | `mcp__gbrain__*` 도구 자동 사용 가능 |
+
+문서 변경 후: `gbrain sync --repo /Users/delta/Desktop/kontaxt` (incremental).
+
+**Semantic vector search 는 OPENAI_API_KEY 또는 VOYAGE_API_KEY 추가 시 활성** (현재는 keyword search 만 동작 — 마크다운 검색엔 충분).
 
 ---
 
@@ -202,6 +226,12 @@ npm run email:dev         # http://localhost:3001 — 실시간 미리보기
 
 ## 변경 이력
 
+- **2026-05-26 (gbrain + graphify 통합 활용)** — gbrain CLI 설치 + PGLite engine + Claude MCP 등록 + markdown 29개 인덱싱 + 탐색 섹션 재작성
+  - 발단: graphify 1주 체크포인트 (D-4) 평가 — 5/23~5/26 실제 사용 1회만, [[feedback_tooling_preference]] 패턴 적중. gbrain 미설치 상태로 "중복" 우려한 전제도 잘못 — 둘 다 안 쓰던 상황
+  - 사용자 결정: 두 도구 모두 적극 활용 세팅. `brew install bun` 대신 공식 install script → `gstack-gbrain-install` (v0.18.2) → `gbrain init --pglite` → `claude mcp add --scope user gbrain` 등록 → markdown 29개 인덱싱 (469 chunks)
+  - 역할 분리 명시: **graphify = 코드** (AST, 무료, symbol-aware) / **gbrain = 문서·노트** (CLAUDE/VOICE/DESIGN/audit/business-plan markdown). 중복 아님
+  - 제약: OpenAI/Voyage API key 없어 embedding 0개. **keyword search (tsvector) 동작 ✅** / semantic vector search 보류. key 추가 시 활성
+  - 다음 세션부터 `mcp__gbrain__*` 도구 자동 사용 가능 (MCP는 세션 시작 시 로드)
 - **2026-05-25 (Tier 3 톤 mix 전환)** — VOICE.md 광범위 재작성 + 카피 15+ 파일 친밀 톤 전환
   - 발단: `/humanizer /insights` 분석에서 토스·카카오뱅크 reference 대비 "soulless AI 톤" 인식 가능 발견 (sterile, voiceless writing — humanizer PERSONALITY AND SOUL 절). 광고 puffing 만 잡고 인간미 부재 사각지대 인지.
   - VOICE.md Q2 (a) 격식 통일 → **(c) 컨텍스트별 mix** / Q3 (d) 사용 금지 → **(e) "당신" 금지 + 사용자 1인칭 "내·나의" 허용**. §0·§1·§2·§3·§10·§11·§12·§13·§14 광범위 재작성 (562 → 658 줄).
