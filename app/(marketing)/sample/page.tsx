@@ -16,6 +16,8 @@ import {
 // 샘플 미리보기 — 하드코딩된 가상 데이터로 Tax + Report 합본 데모.
 // 로그인 없이 확인 가능. (marketing)/sample 경로.
 
+export const revalidate = 86400;
+
 const sampleData = {
   year: 2027,
   totalGain: 21_200_000,

@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     '업비트 PDF · 바이낸스 CSV 거래내역을 다운로드해서 Kontaxt에 업로드하는 방법, 그리고 세금 계산 결과를 해석하는 단계별 안내.',
 };
 
+export const revalidate = 86400;
+
 interface Step {
   n: number;
   title: string;

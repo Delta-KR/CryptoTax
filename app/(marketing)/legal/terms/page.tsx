@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     'Kontaxt 서비스 이용에 관한 권리·의무·책임을 규정하는 약관. 유료 서비스의 종류, 환불 정책, 책임 제한 사항을 포함합니다.',
 };
 
+export const revalidate = 86400;
+
 const EFFECTIVE_DATE = '2026년 5월 12일';
 
 function Article({

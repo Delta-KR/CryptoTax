@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 86400;
+
 export default function SimulatorPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-16 lg:py-24">
