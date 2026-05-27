@@ -4,18 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
-import { CoinIcon } from '@/components/ui/CoinIcon';
-import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableHeaderCell,
-} from '@/components/ui/Table';
 import { useToast } from '@/components/ui/Toast';
 import { useUserContext } from '@/components/app-chrome/UserContextProvider';
 import { calculateTaxFromFiles } from '@/app/actions/calculate';
@@ -23,26 +13,22 @@ import { loadSession, replaceCalculation } from '@/lib/storage/session';
 import { getTransactions, type Transaction } from '@/lib/client/transactions';
 import {
   calculateTax,
-  formatKrw,
   getTaxMethod,
-  type ExchangeCoinPnL,
-  type HoldingsByCoinClient,
-  type RealizedGainClient,
   type TaxMethod,
 } from '@/lib/client/tax';
-import { toKSTDateStr } from '@/lib/engine/exchange-rate';
+import { PremiumBanner } from './_components/PremiumBanner';
+import { HoldingsAfterTable } from './_components/HoldingsAfterTable';
+import { ExchangeCoinMatrix } from './_components/ExchangeCoinMatrix';
+import { RealizedGainList } from './_components/RealizedGainList';
+import { TaxStatsRow } from './_components/TaxStatsRow';
 
 const TAX_METHOD_LABEL: Record<TaxMethod, string> = {
   totalAverage: '총평균법 (시행령 §88①)',
   fifo: '선입선출법',
   avg: '이동평균법',
 };
-import { CalcRow, Divider } from './_components/CalcRow';
-import { PremiumBanner } from './_components/PremiumBanner';
-import { HoldingsAfterTable } from './_components/HoldingsAfterTable';
-import { ExchangeCoinMatrix } from './_components/ExchangeCoinMatrix';
-import { RealizedGainList } from './_components/RealizedGainList';
-import { BlurOverlay } from './_components/BlurOverlay';
+import { TaxCalcFlowCard } from './_components/TaxCalcFlowCard';
+import { TaxPerCoinCard } from './_components/TaxPerCoinCard';
 export default function TaxPage() {
   const toast = useToast();
   const { user } = useUserContext();
@@ -147,196 +133,16 @@ export default function TaxPage() {
 
       {masked && <PremiumBanner />}
 
-      {/* 4 StatCards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          label="순손익"
-          value={formatKrw(result.netPnL)}
-          tone={result.netPnL >= 0 ? 'good' : 'bad'}
-          sub={`${result.transactionCount}건 거래`}
-        />
-        <StatCard
-          label="기본공제"
-          value={`−${formatKrw(result.deduction).replace('+', '').replace('−', '')}`}
-          sub="연 1회 자동 적용"
-        />
-        <BlurOverlay masked={masked}>
-          <StatCard
-            label="과세표준"
-            value={formatKrw(result.taxable)}
-            sub="순손익 − 공제"
-          />
-        </BlurOverlay>
-        <BlurOverlay masked={masked}>
-          <StatCard
-            label="납부세액"
-            value={formatKrw(result.tax)}
-            tone="brand"
-            sub="과세표준 × 22% (소득세 20% + 지방세 2%)"
-          />
-        </BlurOverlay>
-      </div>
+      <TaxStatsRow result={result} masked={masked} />
 
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
-        {/* Calc flow */}
-        <Card padding="lg">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-[16px] font-bold text-ink">계산 흐름</h2>
-            <Link
-              href="/tax/settings"
-              className="text-[12px] font-semibold text-brand hover:underline"
-            >
-              방식 변경 →
-            </Link>
-          </div>
-          <CalcRow
-            label="총 양도차익"
-            value={formatKrw(result.totalGain)}
-            tone="good"
-            sub="양수 손익만 합산"
-          />
-          <CalcRow
-            label="총 양도손실"
-            value={`−${formatKrw(result.totalLoss).replace('+', '').replace('−', '')}`}
-            sub="음수 손익 절댓값"
-          />
-          <Divider />
-          <CalcRow
-            label="순손익"
-            value={formatKrw(result.netPnL)}
-            tone={result.netPnL >= 0 ? 'good' : undefined}
-            bold
-          />
-          <CalcRow label="기본공제" value="−250만원" sub="연 1회" />
-          <Divider />
-          <CalcRow
-            label="과세표준"
-            value={formatKrw(result.taxable)}
-            bold
-            blurred={masked}
-          />
-          <CalcRow
-            label="× 세율"
-            value="22%"
-            sub="소득세 20% + 지방세 2%"
-          />
-          <Divider thick />
-          <div className="relative mt-2">
-            <div
-              className={
-                'rounded-md bg-brand px-5 py-4 text-white shadow-[0_8px_24px_-8px_rgba(37,99,235,0.5)] ' +
-                (masked ? 'pointer-events-none select-none blur-[10px]' : '')
-              }
-              aria-hidden={masked}
-            >
-              <div className="text-[12px] font-medium opacity-90">
-                {year}년 5월 납부 세액
-              </div>
-              <div className="num mt-1 text-[28px] font-extrabold tracking-tighter3">
-                {formatKrw(result.tax).replace('+', '')}
-              </div>
-            </div>
-            {masked && (
-              <Link
-                href="/billing"
-                className="group absolute inset-0 flex items-center justify-center"
-              >
-                <button
-                  type="button"
-                  className="relative whitespace-nowrap rounded-md bg-white px-5 py-2.5 text-[13px] font-extrabold text-brand shadow-md transition-colors hover:bg-bg-soft"
-                >
-                  <span className="absolute inset-0 -z-10 animate-pulse rounded-md bg-white/70 blur-lg" />
-                  유료 플랜 보기 →
-                </button>
-              </Link>
-            )}
-          </div>
-        </Card>
-
-        {/* 코인별 손익 */}
-        <Card padding="none">
-          <div className="px-6 py-4">
-            <h2 className="text-[16px] font-bold text-ink">코인별 손익</h2>
-            <p className="mt-0.5 text-[12px] text-muted">
-              {year}년 매도 거래 기준
-            </p>
-          </div>
-          {result.perCoin.length > 0 ? (
-            <div className="relative">
-              <div
-                className={
-                  masked
-                    ? 'pointer-events-none select-none blur-[8px]'
-                    : ''
-                }
-                aria-hidden={masked}
-              >
-                <Table className="border-t border-line-2">
-                  <TableHead>
-                    <TableRow>
-                      <TableHeaderCell>코인</TableHeaderCell>
-                      <TableHeaderCell className="text-right">손익</TableHeaderCell>
-                      <TableHeaderCell className="text-right">매도금액</TableHeaderCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {result.perCoin.map((c) => (
-                      <TableRow key={c.coin}>
-                        <TableCell>
-                          <span className="inline-flex items-center gap-2">
-                            <CoinIcon coin={c.coin} size={22} />
-                            <span className="font-semibold">{c.coin}</span>
-                          </span>
-                        </TableCell>
-                        <TableCell
-                          className={
-                            'num text-right text-[13px] font-bold ' +
-                            (c.gain >= 0 ? 'text-good' : 'text-bad')
-                          }
-                        >
-                          {formatKrw(c.gain)}
-                        </TableCell>
-                        <TableCell className="num text-right text-[12px] text-muted">
-                          ₩{c.volume.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              {masked && (
-                <Link
-                  href="/billing"
-                  className="group absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center"
-                >
-                  <div className="rounded-full bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-brand shadow-md ring-1 ring-brand/30">
-                    Premium Only
-                  </div>
-                  <div className="text-[14px] font-bold text-ink">
-                    코인별 정확한 손익을 확인하세요
-                  </div>
-                  <button
-                    type="button"
-                    className="relative whitespace-nowrap rounded-md bg-brand px-6 py-3 text-[14px] font-extrabold text-white shadow-brand-glow transition-colors hover:bg-brand-2"
-                  >
-                    프리미엄 시작 →
-                  </button>
-                </Link>
-              )}
-            </div>
-          ) : (
-            <p className="border-t border-line-2 px-6 py-12 text-center text-[13px] text-muted">
-              {year}년 매도 거래가 없어요.
-            </p>
-          )}
-          {result.perCoin.length > 0 && (
-            <div className="border-t border-line-2 px-6 py-3">
-              <Pill tone="brand" size="sm">
-                {method === 'totalAverage' ? '총평균법' : method === 'fifo' ? '선입선출법(FIFO)' : '이동평균법(MA)'}
-              </Pill>
-            </div>
-          )}
-        </Card>
+        <TaxCalcFlowCard result={result} year={year} masked={masked} />
+        <TaxPerCoinCard
+          result={result}
+          year={year}
+          method={method}
+          masked={masked}
+        />
       </div>
 
       {/* 거래소별 손익 (P1 #9) */}
