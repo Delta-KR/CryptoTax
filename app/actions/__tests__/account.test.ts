@@ -13,6 +13,9 @@ const adminDeleteUserMock = vi.fn();
 const profilesDeleteEqMock = vi.fn();
 const oauthTokensSelectMock = vi.fn(); // PR #101 신규 흐름 — Naver token revoke
 const revokeNaverTokenMock = vi.fn();
+const findUserByEmailMock = vi.fn(); // PR #107 신규 흐름 — requestPasswordReset
+const hasEmailIdentityMock = vi.fn();
+const resetPasswordForEmailMock = vi.fn();
 const redirectMock = vi.fn();
 const checkRateLimitMock = vi.fn();
 
@@ -30,6 +33,14 @@ vi.mock('next/headers', () => ({
   cookies: () => ({
     getAll: () => [],
     delete: () => {},
+  }),
+  headers: () => ({
+    get: (key: string) => {
+      if (key === 'x-forwarded-for') return '203.0.113.42';
+      if (key === 'origin') return 'https://kontaxt.kr';
+      if (key === 'host') return 'kontaxt.kr';
+      return null;
+    },
   }),
 }));
 
@@ -57,6 +68,10 @@ vi.mock('@/lib/supabase/server', () => ({
       signOut: () => {
         callOrder.push('signOut');
         return Promise.resolve(signOutMock());
+      },
+      resetPasswordForEmail: (...args: unknown[]) => {
+        callOrder.push('resetPasswordForEmail');
+        return Promise.resolve(resetPasswordForEmailMock(...args));
       },
     },
   }),
@@ -105,9 +120,24 @@ vi.mock('@/lib/auth/oauth-revoke', () => ({
   },
 }));
 
+vi.mock('@/lib/supabase/admin-lookup', () => ({
+  findUserByEmail: (...args: unknown[]) => {
+    callOrder.push('findUserByEmail');
+    return Promise.resolve(findUserByEmailMock(...args));
+  },
+}));
+
+vi.mock('@/lib/auth/oauth-providers', () => ({
+  hasEmailIdentity: (...args: unknown[]) => {
+    callOrder.push('hasEmailIdentity');
+    return hasEmailIdentityMock(...args);
+  },
+}));
+
 import {
   changePassword,
   deleteAccount,
+  requestPasswordReset,
   updateDisplayName,
 } from '../account';
 
@@ -121,9 +151,18 @@ beforeEach(() => {
   profilesDeleteEqMock.mockReset();
   oauthTokensSelectMock.mockReset();
   revokeNaverTokenMock.mockReset();
+  findUserByEmailMock.mockReset();
+  hasEmailIdentityMock.mockReset();
+  resetPasswordForEmailMock.mockReset();
   // default: oauth_tokens row 없음 → revoke skip (PR #101)
   oauthTokensSelectMock.mockReturnValue({ data: null, error: null });
   revokeNaverTokenMock.mockReturnValue({ ok: true });
+  // default: requestPasswordReset (PR #107) — user 없음, 발송 안 됨
+  findUserByEmailMock.mockReturnValue({ user: null, error: null });
+  // changePassword (기존 test) 가 hasEmailIdentity 호출 — default true
+  // (email user 가정). OAuth-only 케이스는 개별 test 에서 명시 override.
+  hasEmailIdentityMock.mockReturnValue(true);
+  resetPasswordForEmailMock.mockReturnValue({ error: null });
   redirectMock.mockReset();
   checkRateLimitMock.mockReset();
   // 기본값: rate limit 통과. 개별 test 에서 throttled 시나리오 override.
@@ -157,6 +196,8 @@ describe('changePassword', () => {
         },
       },
     });
+    // OAuth-only 가드 검증 — hasEmailIdentity false override (default true)
+    hasEmailIdentityMock.mockReturnValue(false);
     const r = await changePassword({ oldPassword: 'x', newPassword: 'Aa1!aaaaaaaa' });
     expect(r.ok).toBe(false);
     expect(r.code).toBe('oauth_only');
@@ -266,7 +307,7 @@ describe('changePassword', () => {
       newPassword: 'Aa1!aaaaaaaa',
     });
     expect(r.ok).toBe(true);
-    expect(callOrder).toEqual(['signInWithPassword', 'updateUser']);
+    expect(callOrder).toEqual(['hasEmailIdentity', 'signInWithPassword', 'updateUser']);
   });
 
   it('rate-limits brute force attempts (rate_limited code)', async () => {
@@ -444,5 +485,76 @@ describe('deleteAccount', () => {
     // revoke 실패해도 admin.deleteUser 진행
     expect(callOrder).toContain('revokeNaverToken');
     expect(callOrder).toContain('admin.deleteUser');
+  });
+});
+
+// PR #107 — server-side OAuth-only 가드 + email enumeration silent 패턴.
+describe('requestPasswordReset', () => {
+  it('returns ok:true silently when user not found (enumeration 방지)', async () => {
+    findUserByEmailMock.mockReturnValue({ user: null, error: null });
+    const r = await requestPasswordReset('unknown@example.com');
+    expect(r).toEqual({ ok: true });
+    // 실제 발송 안 일어남
+    expect(resetPasswordForEmailMock).not.toHaveBeenCalled();
+    expect(callOrder).toContain('findUserByEmail');
+  });
+
+  it('returns ok:true silently when user is OAuth-only (Naver/Google)', async () => {
+    findUserByEmailMock.mockReturnValue({
+      user: { id: 'u-naver', identities: [{ provider: 'naver' }] },
+      error: null,
+    });
+    hasEmailIdentityMock.mockReturnValue(false); // OAuth-only
+
+    const r = await requestPasswordReset('naver-user@naver.com');
+    expect(r).toEqual({ ok: true });
+    // 핵심: reset email 발송 차단
+    expect(resetPasswordForEmailMock).not.toHaveBeenCalled();
+    expect(hasEmailIdentityMock).toHaveBeenCalled();
+  });
+
+  it('calls supabase resetPasswordForEmail when user has email identity', async () => {
+    findUserByEmailMock.mockReturnValue({
+      user: { id: 'u-email', identities: [{ provider: 'email' }] },
+      error: null,
+    });
+    hasEmailIdentityMock.mockReturnValue(true);
+
+    const r = await requestPasswordReset('email-user@example.com', 'captcha-tok');
+    expect(r).toEqual({ ok: true });
+    expect(resetPasswordForEmailMock).toHaveBeenCalledWith(
+      'email-user@example.com',
+      expect.objectContaining({
+        redirectTo: 'https://kontaxt.kr/reset-password',
+        captchaToken: 'captcha-tok',
+      }),
+    );
+  });
+
+  it('returns ok:true silently when rate limited (enumeration 방지)', async () => {
+    checkRateLimitMock.mockReturnValue({
+      ok: false,
+      limit: 5,
+      remaining: 0,
+      reset: Date.now() + 60_000,
+    });
+    findUserByEmailMock.mockReturnValue({
+      user: { id: 'u-email' },
+      error: null,
+    });
+    hasEmailIdentityMock.mockReturnValue(true);
+
+    const r = await requestPasswordReset('email-user@example.com');
+    expect(r).toEqual({ ok: true });
+    // rate limit 으로 차단 — findUserByEmail / 발송 모두 skip
+    expect(findUserByEmailMock).not.toHaveBeenCalled();
+    expect(resetPasswordForEmailMock).not.toHaveBeenCalled();
+  });
+
+  it('returns ok:true for empty email (no-op)', async () => {
+    const r = await requestPasswordReset('');
+    expect(r).toEqual({ ok: true });
+    expect(findUserByEmailMock).not.toHaveBeenCalled();
+    expect(resetPasswordForEmailMock).not.toHaveBeenCalled();
   });
 });
