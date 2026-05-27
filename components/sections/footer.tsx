@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Mark } from '@/components/ui/Mark';
 
 interface FooterItem {
   label: string;
@@ -42,8 +43,7 @@ export function Footer() {
         <div className="grid grid-cols-1 gap-10 border-b border-line pb-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div>
             <div className="mb-3.5 flex items-center gap-2" aria-label="Kontaxt">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/mark.svg" alt="" className="h-8 w-8 shrink-0" />
+              <Mark className="h-8 w-8 text-[#1b17ff]" />
               <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">
                 kontaxt.
               </span>
