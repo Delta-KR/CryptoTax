@@ -117,11 +117,11 @@
 
 코드 fix 검증. 한 사이클 워크스루로 처리.
 
-- [ ] **Naver 재로그인 lockout 해소** (PR #35) — Naver signup → logout → Naver 재로그인 시 `?error=already_registered_other_provider` 발생 안 함
-- [ ] **changePassword brute-force RL** (PR #35) — 잘못된 oldPassword 6회 연속 → 6번째에 "15분 후 다시 시도" + `code: 'rate_limited'`
+- [x] **Naver 재로그인 lockout 해소** (PR #35) — 2026-05-27 사용자 검증 완료. PR #80 sameSite=lax + PR #83 user_metadata.provider 검증 효과. 단 회원탈퇴 후 재로그인 시 자동 로그인 issue 발견 → 별도 follow-up ([[project_naver_auto_relogin_followup]])
+- [x] **changePassword brute-force RL** (PR #35) — 2026-05-27 사용자 검증 완료. 정상 작동
 - [x] **/tax 재계산 race** (PR #36) — 2026-05-26 /qa 검증. `if (recalcing) return` ([app/(app)/tax/page.tsx:545](app/(app)/tax/page.tsx:545)) + `disabled={recalcing}` (L611) 2중 방어. 더블클릭 → "재계산 중…" + button disabled 즉시 노출
 - [x] **/report year 동기** (PR #36) — 2026-05-27 검증 완료. incident ([[project_api_report_incident_2026_05_26]]) 종결 — [PR #89](https://github.com/Delta-KR/kontaxt/pull/89) (`480eab0`) ttf path swap 으로 해결. fontkit woff2 decompressor + Node 24 → ttf raw parser 사용. 사용자 PDF 다운로드 prod 검증 PASS. Wave 1 사후 routine (5 sub-agent) 머지 차단 finding 0건
-- [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능 (2026-05-26 /qa 자동화 한계로 deferred — Chrome ext MCP `resize_window` 가 viewport emulation 안 함. DevTools 디바이스 모드 5초 필요)
+- [x] **모바일 가로 스크롤** (PR #37) — 2026-05-27 사용자 검증 완료. 가로 스크롤 정상. 단 모바일 햄버거 메뉴 UI 깨짐 발견 → [PR #96](https://github.com/Delta-KR/kontaxt/pull/96) 으로 별도 fix (mobile-nav createPortal, [[feedback_backdrop_blur_containing_block]])
 - [x] **theme toggle 깜빡임** (PR #37) — 2026-05-26 /qa 검증. bootScript ([app/layout.tsx:70](app/layout.tsx:70)) + getInitialTheme + visibility:hidden 3중 방어 정상 동작 확인. data-theme=dark reload 후 persist, head 6.4KB 안에 inline blocking script 2개
 - [x] **404 페이지** — 2026-05-26 /qa 검증. `/nonexistent-page-qa-test` → "404 페이지를 찾을 수 없습니다 / 메인으로" 링크 (href="/") 정상
 
@@ -144,18 +144,27 @@
 ### 2026-05-27 incident 종결 후속
 
 - [x] **PDF Bold weight 시각 검증** — 2026-05-27 사용자 PDF (`Kontaxt_2027.pdf`) 시각 확인 PASS. variable ttf 의 `wght` axis 가 fontkit + @react-pdf/renderer 조합에서 정확히 작동 — H1·헤더·금액 강조·납부세액·섹션 라벨 모두 진짜 weight 700 글리프 렌더. synthetic bold fallback 아님. codex + regression 의심 = false alarm (의심은 정당, 시각 검증으로 확정)
-- [ ] **(선택) pretendard 패키지 version pin 틸드** — `dist/public/variable/` path 가 major bump 시 깨질 위험. 캐럿 → 틸드 (1.3.x) 또는 fallback resolver
+- [x] **pretendard 패키지 version pin 틸드** — [PR #91](https://github.com/Delta-KR/kontaxt/pull/91). `^1.3.9` → `~1.3.9`. `dist/public/variable/` path 가 major bump 시 깨질 위험 차단
+- [x] **`@react-pdf/renderer` 틸드 pin** — [PR #97](https://github.com/Delta-KR/kontaxt/pull/97). `^4.5.1` → `~4.5.1`. fontkit/pdfkit transitive 라 같은 incident 벡터 (Wave 1 codex finding)
 - [ ] **(선택) woff2 + brotli polyfill 로 bundle size 회복** — ttf 6.74MB → woff2 2.06MB (-4.7MB). Node 24 + fontkit 호환 stabilize 시점 재검토
+
+### 2026-05-27 P1 검증 중 신규 발견
+
+- [x] **모바일 햄버거 메뉴 UI 깨짐** — [PR #96](https://github.com/Delta-KR/kontaxt/pull/96). nav 의 `backdrop-blur-[20px]` 가 CSS spec 상 fixed positioning containing block 만드는 문제. 자식 MobileNav 의 `fixed inset-0 z-[60]` dialog 가 viewport 가 아닌 nav 영역 안에 한정 → panel 이 본문 위로 안 올라감. `createPortal` 로 `document.body` 에 mount 우회. 메모리 [[feedback_backdrop_blur_containing_block]]
+- [ ] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident** — 2026-05-27 사용자 발견. deleteAccount 성공 (auth.users row 정상 삭제 검증) 후 Naver 로그인 버튼 클릭 시 Naver NID_AUT cookie 가 살아있어 consent skip → callback → `findUserByEmail` null → `admin.generateLink` 가 새 user 자동 생성 → 자동 로그인. **보안 사고 아님** (사용자 본인 Naver 인증), UX 측면 어색. follow-up plan ([[project_naver_auto_relogin_followup]]):
+  - (1) Naver token revoke API 호출 — `auth.identities.provider_token` 컬럼 검증 (Naver magic link 패턴이라 비어있을 가능성) → callback 수정해서 token 보관 + 탈퇴 시 Naver delete API 호출
+  - (2) 회원탈퇴 모달에 외부 link 추가 — `https://nid.naver.com/user2/api/oauth/oauthMyInfo.naver` (사용자 직접 권한 해제)
+  - (3) Naver NID_AUT cookie 자체는 우리가 제어 불가 (사용자 다른 Naver 서비스 사용 영향)
+- [ ] **모바일 UI/UX 추가 깨짐** — 사용자 보고: "모바일 환경에서 UI UX 깨짐이 약간있어". 햄버거 메뉴 외 다른 페이지 모바일 viewport 시각 audit 필요
 
 ### P3 — code quality 폴리시
 
 - [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
-- [ ] README 갱신 — marketing-only → SaaS 전체 (code-quality P1)
+- [x] **README 갱신 — marketing-only → SaaS 전체** (code-quality P1) — [PR #94](https://github.com/Delta-KR/kontaxt/pull/94). +230/-238, Quick Start·Tech Stack·Architecture·Domain·거래소 파서·PDF/Email/DB 섹션 신설
 - [x] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용). 4 파일 + 13 import + `@vitest/coverage-v8` 설치 묶음 PR
-- [x] ~~`@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합~~ — **2026-05-27 verify: 통합할 게 없음**. `package.json` 직접 의존 = `@react-email/components` + `@react-email/render` 둘뿐 (커밋 7e28fb9 시점부터). emails/, scripts/, lib/email/ .tsx/.ts 6 파일 import 도 전부 `@react-email/components` 통합 패키지 사용 중. 빌드 로그의 18개 deprecation warning 은 `@react-email/components@1.0.12` 자체의 transitive subdep — 상류 (Resend) 가 1.x 라인 전체를 deprecated 처리했지만 2.x 대체본 미배포. 우리 레포 차원 fix 불가. 후속: 상류 2.x 배포 대기 또는 npm `overrides` no-op 스텁 (위험)
-- [ ] doge.svg 압축 — 56 KB, 다른 코인 로고의 30× (perf P1-6)
-- [ ] mark.svg 인라인 SVG 화 — `<img>` 대신
-- [ ] `error.tsx`가 `<Button>` 사용 (reuse R#10), login `Input.error` aria 복원 (R#14)
+- [x] ~~`@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합~~ — **2026-05-27 verify: 통합할 게 없음** ([PR #92](https://github.com/Delta-KR/kontaxt/pull/92)). 직접 의존 = `@react-email/components` + `@react-email/render` 둘뿐. 빌드 로그의 18개 deprecation warning 은 상류 (Resend) 가 1.x 라인 전체 deprecated 처리한 transitive — 우리 레포 차원 fix 불가
+- [x] **doge.svg 압축 + mark.svg 인라인 SVG화** (perf P1-6 + reuse) — [PR #95](https://github.com/Delta-KR/kontaxt/pull/95). doge.svg 57KB → 26KB (-53.7% svgo). mark.svg 제거 + `components/ui/Mark.tsx` 컴포넌트 신설 (currentColor 적용, nav/footer 2 사용처 마이그)
+- [x] **`error.tsx` `<Button>` 사용 (reuse R#10), login `Input.error` aria 복원 (R#14)** — [PR #93](https://github.com/Delta-KR/kontaxt/pull/93). `app/error.tsx` raw button → Button + Link, `app/(auth)/login` 빈 필드 시 Input error state + aria-invalid 정확 wire
 
 ### 직전 세션 핵심 참고
 
