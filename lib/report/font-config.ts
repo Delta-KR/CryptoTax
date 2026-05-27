@@ -6,19 +6,18 @@ let registered = false;
 
 export function ensureFontRegistered(): void {
   if (registered) return;
+  // ttf 사용 — PR #86~#88 의 woff2 + Node 24 RangeError 회피.
+  // fontkit 의 woff2 decompressor 가 Node 24 DataView 환경에서 깨지는 문제 (`Offset is
+  // outside the bounds of the DataView`) 우회. ttf 는 압축 없는 raw 폰트라 decompressor
+  // 경로를 건드리지 않음. variable ttf 1 파일로 모든 weight 자동 처리.
   const fontPath = path.join(
     process.cwd(),
-    'node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
+    'node_modules/pretendard/dist/public/variable/PretendardVariable.ttf',
   );
 
-  // 진단: PR #76 이 outputFileTracingIncludes 로 woff2 를 lambda 에 포함시켰음에도
-  // prod /api/report 가 RangeError (Offset is outside the bounds of the DataView) 발생.
-  // 두 가지 가능성: (1) outputFileTracingIncludes key 가 next 16 App Router 에서
-  // 작동 안 함 → file 자체 lambda 에 없음, (2) file 은 있지만 woff2 decompressor 가
-  // Node 24 환경에서 깨짐. existsSync 로 어느 쪽인지 판별.
   if (!fs.existsSync(fontPath)) {
     throw new Error(
-      `[font-config] Pretendard woff2 not found at ${fontPath} ` +
+      `[font-config] Pretendard ttf not found at ${fontPath} ` +
         `(cwd=${process.cwd()}). outputFileTracingIncludes 가 lambda bundle 에 ` +
         `포함하지 못함.`,
     );
