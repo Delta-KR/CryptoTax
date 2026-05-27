@@ -201,16 +201,23 @@ export async function deleteAccount(): Promise<{
   try {
     const { data: tokenRow, error: tokenLookupError } = await admin
       .from('oauth_tokens')
-      .select('access_token, refresh_token, provider')
+      .select('access_token, refresh_token, expires_at, provider')
       .eq('user_id', userId)
       .eq('provider', 'naver')
       .maybeSingle();
     if (tokenLookupError) {
       console.error('[deleteAccount] oauth_tokens lookup error:', tokenLookupError);
     } else if (tokenRow?.access_token) {
+      // expires_at 전달 — Wave 1 사후 codex NIT (PR #101 review): 만료된
+      // access_token 으로 1차 delete 호출 skip 하고 직접 refresh 분기로
+      // (Naver API call 1회 절감).
+      const expiresAt = tokenRow.expires_at
+        ? new Date(tokenRow.expires_at as string)
+        : null;
       const revokeResult = await revokeNaverToken(
         tokenRow.access_token,
         tokenRow.refresh_token,
+        expiresAt,
       );
       if (!revokeResult.ok) {
         console.error(

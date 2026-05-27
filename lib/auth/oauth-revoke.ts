@@ -16,10 +16,15 @@ type RevokeResult = {
  * Naver access_token 으로 권한 해제 시도. access_token 만료면 refresh 후 재시도.
  * 모든 실패 (token 없음 / refresh 실패 / Naver API error) 에서 false 반환 + reason.
  * deleteAccount 흐름은 결과와 무관하게 진행 (best-effort).
+ *
+ * @param expiresAt - 보관된 access_token 의 만료 시각. 이미 만료됐으면 1차
+ *   delete 호출 skip 하고 직접 refresh 분기로 (Naver API call 1회 절감).
+ *   Wave 1 사후 codex NIT (PR #101 review) follow-up.
  */
 export async function revokeNaverToken(
   accessToken: string,
   refreshToken: string | null,
+  expiresAt: Date | null = null,
 ): Promise<RevokeResult> {
   const clientId = process.env.NAVER_CLIENT_ID;
   const clientSecret = process.env.NAVER_CLIENT_SECRET;
@@ -55,12 +60,21 @@ export async function revokeNaverToken(
     }
   };
 
-  // 1차 — 보관된 access_token 으로 직접 호출
-  const first = await callDelete(accessToken);
-  if (first.ok) return first;
+  // expires_at 만료 검사 — 이미 만료 확실하면 1차 delete 호출 skip
+  // (Naver API call 1회 절감). 단 expiresAt 모름 (null) 이면 그냥 시도.
+  const expired = expiresAt !== null && expiresAt.getTime() <= Date.now();
+
+  let firstFailReason: string = expired ? 'token_expired' : 'naver_api_error';
+
+  // 1차 — 보관된 access_token 으로 직접 호출 (만료 안 됐을 때만)
+  if (!expired) {
+    const first = await callDelete(accessToken);
+    if (first.ok) return first;
+    firstFailReason = first.reason ?? 'naver_api_error';
+  }
 
   // 2차 — refresh_token 있으면 새 access_token 받고 재시도
-  if (!refreshToken) return first;
+  if (!refreshToken) return { ok: false, reason: firstFailReason };
   try {
     const refreshRes = await fetch('https://nid.naver.com/oauth2.0/token', {
       method: 'POST',
