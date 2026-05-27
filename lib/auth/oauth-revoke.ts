@@ -29,6 +29,9 @@ export async function revokeNaverToken(
 
   const callDelete = async (token: string): Promise<RevokeResult> => {
     try {
+      // 5s timeout — Naver API hang 시 회원탈퇴 lambda 가 60s 한계까지
+      // 기다리면 사용자에게 "탈퇴 안 됨" 으로 보이는 UX 차단.
+      // Wave 1 사후 routine codex+infra finding (PR #101 review).
       const res = await fetch('https://nid.naver.com/oauth2.0/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -39,6 +42,7 @@ export async function revokeNaverToken(
           access_token: token,
           service_provider: 'NAVER',
         }).toString(),
+        signal: AbortSignal.timeout(5000),
       });
       const data = (await res.json()) as { result?: string; error?: string };
       if (data.result === 'success') return { ok: true };
@@ -67,6 +71,8 @@ export async function revokeNaverToken(
         client_secret: clientSecret,
         refresh_token: refreshToken,
       }).toString(),
+      // 5s timeout (위 callDelete 와 동일 사유).
+      signal: AbortSignal.timeout(5000),
     });
     const refreshData = (await refreshRes.json()) as {
       access_token?: string;
