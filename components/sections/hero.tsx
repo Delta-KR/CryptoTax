@@ -53,19 +53,24 @@ function Stat({ label, value, tone, big }: StatProps) {
   return (
     <div
       className={
-        'rounded-[10px] px-3.5 py-3 ' +
+        'rounded-[10px] px-2.5 py-2.5 sm:px-3.5 sm:py-3 ' +
         (isBrand
           ? 'border border-brand/20 bg-brand-faint'
           : 'border border-line-2 bg-card-2')
       }
     >
-      <div className="nowrap mb-1 text-[11px] font-medium text-muted">{label}</div>
+      <div className="nowrap mb-0.5 text-[10px] font-medium text-muted sm:mb-1 sm:text-[11px]">
+        {label}
+      </div>
+      {/* 모바일에서 tracking-tightish 가 letter-spacing 너무 압축돼 글자 stroke 가
+          가로로 합쳐져 strikethrough 처럼 보이는 시각 효과 회피 — tracking-normal
+          기본 + sm 이상에서 tightish. text size 도 모바일은 살짝 작게. */}
       <div
         className={
-          'num nowrap font-bold tracking-tightish ' +
+          'num nowrap font-bold tracking-normal sm:tracking-tightish ' +
           valueColor +
           ' ' +
-          (big ? 'text-[22px]' : 'text-[18px]')
+          (big ? 'text-[17px] sm:text-[22px]' : 'text-[15px] sm:text-[18px]')
         }
       >
         {value}
@@ -84,10 +89,12 @@ interface BarProps {
 function Bar({ label, amount, pct, gain }: BarProps) {
   return (
     <div
-      className="grid items-center gap-3"
-      style={{ gridTemplateColumns: '36px 1fr 90px' }}
+      className="grid items-center gap-2 sm:gap-3"
+      // 모바일에서 좁은 viewport — 라벨/금액 컬럼 살짝 축소.
+      // sm 이상은 기존 비율 유지.
+      style={{ gridTemplateColumns: '30px 1fr 72px' }}
     >
-      <div className="nowrap text-xs font-semibold text-ink-2">{label}</div>
+      <div className="nowrap text-[11px] font-semibold text-ink-2 sm:text-xs">{label}</div>
       <div className="relative h-2.5 rounded-[6px] border border-line-2 bg-bg-tint">
         <div
           className="absolute inset-y-0 left-0 rounded-[6px]"
@@ -101,7 +108,7 @@ function Bar({ label, amount, pct, gain }: BarProps) {
       </div>
       <div
         className={
-          'num nowrap text-right text-xs font-semibold ' +
+          'num nowrap text-right text-[11px] font-semibold sm:text-xs ' +
           (gain ? 'text-good' : 'text-bad')
         }
       >
@@ -203,36 +210,40 @@ function DashboardMock() {
           <div className="w-[30px]" />
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Header row */}
-          <div className="mb-5 flex items-baseline justify-between">
+          <div className="mb-4 flex items-baseline justify-between sm:mb-5">
             <div>
-              <div className="nowrap mb-1 text-xs text-muted">
+              <div className="nowrap mb-1 text-[11px] text-muted sm:text-xs">
                 2027년 귀속 · 가상자산 양도소득
               </div>
-              <div className="text-[18px] font-bold tracking-tightish text-ink">
+              <div className="text-[16px] font-bold tracking-tightish text-ink sm:text-[18px]">
                 세금 계산 결과
               </div>
             </div>
-            <div className="nowrap rounded-full border border-good/40 bg-good-soft px-2.5 py-1 text-[11px] font-semibold text-good">
+            <div className="nowrap rounded-full border border-good/40 bg-good-soft px-2 py-0.5 text-[10px] font-semibold text-good sm:px-2.5 sm:py-1 sm:text-[11px]">
               ● 계산 완료
             </div>
           </div>
 
           {/* 3 stat tiles */}
-          <div className="mb-5 grid grid-cols-3 gap-3">
+          <div className="mb-4 grid grid-cols-3 gap-2 sm:mb-5 sm:gap-3">
             <Stat label="총 양도차익" value="+₩2,120만" tone="good" />
             <Stat label="기본공제" value="−₩250만" tone="muted" />
             <Stat label="납부세액" value="₩411만" tone="brand" big />
           </div>
 
           {/* Chart */}
-          <div className="mb-4 rounded-md border border-line-2 bg-bg-soft px-[18px] py-4">
-            <div className="mb-3.5 flex items-baseline justify-between gap-2">
-              <div className="nowrap text-[13px] font-semibold text-ink">코인별 손익</div>
-              <div className="nowrap text-[11px] text-muted-2">세율 22% (20% + 2%)</div>
+          <div className="mb-3 rounded-md border border-line-2 bg-bg-soft px-3 py-3 sm:mb-4 sm:px-[18px] sm:py-4">
+            <div className="mb-3 flex items-baseline justify-between gap-2 sm:mb-3.5">
+              <div className="nowrap text-[12px] font-semibold text-ink sm:text-[13px]">
+                코인별 손익
+              </div>
+              <div className="nowrap text-[10px] text-muted-2 sm:text-[11px]">
+                세율 22% (20% + 2%)
+              </div>
             </div>
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2 sm:gap-2.5">
               {bars.map((b) => (
                 <Bar key={b.label} {...b} />
               ))}
@@ -240,7 +251,7 @@ function DashboardMock() {
           </div>
 
           {/* Footer chips */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <Chip>총평균법</Chip>
             <Chip>의제취득가액 적용</Chip>
             <Chip>3개 거래소 통합</Chip>
