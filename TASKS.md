@@ -152,7 +152,7 @@
 - [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
 - [ ] README 갱신 — marketing-only → SaaS 전체 (code-quality P1)
 - [x] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용). 4 파일 + 13 import + `@vitest/coverage-v8` 설치 묶음 PR
-- [ ] `@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합
+- [x] ~~`@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합~~ — **2026-05-27 verify: 통합할 게 없음**. `package.json` 직접 의존 = `@react-email/components` + `@react-email/render` 둘뿐 (커밋 7e28fb9 시점부터). emails/, scripts/, lib/email/ .tsx/.ts 6 파일 import 도 전부 `@react-email/components` 통합 패키지 사용 중. 빌드 로그의 18개 deprecation warning 은 `@react-email/components@1.0.12` 자체의 transitive subdep — 상류 (Resend) 가 1.x 라인 전체를 deprecated 처리했지만 2.x 대체본 미배포. 우리 레포 차원 fix 불가. 후속: 상류 2.x 배포 대기 또는 npm `overrides` no-op 스텁 (위험)
 - [ ] doge.svg 압축 — 56 KB, 다른 코인 로고의 30× (perf P1-6)
 - [ ] mark.svg 인라인 SVG 화 — `<img>` 대신
 - [ ] `error.tsx`가 `<Button>` 사용 (reuse R#10), login `Input.error` aria 복원 (R#14)
