@@ -8,6 +8,7 @@ import {
 } from '@/lib/supabase/server';
 import { isPasswordValid } from '@/lib/auth/password-rules';
 import { hasEmailIdentity } from '@/lib/auth/oauth-providers';
+import { revokeNaverToken } from '@/lib/auth/oauth-revoke';
 import { checkRateLimit, getAuthReauthRateLimit } from '@/lib/rate-limit';
 
 export type ChangePasswordCode =
@@ -186,21 +187,52 @@ export async function deleteAccount(): Promise<{
     console.error('[deleteAccount] profiles delete exception:', e);
   }
 
-  // 2) 쿠키 정리. admin.deleteUser 후에는 세션이 무효이므로 먼저 sign out.
+  // 2) Naver OAuth 권한 revoke 시도 — best-effort.
+  //    [[project_naver_auto_relogin_followup]] layer 2 자동화. 성공 시 다음
+  //    로그인에 Naver consent 화면 다시 나옴 (자동 재로그인 X).
+  //    실패해도 진행 — 사용자가 회원탈퇴 모달의 외부 link 로 직접 해제 가능.
+  //    auth.users.deleteUser 가 oauth_tokens 도 cascade delete 하므로 순서가
+  //    deleteUser 이전이어야 함.
+  try {
+    const { data: tokenRow, error: tokenLookupError } = await admin
+      .from('oauth_tokens')
+      .select('access_token, refresh_token, provider')
+      .eq('user_id', userId)
+      .eq('provider', 'naver')
+      .maybeSingle();
+    if (tokenLookupError) {
+      console.error('[deleteAccount] oauth_tokens lookup error:', tokenLookupError);
+    } else if (tokenRow?.access_token) {
+      const revokeResult = await revokeNaverToken(
+        tokenRow.access_token,
+        tokenRow.refresh_token,
+      );
+      if (!revokeResult.ok) {
+        console.error(
+          '[deleteAccount] naver revoke failed (best-effort):',
+          revokeResult.reason,
+        );
+      }
+    }
+  } catch (e) {
+    console.error('[deleteAccount] naver revoke exception:', e);
+  }
+
+  // 3) 쿠키 정리. admin.deleteUser 후에는 세션이 무효이므로 먼저 sign out.
   try {
     await supabase.auth.signOut();
   } catch (e) {
     console.error('[deleteAccount] signOut error:', e);
   }
 
-  // 3) auth.users 삭제.
+  // 4) auth.users 삭제. ON DELETE CASCADE 로 oauth_tokens 도 같이 삭제.
   const { error: deleteError } = await admin.auth.admin.deleteUser(userId);
   if (deleteError) {
     console.error('[deleteAccount] admin.deleteUser error:', deleteError);
     return { ok: false, error: deleteError.message };
   }
 
-  // 4) sb-* auth 쿠키 명시 cleanup — signOut 의 cookieStore mutation 이
+  // 5) sb-* auth 쿠키 명시 cleanup — signOut 의 cookieStore mutation 이
   //    server-action 환경에서 best-effort 라 orphan 쿠키가 남을 수 있음.
   try {
     const cookieStore = await cookies();

@@ -69,6 +69,9 @@ export async function GET(request: NextRequest) {
     });
     const tokenData = (await tokenResponse.json()) as {
       access_token?: string;
+      refresh_token?: string;
+      expires_in?: string;
+      token_type?: string;
       error?: string;
       error_description?: string;
     };
@@ -168,6 +171,36 @@ export async function GET(request: NextRequest) {
           providers: ['naver'],
         },
       });
+
+      // 6b. oauth_tokens 보관 — 회원탈퇴 시 Naver delete API 호출용
+      //     ([[project_naver_auto_relogin_followup]] layer 2 자동화).
+      //     service role admin client 라 RLS 우회. expires_at 으로 token 유효성
+      //     판단해 만료 시 refresh_token 으로 재발급 가능.
+      //     실패해도 로그인 흐름 진행 (best-effort).
+      try {
+        const expiresAt = tokenData.expires_in
+          ? new Date(Date.now() + parseInt(tokenData.expires_in, 10) * 1000)
+          : null;
+        const { error: tokenStoreError } = await admin
+          .from('oauth_tokens')
+          .upsert(
+            {
+              user_id: userId,
+              provider: 'naver',
+              access_token: tokenData.access_token,
+              refresh_token: tokenData.refresh_token ?? null,
+              expires_at: expiresAt?.toISOString() ?? null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'user_id,provider' },
+          );
+        if (tokenStoreError) {
+          // 로그인 흐름은 계속 진행. revoke 자동화만 영향.
+          console.error('[naver/callback] oauth_tokens upsert error:', tokenStoreError);
+        }
+      } catch (e) {
+        console.error('[naver/callback] oauth_tokens upsert exception:', e);
+      }
     }
 
     // 7. magic link로 redirect → Supabase verify + fragment에 token → /auth/finish
