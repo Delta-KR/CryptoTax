@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 
 interface NavLink {
@@ -14,6 +15,12 @@ interface Props {
 
 export function MobileNav({ links, isAuthed }: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // SSR 안전 — document 접근은 mount 후만.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Lock body scroll while sheet is open; close on Esc.
   useEffect(() => {
@@ -30,34 +37,17 @@ export function MobileNav({ links, isAuthed }: Props) {
     };
   }, [open]);
 
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="메뉴 열기"
-        aria-expanded={open}
-        aria-controls="mobile-nav-sheet"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-transparent text-ink-2 transition-colors hover:bg-bg-soft md:hidden"
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path
-            d="M4 7h16M4 12h16M4 17h16"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      </button>
-
-      {open && (
-        <div
-          id="mobile-nav-sheet"
-          role="dialog"
-          aria-modal="true"
-          aria-label="주 메뉴"
-          className="fixed inset-0 z-[60] md:hidden"
-        >
+  // Portal 으로 document.body 에 mount — nav 의 backdrop-blur 가 stacking
+  // context + fixed positioning containing block 을 만들어서 자식 fixed
+  // dialog 가 viewport 가 아닌 nav 영역으로 한정되는 문제 회피.
+  const sheet = open ? (
+    <div
+      id="mobile-nav-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-label="주 메뉴"
+      className="fixed inset-0 z-[60] md:hidden"
+    >
           <div
             aria-hidden="true"
             className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
@@ -126,7 +116,29 @@ export function MobileNav({ links, isAuthed }: Props) {
             </div>
           </div>
         </div>
-      )}
+  ) : null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label="메뉴 열기"
+        aria-expanded={open}
+        aria-controls="mobile-nav-sheet"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-line bg-transparent text-ink-2 transition-colors hover:bg-bg-soft md:hidden"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M4 7h16M4 12h16M4 17h16"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+
+      {mounted && sheet && createPortal(sheet, document.body)}
     </>
   );
 }
