@@ -1,298 +1,290 @@
-# Handoff: Kontaxt — Marketing Landing Page
+# Kontaxt
 
-## Overview
-A marketing landing page for **Kontaxt**, a Korean crypto-tax reconciliation platform. The page introduces the 2027 Korean crypto capital-gains tax, explains how the product unifies trade data across exchanges (Upbit / Bithumb / Binance and more), walks through how the calculation works, and converts visitors to free signup.
+> 한국 가상자산 양도소득세(2027.01.01 시행) 정산 SaaS.
+> Upbit / Binance / Bithumb 거래내역을 한국 세법(시행령 §88①·총평균법·의제취득가액·22%)에 맞춰 통합 계산.
 
-Sections (in order):
-1. **Nav** (sticky) — logo, anchor links (작동 방식 / 지원 거래소 / 기능 / 요금제), theme toggle, login, 무료 시작 CTA
-2. **Hero** — D-237 badge, gradient headline, dual CTAs, trust checks, dashboard mock with two floating cards
-3. **Problem** — CSV/PDF/XLS format comparison across 3 exchanges + a reconciliation diagram
-4. **HowItWorks** — 3 numbered step cards with connecting arrows
-5. **Example** — 총평균법 단일 시연 (시행령 §88①), gain/loss list, derived 납부세액 card
-6. **Exchanges** — supported exchange grid (Live vs Coming Soon)
-7. **Features** — bento-style grid: 1 big card + 4 small cards
-8. **Pricing** — 3 tiers (무료 / 프리미엄 / 원타임), monthly↔annual toggle, BEST VALUE emphasis
-9. **CTA** — glass card on vivid blob glow + stats strip
-10. **Footer** — 4-column layout
-
-A floating **Tweaks** panel exists in the design preview only — it's an authoring tool, not a production feature. Do not ship it.
+[kontaxt.kr](https://kontaxt.kr) · D-219 to 2027.01.01 · Next.js 16 · React 19 · Supabase · Resend
 
 ---
 
-## About the Design Files
-The files inside `design/` are **design references created as a static HTML prototype** — they exist to communicate intended look, layout, and behavior. They are *not* production code to ship verbatim.
+## What is Kontaxt
 
-The expected work is to **recreate this design in the target codebase's existing environment**:
-- If there's already a React / Next.js / Vue / SvelteKit / SwiftUI app — use that stack, that component library, that token system, that routing.
-- If there's no codebase yet — pick the most appropriate framework for the project (Next.js + Tailwind is a reasonable default for a Korean marketing site that needs server-rendered SEO and Pretendard font loading) and implement there.
+거주자 가상자산 양도소득세는 2027.01.01 시행이다. 거래소마다 데이터 포맷이 다르고(PDF / CSV / XLS), 세법은 총평균법·의제취득가액·연간 250만원 공제·22% 단일세율을 요구한다. Kontaxt 는 거래내역을 업로드받아 세법에 맞춰 정산하고, 세무사 전달용 신고 PDF 까지 한 번에 만들어낸다.
 
-The HTML prototype uses React + Babel-in-the-browser only because that was the fastest way to design it. Translate the JSX/CSS-in-JS into idiomatic components in the target stack.
-
-## Fidelity
-**High-fidelity (hifi).** Colors, typography, spacing, shadows, gradients, and interactive states are all final. Reproduce pixel-for-pixel using the codebase's existing primitives where they exist; introduce new tokens only when no equivalent exists.
+대상은 한국 거주자 개인 투자자. 무료 양도 시뮬레이터로 결과를 미리 확인할 수 있고, 회원가입 후 거래내역 통합 계산·결과 검토·신고용 PDF 다운로드까지 진행한다.
 
 ---
 
-## Design Tokens
+## Quick Start
 
-All tokens are defined in `design/index.html` inside `:root` and `[data-theme="dark"]`. Drop them into the target codebase's token system (Tailwind config, CSS variables, design-system theme file — whatever's idiomatic).
+```bash
+# clone & install
+git clone https://github.com/Delta-KR/kontaxt.git
+cd kontaxt
+npm install
 
-### Colors — Light
+# 환경변수 — .env.local 에 작성. 자세한 키는 docs/env.md.
+# 최소 필수:
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   SUPABASE_SERVICE_ROLE_KEY
+#   NEXT_PUBLIC_TURNSTILE_SITE_KEY
+#   TURNSTILE_SECRET_KEY
 
-| Token | Value | Use |
+# dev server
+npm run dev               # http://localhost:3000
+
+# typecheck / tests
+npm run typecheck
+npm test
+
+# 이메일 미리보기
+npm run email:dev         # http://localhost:3001
+npm run email:build       # emails/*.tsx → emails/dist/*.html
+```
+
+Node 20.x 필요(`package.json#engines`, fontkit + @react-pdf/renderer 호환).
+
+---
+
+## Tech Stack
+
+| 영역 | 선택 |
+|---|---|
+| Framework | Next.js 16 (App Router · RSC) · React 19 |
+| Styling | Tailwind 3.4 · CSS variables (light/dark) · Pretendard · JetBrains Mono |
+| Auth | Supabase Auth (이메일·Google·Naver OAuth) · Cloudflare Turnstile |
+| DB | Supabase Postgres + Row Level Security |
+| 이메일 | Resend (Custom SMTP) + React Email |
+| PDF | `@react-pdf/renderer` + Pretendard variable ttf |
+| Validation | Zod |
+| Rate limit | Upstash Redis (sliding window) |
+| Test | Vitest (50+ 케이스, FIFO·MA·총평균·환율·penalty) |
+| Host | Vercel (Node 20.x runtime) |
+| Domain | kontaxt.kr (Cloudflare DNS · 도메인 등록 가비아) |
+
+---
+
+## Architecture Overview
+
+4-layer 구조. 모든 인앱·API 경로는 Supabase Auth 세션을 요구하며, server action·route handler 에서 `requirePremium` / RLS 로 권한 확인한다.
+
+```
+┌─ Marketing (public · 정적) ─────────────────────────────────┐
+│  app/(marketing)/        Hero·Pricing·FAQ·Guide·Sample      │
+│  app/(marketing)/simulator/   회원가입 없이 양도세 추정       │
+└─────────────────────────────────────────────────────────────┘
+                          │ 가입·로그인
+                          ▼
+┌─ Auth ───────────────────────────────────────────────────────┐
+│  app/(auth)/             signup · login · reset-password    │
+│  app/api/auth/naver/     state cookie sameSite=lax          │
+│  emails/                 verify · reset · welcome 트랜잭셔널 │
+└─────────────────────────────────────────────────────────────┘
+                          │ 로그인 세션
+                          ▼
+┌─ In-app SaaS (인증 필수) ────────────────────────────────────┐
+│  app/(app)/dashboard/    온보딩 + 거래소 업로드 진입         │
+│  app/(app)/transactions/ 업로드 + 통합 거래내역 테이블        │
+│  app/(app)/tax/          엔진 결과 + 재계산 + 옵션 토글       │
+│  app/(app)/report/       신고용 PDF 다운로드 (premium gate)   │
+│  app/(app)/billing/      포트원 결제(통합 진행 중)            │
+│  app/(app)/settings/     의제취득가액 override · 계정         │
+└─────────────────────────────────────────────────────────────┘
+                          │ server action / API
+                          ▼
+┌─ Engine & Infra ─────────────────────────────────────────────┐
+│  lib/parsers/   Upbit PDF · Binance CSV → ParsedTransaction │
+│  lib/engine/    normalizer → 총평균/FIFO/MA → tax-calculator │
+│  lib/engine/    deemed-cost · exchange-rate · penalty       │
+│  lib/report/    react-pdf 신고서 + Pretendard ttf            │
+│  app/api/report/  PDF 생성 (Node 20.x, fontkit raw ttf)     │
+│  supabase/      profiles · daily_rates · deemed_cost_*       │
+│                 + Edge function (Upbit 일별 환율 cron)       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+자세한 트리:
+
+```
+app/
+  (marketing)/       랜딩 + 게스트 페이지 (정적 ISR · revalidate=86400)
+    page.tsx         Hero · Problem · HowItWorks · Example · Exchanges
+                     Features · Pricing · CTA · Footer
+    simulator/       회원가입 없이 querystring 공유 가능한 양도세 추정
+    guide/ sample/   가이드 · 샘플 결과
+    legal/           이용약관 · 개인정보처리방침
+  (auth)/            signup · login · forgot-password · reset-password
+  (app)/             인증 필수 — AppShell 안에서 useCurrentUser context
+    dashboard/       랜딩 진입점
+    transactions/    업로드 + 통합 거래 테이블
+    tax/             세금 결과 + 재계산 + 엔진 옵션
+    report/          PDF 다운로드 (premium)
+    billing/         결제 (포트원 통합 진행 중)
+    settings/        deemed-cost override · 계정
+  api/
+    report/          PDF 생성 (POST · rate-limited · premium)
+    auth/naver/      OAuth start + callback (state cookie lax)
+
+lib/
+  parsers/           각 거래소 → ParsedTransaction
+  engine/            normalizer · FIFO · MA · total-average ·
+                     deemed-cost · exchange-rate · penalty · tax-calculator
+  pricing/plans.ts   단일 source — ₩49,900 원타임 / ₩89,000/년 구독
+  report/            @react-pdf/renderer 컴포넌트 + font-config
+  email/             Resend SDK 래퍼 (welcome 등 자체 발송)
+  auth/              client-ip · naver helper · finish-nonce
+  supabase/          server/client 분리 + admin
+  rate-limit.ts      makeLimit(prefix, count, window)
+
+components/
+  sections/          marketing 섹션 컴포넌트
+  app-chrome/        Nav · Footer · UserContextProvider
+  ui/                Button · Input · FormErrorBanner 등
+
+supabase/migrations/ 13 마이그레이션 (profiles · daily_rates ·
+                     deemed_cost_snapshots · rls_initplan 최적화 등)
+emails/              verify-email · reset-password · welcome (React Email)
+public/              로고 · 거래소 SVG · OG 이미지
+docs/                business-plan · tax-law-compliance · env · audit/
+```
+
+---
+
+## Domain — 한국 가상자산 양도소득세
+
+거주자(개인) 양도소득세는 2027.01.01 시행. 핵심 규정:
+
+- **취득가액 산정** — 시행령 §88①·§92②4호 → **총평균법 단일 적용**(연간 평균 단가). FIFO·이동평균은 비거주자 모드(§183⑥) 또는 참고용 시나리오로만 사용. `lib/engine/total-average.ts` 가 디폴트 경로.
+- **의제취득가액** — 2027.01.01 이전 취득분은 (실제 취득가액 vs 2026.12.31 시가) 중 큰 값 적용. `lib/engine/deemed-cost.ts` + Supabase `deemed_cost_snapshots` 테이블 + 사용자 override(`settings/deemed-cost`).
+- **기본공제** — 연 250만원.
+- **세율** — 22%(소득세 20% + 지방세 2%) 단일세율.
+- **환율 변환** — 해외 거래소(Binance) 거래의 USDT·USD 표시 금액은 거래일 KST 기준 환율로 KRW 환산. `lib/engine/exchange-rate.ts` + Supabase `daily_rates`(Upbit Edge function 일별 cron).
+- **가산세** — 무신고 20% · 부정 40% · 납부지연 일 0.022%. `lib/engine/penalty.ts`.
+
+전체 시행령 매핑·예시 케이스는 [`docs/tax-law-compliance.md`](docs/tax-law-compliance.md) 참조. 산식 검증용 vitest 케이스는 `lib/engine/__tests__/`.
+
+---
+
+## 거래소 파서
+
+| 거래소 | 포맷 | 상태 |
 |---|---|---|
-| `--brand` | `#2563EB` | Primary actions, brand accents |
-| `--brand-2` | `#1D4ED8` | Brand hover / pressed |
-| `--brand-soft` | `#EEF4FF` | Chip / pill backgrounds |
-| `--brand-faint` | `#F5F8FF` | Subtle brand-tinted surfaces |
-| `--ink` | `#0B1220` | Primary text |
-| `--ink-2` | `#1F2937` | Secondary text |
-| `--muted` | `#5C6678` | Tertiary text / labels |
-| `--muted-2` | `#8A93A4` | Quaternary text |
-| `--line` | `#E6EAF0` | Borders |
-| `--line-2` | `#EEF1F6` | Inner / subtle dividers |
-| `--bg` | `#FFFFFF` | Page background |
-| `--bg-soft` | `#FAFBFD` | Section / footer alt background |
-| `--bg-tint` | `#F4F7FB` | Inset / track backgrounds |
-| `--card` | `#FFFFFF` | Card surface |
-| `--card-2` | `#F8FAFC` | Card alt surface |
-| `--good` | `#16A34A` | Profit / success |
-| `--good-soft` | `#ECFDF5` | Success backgrounds |
-| `--bad` | `#DC2626` | Loss / error |
-| `--bad-soft` | `#FEF2F2` | Error backgrounds |
-| `--warn` | `#D97706` | Warning |
-| `--warn-soft` | `#FFFBEB` | Warning backgrounds |
+| Upbit | PDF (거래내역) | Live · `lib/parsers/upbit.parser.ts` |
+| Binance | CSV (Spot Trade History) | Live · `lib/parsers/binance-spot.parser.ts` |
+| Bithumb | XLS | Coming Soon (Phase 8 1순위) |
+| Coinone / Bybit / OKX / Bitget / Coinbase | 거래소별 | Coming Soon |
 
-### Colors — Dark (override under `[data-theme="dark"]`)
+각 파서는 `ParserInterface` 를 implements 해서 `lib/parsers/registry.ts` 에 등록. 신규 파서는 5단계:
 
-| Token | Value |
-|---|---|
-| `--brand` | `#3B82F6` |
-| `--brand-2` | `#2563EB` |
-| `--brand-soft` | `#1E2A4A` |
-| `--brand-faint` | `#182238` |
-| `--ink` | `#F1F5F9` |
-| `--ink-2` | `#E2E8F0` |
-| `--muted` | `#94A3B8` |
-| `--muted-2` | `#64748B` |
-| `--line` | `#1E293B` |
-| `--line-2` | `#1B2433` |
-| `--bg` | `#0B1220` |
-| `--bg-soft` | `#0E1626` |
-| `--bg-tint` | `#111A2C` |
-| `--card` | `#131C2E` |
-| `--card-2` | `#182238` |
-| `--good` | `#22C55E` |
-| `--bad` | `#F87171` |
-| `--warn` | `#FBBF24` |
+1. 샘플 거래내역 파일 확보(베타 사용자 협조 또는 본인 계정).
+2. `lib/parsers/{exchange}.parser.ts` 구현 — `parse(file)` 이 `ParsedTransaction[]` 반환.
+3. `registry.ts` 에 등록.
+4. `lib/parsers/__tests__/{exchange}.test.ts` 정상 + 엣지케이스 3~5개.
+5. 랜딩 `components/sections/exchanges.tsx` 의 Coming Soon → Live 이동.
 
-### Accent colors (used in section / feature cards, NOT theme-aware)
-
-| Purpose | Hex |
-|---|---|
-| Step 1 / Big feature / Brand | `#2563EB` |
-| Step 2 / Compare feature | `#7C3AED` |
-| Step 3 / Globe feature | `#16A34A` |
-| Doc feature / Bithumb | `#D97706` / `#F37321` |
-| Globe alt | `#0891B2` |
-| Upbit | `#0E48F0` |
-| Binance | `#F0B90B` (with `#1E2329` ink) |
-
-### Coin chart palette (Example section)
-- BTC `#F7931A` · ETH `#627EEA` · SOL `#9945FF`
-
-### Radii
-`--r-sm: 8px` · `--r-md: 12px` · `--r-lg: 16px` · `--r-xl: 24px`
-Also used directly: 10, 14, 18, 28.
-
-### Shadows
-Light:
-- `--shadow-sm`: `0 1px 0 rgba(255,255,255,.7) inset, 0 1px 2px rgba(15,23,42,.05), 0 0 0 1px rgba(15,23,42,.04)`
-- `--shadow-md`: `0 1px 0 rgba(255,255,255,.8) inset, 0 6px 20px -6px rgba(15,23,42,.10), 0 0 0 1px rgba(15,23,42,.05)`
-- `--shadow-lg`: `0 1px 0 rgba(255,255,255,.9) inset, 0 28px 56px -16px rgba(15,23,42,.18), 0 0 0 1px rgba(15,23,42,.04)`
-
-Dark equivalents are in `index.html`; they layer an inset white highlight + an outer brand-tinted glow on `--shadow-lg`.
-
-### Typography
-
-- **Body**: `Pretendard` (loaded from `cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9`) → fallback `-apple-system, BlinkMacSystemFont, sans-serif`
-- **Monospace / numerics**: `JetBrains Mono` (Google Fonts, weights 400/500/600) → fallback `ui-monospace, monospace`
-- **Font features**: body sets `font-feature-settings: "ss06" 1, "ss03" 1`; numeric usage sets `font-variant-numeric: tabular-nums` (`.num` class) and `"tnum" 1` on `.mono`.
-- **Wrapping**: `word-break: keep-all; overflow-wrap: break-word` on `html, body` — important for Korean. Many short labels (prices, chip text) force `white-space: nowrap` to prevent syllable-by-syllable wrapping.
-
-Type scale (used sizes, px):
-- Hero headline: 56 / 800 / 1.12 / −0.035em
-- CTA headline: 56 / 800
-- Section title (h2): 44 / 800 / 1.15 / −0.03em
-- Card title (h3): 20–24 / 700 / −0.02em
-- Stat large: 32–40 / 800 / −0.025em
-- Body lead: 17–18 / 1.6
-- Body: 13–14
-- Eyebrow: 12 / 700 / 0.18em tracking
-- Pricing price: 40 / 800
-- Tax-result figure: 36 / 800
-
-### Spacing
-Sections are vertically padded `120px 32px` (hero is `88px 32px 96px`). Max content width: `1240px`. Grid gaps: 12 / 16 / 24 / 32 / 40 / 56. Card padding: 24 / 28 / 32.
+Upbit PDF 파싱은 `pdf-parse@1` 고정(Vercel serverless DOMMatrix 미지원). v2 마이그레이션은 보안 업데이트 끊기는 시점에 재검토.
 
 ---
 
-## Atmosphere & background system
+## PDF 신고용 리포트
 
-The page has a continuous "aurora" background that runs the full document — do not lose this when porting; it's the most distinctive part of the visual identity.
+`app/api/report/route.ts` 가 `@react-pdf/renderer` + `lib/report/tax-report.tsx` 컴포넌트로 신고서 PDF 를 생성한다. premium 사용자만 다운로드 가능(`requirePremium`), rate limit 적용, 첫 페이지에 self-declared worksheet disclaimer 박스.
 
-Layers (back-to-front):
-1. **`body::before` + `body::after`** — fixed-position radial blooms (top-right brand, bottom-left violet `#8B5CF6`), `filter: blur(80–90px)`.
-2. **`.atmosphere` container** (absolutely-positioned, behind `#root`):
-   - `::before` — fine dot grid `radial-gradient(circle at center, color-mix(in srgb, var(--ink) 10%, transparent) 1px, transparent 1.5px)` at `24px 24px`, masked to fade at top/bottom.
-   - `::after` — diagonal hairline streaks via `repeating-linear-gradient(118deg, …)`.
-   - **10 `.blob` spans** (`b1`–`b10`) positioned down the page, each `border-radius: 50%`, `filter: blur(120px)` (light) / `140px` (dark), `opacity: 0.7` (light) / `0.85` (dark). Color rotation: brand blue → violet `#8B5CF6` → cyan `#06B6D4`.
-3. **`#root` background** — a vertical linear-gradient knitting `--bg` → `--bg-soft` blends through the whole document so transparent sections share one color story.
+**Node 20.x 런타임 고정 학습**:
+- `package.json#engines.node = "20.x"`(PR #88).
+- Pretendard 는 **variable ttf**(`PretendardVariable.ttf`)를 사용. woff2 는 fontkit 의 decompressor 가 Node 24 DataView 환경에서 `Offset is outside the bounds of the DataView` 로 깨진다(PR #89 ttf path swap 으로 해결).
+- ttf 는 압축이 없어 fontkit decompressor 경로를 건드리지 않음. variable 1 파일로 모든 weight 자동 처리 — Bold 까지 실제 weight 700 글리프로 렌더(PR #90 시각 검증 PASS).
+- `next.config.mjs` 의 `outputFileTracingIncludes` 가 lambda bundle 에 ttf 포함.
 
-The Hero adds a **notebook grid** overlay (40px × 40px brand-tinted lines, masked by a radial ellipse). The CTA adds the same grid masked by a vertical linear fade plus 3 additional vivid blobs.
-
-Hover-tracked spotlight: a JS `pointermove` listener writes `--mx` / `--my` CSS vars on the `.hov` element under the cursor. `.hov::before` draws a 220px radial spotlight at those vars; `.hov::after` adds a brand-tinted inner border. On `:hover` the card lifts `translateY(-3px)` and the spotlight + brand glow fade in.
+자세한 incident 기록은 `TASKS.md` `/api/report incident 2026-05-26` 절.
 
 ---
 
-## Section-by-section
+## 이메일
 
-### 1. Nav (`parts/chrome.jsx` → `Nav`)
-Sticky top, `border-bottom: 1px solid var(--line)`, `backdrop-filter: blur(20px) saturate(180%)` over `color-mix(in srgb, var(--bg) 85%, transparent)`. Layout: brand wordmark left, anchor links centered, theme toggle + 로그인 + 무료 시작 right. Anchors target `#how`, `#exchanges`, `#features`, `#pricing`. Theme toggle persists to `localStorage` under key `kontaxt-theme`; the value is restored by an inline `<script>` in the document head before React mounts (prevents flash).
+**Architecture** — Supabase Custom SMTP via Resend.
 
-### 2. Hero (`parts/hero.jsx`)
-2-column grid (`1fr 1.05fr`, gap 56). Left:
-- Pill badge: blue dot icon + "2027년 1월 1일 과세 시행 확정 · D-237"
-- Headline 56px/800, last clause has a gradient fill: `linear-gradient(120deg, var(--brand) 0%, #6366F1 60%, #8B5CF6 100%)` clipped to text
-- Lead paragraph
-- Two buttons (primary brand-filled with arrow icon; secondary card-bordered with file icon)
-- Three check chips: 신용카드 불필요 / 1거래소 영구 무료 / 2분만에 첫 결과
+```
+[가입/재설정 트리거]
+      ↓
+Supabase Auth (토큰 생성 + 템플릿 머지)
+      ↓ SMTP
+Resend (kontaxt.kr SPF/DKIM/DMARC 인증)
+      ↓
+사용자 받은편지함
+```
 
-Right: **DashboardMock** — a glass-effect "app window" with macOS traffic-light chrome and:
-- Header: "2027년 귀속 · 가상자산 양도소득" / "세금 계산 결과" + green ● 계산 완료 pill
-- 3 stat tiles (총 양도차익 / 기본공제 / 납부세액) — the 납부세액 tile uses `--brand-faint` background and brand-tinted border
-- Horizontal bar chart: BTC / ETH / SOL / XRP, each a 36px label + bar + amount, with gradient fills (`#60A5FA → var(--brand)` for gains, `#FCA5A5 → var(--bad)` for losses)
-- 4 chips below: 총평균법 / 의제취득가액 적용 / 3개 거래소 통합 / 247건 거래
-- Two **floating cards** absolutely positioned above + below-right of the mock: "업비트 거래내역 · upbit_2027.pdf · 통합 완료" with green check, and "2027 신고용 PDF · tax_report_홍길동.pdf · 세무사 전달 가능" with green dot.
+- 토큰·매직링크 생성 — Supabase Auth.
+- HTML 템플릿 저장 — Supabase Dashboard → Auth → Email Templates(`{{ .ConfirmationURL }}` 같은 Go 변수 그대로).
+- SMTP 발송 — Resend (`kontaxt.kr` 도메인 인증 완료).
+- Welcome 메일만 예외 — 인증 콜백에서 `lib/email/send.ts#sendWelcomeEmail()` 로 자체 발송.
 
-### 3. Problem (`parts/problem.jsx`)
-Section eyebrow + 2-line title (second line in `--muted`) + lead.
-3-column grid of **CSVCard**s — one per exchange (업비트/PDF, 빗썸/XLS, 바이낸스/CSV). Each card:
-- Colored header bar in exchange brand color (`#0E48F0` / `#F37321` / `#F0B90B`) with white logo square + name + monospace `.pdf`/`.xls`/`.csv` chip
-- Monospace comment line `# BTC 0.005 매수 · 425,212원`
-- Two-column table of label/value rows in JetBrains Mono with `font-variant-numeric: tabular-nums`
-- Quirks footer in `--bg-soft` with bordered pill chips (PDF 전용, 슬래시 날짜, UTC 시간, etc.)
-- Hover highlight via `.hov`; first-card-hover (or `active` state) thickens the border in the exchange color and adds a `0 0 0 4px ${color}15` glow
+빌드:
 
-Below the cards, a **reconciliation diagram**: 5-column grid (pills → arrow → label → arrow → "3초" result). Pills are red-tinted (`tone="bad"`) to convey friction; result is green.
+```bash
+npm run email:build       # emails/*.tsx → emails/dist/*.html
+                          # → Supabase 템플릿에 붙여넣을 최종 HTML
+```
 
-### 4. HowItWorks (`parts/howitworks.jsx`)
-Centered title, 3 step cards separated by SVG arrows in a single grid row (`1fr auto 1fr auto 1fr`). Each card has:
-- Huge step numeral (`0n` / 64px / 800 / accent color at 0.7 opacity) absolutely positioned top-right
-- Mono `STEP 0n` pill in a soft accent background
-- 48px rounded icon tile in soft accent background
-- Title 20/700 + description 14/muted
-
-Step accent colors: `#2563EB` / `#7C3AED` / `#16A34A`.
-
-### 5. Example (`parts/example.jsx`)
-Two-column glass grid (`1.2fr 1fr`):
-- **Left card** — title row "총평균법 기준 (시행령 §88①)" with a `거주자 법정` badge. List of 3 trades (BTC +1500만, ETH −300만, SOL +300만). Each row: round colored coin badge in `${coinColor}18` background + name + mono buy/sell text + signed amount in good/bad color.
-- **Right card** — calculation flow with `CalcRow`s: 총 양도차익 → 기본공제 (−250만원) → divider → 과세표준 (bold) → × 세율 (20%, 지방세 2% 별도) → thick divider → final 납부세액 result in a brand-filled card with `36px / 800` figure and brand-glow shadow.
-
-거주자 가상자산 양도소득은 시행령 §88①·§92②4호에 따라 총평균법 단일 적용 — FIFO/이동평균 사용자 토글 모델은 폐기됨 (P1 PR #12).
-
-### 6. Exchanges (`parts/exchanges.jsx`)
-Two groups:
-- **LIVE** — green pill header, 3-column grid of cards (max-width 800px). Each card: 48px logo tile in soft brand-tinted bg + name + EN sub + green check circle.
-- **COMING SOON** — amber pill header, 4-column grid of `border: 1px dashed var(--line)` cards. Each: 40px logo tile + name.
-
-Logos pulled from favicon URLs (Upbit / Bithumb / Binance / Bybit / OKX / Bitget / Coinone). All have `onError` fallbacks that hide the broken image. In production, replace with bundled SVG logos.
-
-### 7. Features (`parts/features.jsx`)
-Bento grid: `1.4fr 1fr 1fr` × 2 rows. The big card spans both rows on the left; 4 small cards fill the right 2×2.
-
-- **Big (FeatureBig)** — 다중 거래소 데이터 통합. Subtle brand-tinted gradient bg, 48px icon tile, title 22/700, description, plus a "247건" visual: three left-bordered tiles (`#0E48F0` / `#F37321` / `#F0B90B`) showing per-exchange counts.
-- **Small (FeatureCard ×4)** — 계산 방식 선택, 의제취득가액 자동 적용, 해외 거래 환율 변환, 세무사 전달용 PDF. Each: 40px icon tile in `color-mix(in srgb, ${color} 12%, var(--card))`, title 16/700, body 13/muted.
-
-Icons are inline SVGs (`compare` / `shield` / `globe` / `doc`) defined in `FeatureIcon`.
-
-### 8. Pricing (`components/sections/pricing.tsx`)
-Title + 3-card grid (no monthly/annual toggle — 월 결제 없음). 3 cards in order:
-- **무료** — ₩0 · 4 features (결제 전 결과 미리보기 funnel)
-- **구독 (premium)** — emphasized: `bg-card shadow-sm ring-1 ring-brand/10` (brand ring, **no dark gradient · no BEST VALUE pill — DESIGN.md §8 안티패턴 회피**). Brand pill `2026.Q4 출시 예정` absolutely-positioned at top-center. CTA `출시 알림 받기` (premium 은 MVP 미판매 — Phase 2: 2026.Q4 이후).
-- **원타임** — ₩49,900 · 단일 과세연도 1회 결제 (확정 전략 2026-05-21).
-
-Annual subscription ₩89,000/년 (연중 절세 도구 — Phase 2 출시 예정). 단일 source: `lib/pricing/plans.ts` (가격·features 모두 여기서 가져다 씀). Each card: tag eyebrow, name 24/800, price row (40/800 figure + sub in muted), divider, feature list with brand-tinted checks, full-width CTA button.
-
-### 9. CTA (`components/sections/cta.tsx`)
-Solid card on neutral background (**no blobs · no gradients · no violet — DESIGN.md §8 안티패턴 회피**). Card padding 넉넉 (section-pad), `border-radius: 28px`. Contents:
-- Brand pill: "첫 신고까지 D-{N}" (동적 계산, 차분한 톤 — DESIGN.md §4)
-- Headline 56/800 with **solid brand blue** text (그라디언트·보라 X). 단문 한 문장 + 마침표.
-- Lead, two buttons (primary brand + ghost), and a **stats strip**: 1,550만 한국 가상자산 투자자 (5대 거래소 합산 1,559만, 2024.11 — `docs/business-plan.md` §3) / 20% 양도소득세율 (지방세 2% 별도) / 250만원 기본공제 — middle stat has vertical dividers.
-
-### 10. Footer (`parts/chrome.jsx` → `Footer`)
-`--bg-soft` background, 4-column grid (`1.4fr 1fr 1fr 1fr`):
-- Brand + description
-- 서비스 column
-- 회사 column
-- 고객지원 column
-
-Bottom bar: copyright left, disclaimer right ("본 서비스는 세무 신고의 참고 자료를 제공하며, 최종 신고는 세무사 검토를 권장합니다.").
+로고는 단일 brand blue PNG(`public/kontaxt-logo-brand.png`) — Apple Mail 다크모드 swap 4가지 시도(base64 / CSS filter / picture / inline display:none)가 전부 실패해서 단색 PNG 로 정착. **반복 금지**(CLAUDE.md "알려진 함정").
 
 ---
 
-## Interactions & Behavior
+## Design & Voice
 
-- **Theme toggle** — Light / Dark via `data-theme` attribute on `<html>`. Persisted in `localStorage["kontaxt-theme"]`. **Implement an inline script that reads the saved value before first paint** to avoid theme flash.
-- **`.hov` hover** — pointer-tracked spotlight + lift on cards (CSV cards, step cards, exchange cards, feature cards, pricing cards). Transition `transform .35s cubic-bezier(.2,.7,.2,1)`.
-- **CSV card highlight** — `onMouseEnter` sets an active exchange in `Problem`; the active card gets a colored border + soft glow.
-- **Pricing monthly/annual toggle** — flips price and sub-label, shows saving line on annual.
-- **Anchor nav** — smooth scroll to `#how`, `#exchanges`, `#features`, `#pricing`. (Use `scroll-behavior: smooth` on `html` or per-link.)
-- **Responsive** — not implemented in the mock. Production must collapse all `repeat(3, 1fr)` and 2-column hero grids to single-column below ~960px, with reduced section padding (`80px 24px`) on tablet and `64px 20px` on mobile. The dashboard mock should hide its floating cards or restack on narrow widths.
+코드와 UI 의 시각·언어 표준은 두 단일 source 로 분리되어 있다.
 
----
+- [`DESIGN.md`](DESIGN.md) — 시각 시스템: 5대 디자인 원칙 · 컬러 토큰 · 타이포 스케일 · 간격 · 시각 안티패턴(블롭·그라디언트·이모지 금지).
+- [`VOICE.md`](VOICE.md) — 언어 시스템: 컨텍스트별 종결어(친밀 해요체 vs 격식 합니다체) · 한·영 병기 패턴 · 금지어 사전 · AI 안티패턴 28개. 미러: `.claude/brand-voice-guidelines.md`(brand-voice 스킬 자동 발견).
 
-## State Management
-
-Local component state only:
-- `App` → `useTweaks` (authoring-only, **do not ship**)
-- `Problem` → `active` (string: 'upbit' / 'bithumb' / 'binance')
-- `Pricing` → `annual` (boolean)
-- `chrome.Nav.ThemeToggle` → `dark` (boolean, persisted)
-
-No data fetching. Exchange logos use `window.__resources` if present, otherwise fall back to live favicon URLs — replace both with bundled assets in production.
+새 카피·이메일·페이지 작성 시 두 문서를 모두 통과해야 한다. 자세한 grep 3종(soft 금지어·hard 금지어·AI 안티패턴)과 워크플로우는 [`CLAUDE.md`](CLAUDE.md) "작업 패턴 5)" 절 참조.
 
 ---
 
-## Production Checklist
+## Database (Supabase)
 
-1. **Strip the Tweaks system** — `app.jsx` imports `tweaks-panel.jsx` and renders `<TweaksPanel>`. Remove the import, the `useTweaks` hook, the panel render, and the `TWEAK_DEFAULTS` block. Hard-code the resulting tokens (primary `#2563EB`, gradient headline).
-2. **Replace favicon URLs with bundled SVG logos** for Upbit / Bithumb / Binance / Bybit / OKX / Bitget / Coinone. The mock uses `https://www.google.com/s2/favicons?...` and direct favicon URLs — these are unreliable in production and CSP-risky.
-3. **Self-host Pretendard** (the prototype loads from a CDN). Use the official `pretendard-dynamic-subset` for KR + Latin or self-host the static build.
-4. **Self-host JetBrains Mono** via `next/font` or equivalent.
-5. **Implement responsive breakpoints** (see above).
-6. **Wire CTAs** — 무료로 시작하기 / 무료 시작 / 신고 시즌 구매 / 프리미엄 시작 all need real signup destinations.
-7. **Wire anchor smooth-scroll** + nav highlight-on-scroll if desired.
-8. **SEO** — add `<title>`, `<meta description>`, OG tags, structured data. Korean: set `<html lang="ko">` (already done in mock).
-9. **Accessibility audit** — buttons need `:focus-visible` styles (mock doesn't define them), the theme toggle already has `aria-label`, the atmosphere layer is correctly `aria-hidden`. Many SVGs need accessible alternatives where they convey meaning vs decoration.
-10. **Dark-mode QA** — the design ships full dark-mode tokens but several inline `style` colors (e.g. pricing `linear-gradient(#1E3A8A → #0F1B3D)`, BEST VALUE shadow) are theme-neutral and read well on both — confirm in production.
+13 마이그레이션(2026-05-18 ~ 2026-05-23):
+
+- `profiles` — 사용자 메타데이터 · premium 상태 · RLS 격리.
+- `daily_rates` — Upbit USDT/KRW 일별 환율(Edge function cron).
+- `deemed_cost_snapshots` — 2026.12.31 시가 스냅샷 + 자동 승격 함수.
+- `user_deemed_cost_overrides` · `user_imputed_expense_coins` — 사용자 override.
+- 보안 잠금 — `lockdown_profiles_and_cron_secret` · `revoke_security_definer_exposure` · `optimize_rls_initplan`(advisor 0 finding).
+
+prod 작업은 Claude Code 의 `mcp__supabase__*` MCP 도구로 직접 조작(advisors / migrations / edge function 배포 / logs / tables).
 
 ---
 
-## Files
-Everything under `design/` is the working prototype:
-- `design/index.html` — root document. Contains all CSS variables, the atmosphere layer, the theme-restore inline script, and `<script>` tags loading every component in order.
-- `design/app.jsx` — root `App` component + Tweaks wiring.
-- `design/tweaks-panel.jsx` — authoring-only Tweaks UI. **Do not port.**
-- `design/parts/hero.jsx` — Hero + DashboardMock + Badge + Check + Stat + Bar + Chip
-- `design/parts/problem.jsx` — Problem + CSVCard + Pill + ArrowRight + SectionEyebrow + SectionTitle + SectionLead (the section helpers are reused by other parts)
-- `design/parts/howitworks.jsx` — HowItWorks
-- `design/parts/example.jsx` — Example + CalcRow + Divider
-- `design/parts/exchanges.jsx` — Exchanges
-- `design/parts/features.jsx` — Features + FeatureBig + FeatureCard + FeatureIcon
-- `design/parts/pricing.jsx` — Pricing + PricingCard
-- `design/parts/cta.jsx` — CTA + Stat2
-- `design/parts/chrome.jsx` — Nav + ThemeToggle + Logo + Footer + FooterCol
+## Project Structure
 
-To preview the prototype locally: open `design/index.html` in a browser. (It uses Babel-in-the-browser — there's no build step.)
+세부 트리는 위 Architecture Overview 다이어그램 참조. 핵심 진입점:
+
+- `app/(marketing)/page.tsx` — 랜딩(10 섹션).
+- `app/(app)/tax/page.tsx` — 세금 결과 페이지(엔진 결과 + 재계산 + 옵션 토글, 1056 LOC, 분할 예정).
+- `lib/engine/tax-calculator.ts` — 엔진 dispatch 진입점.
+- `lib/engine/total-average.ts` — 거주자 기본 경로(시행령 §88①).
+- `lib/parsers/registry.ts` — 거래소 파서 레지스트리.
+- `lib/pricing/plans.ts` — 가격 단일 source(₩49,900 원타임 / ₩89,000/년 구독, Phase 2).
+- `app/api/report/route.ts` — PDF 생성 route(`maxDuration=60`, premium gate).
+
+이전 마케팅 디자인 핸드오프(섹션·토큰·인터랙션 세부 명세)는 디자인 시스템이 `DESIGN.md` 로 단일화되면서 제거됨. 옛 디자인 정적 프로토타입은 `design/` 폴더에 그대로 남아 있다.
+
+---
+
+## Contributing
+
+이 repo 는 1인 메인테이너 + Claude Code 페어 작업 패턴이다. 외부 PR 은 받지 않지만 코드 참고와 이슈 제기는 환영.
+
+- 작업 흐름·결정사항은 [`CLAUDE.md`](CLAUDE.md)(코드 가이드라인 + 알려진 함정).
+- 작업 목록은 [`TASKS.md`](TASKS.md).
+- 디자인·언어 표준은 [`DESIGN.md`](DESIGN.md) · [`VOICE.md`](VOICE.md).
+- 감사 보고서는 [`docs/audit/`](docs/audit/) (security / ux / logic / quality / perf · 2026-05-23).
+
+코드 변경 후 필수: `npm run typecheck && npm test`. 사용자-노출 카피 변경 시 VOICE.md grep 3종 통과 필수.
+
+---
+
+## License
+
+Proprietary. © 2026 Kontaxt.
