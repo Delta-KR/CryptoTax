@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MobileNav } from '@/components/sections/mobile-nav';
+import { Mark } from '@/components/ui/Mark';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const navLinks = [
@@ -50,11 +51,11 @@ export function Nav() {
     >
       <div className="mx-auto flex max-w-content items-center justify-between px-8 py-3.5">
         <Link href="/" className="flex items-center gap-2" aria-label="Kontaxt 홈으로">
-          {/* mark.svg는 1500x1500 정사각 viewBox에 마크가 작게 들어가 있어
-              h-8로 두면 실제 시각 마크는 한 변 ~12px 수준. 텍스트 워드마크를
-              함께 노출해 인지도 보완. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/mark.svg" alt="" className="h-8 w-8 shrink-0" />
+          {/* Mark 는 1500x1500 정사각 viewBox 안에 작게 들어가 있어 h-8 로
+              두면 실제 시각 마크는 한 변 ~12px 수준. 텍스트 워드마크를 함께
+              노출해 인지도 보완. 인라인 SVG 라 `text-[#1b17ff]` 같은 currentColor
+              지정으로 색 컨트롤 가능. */}
+          <Mark className="h-8 w-8 text-[#1b17ff]" />
           <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">
             kontaxt.
           </span>
