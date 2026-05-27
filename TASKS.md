@@ -132,7 +132,11 @@
 - [x] **marketing nav 정적화** (perf P1-2) — 2026-05-26 [PR #68](https://github.com/Delta-KR/kontaxt/pull/68) cheapest 옵션 적용. legal/sample/guide/simulator 4 페이지 + simulator 에 `revalidate=86400` 추가. Nav client 화 (Best 옵션) 는 useCurrentUser context 화 (P1-1) 와 같이 묶을 때 진행.
 - [x] **`/auth/finish` nonce binding** (security P1-6) — 2026-05-26 [PR #72](https://github.com/Delta-KR/kontaxt/pull/72). httpOnly nonce cookie (Naver callback 발급) + server action consume (Next 16 RSC 제약 회피). phishing fragment 차단.
 - [x] **`/api/report` self-declared worksheet disclaimer** (P0-4 mitigation) — 2026-05-26 [PR #73](https://github.com/Delta-KR/kontaxt/pull/73). PDF 첫 페이지 disclaimer 박스 + footer 4곳 카피 강화. 근본 fix (server transactions DB) 는 privacy 철학 충돌이라 미채택, defense-in-depth.
-- [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — 별도 의사결정 (rate provider 재실행 효과 작음, transactions 이미 환산된 wire).
+- [ ] **`/api/report` getSourceInfo 사용** (reuse R#3) — **deferred (효과 미미)**:
+  - 잠재 효과 = `/api/report` server action 에서 client wire 의 KRW 환산 값을 server 에서 rate provider 재조회로 cross-check → client JS tampered 환율로 PDF 만드는 시나리오 검출
+  - 미미한 이유 — (1) client wire 의 KRW 값 source 가 `lib/engine/exchange-rate.ts` 의 daily_rates DB lookup (Upbit edge function feed) 라 server 재조회와 **같은 source** → 결과 100% 일치 (mismatch 검출 0). (2) 이미 [PR #73](https://github.com/Delta-KR/kontaxt/pull/73) PDF disclaimer ("self-declared worksheet · 거래 원본 미검증") 로 신뢰성 명시 mitigation 완료
+  - 비용 — daily_rates DB lookup N회 (transactions 수) → lambda 응답 +50~100ms · 결과 항상 no-op
+  - effective gain = 0 / cost > 0 → 별도 의사결정 안 함
 - [x] **deemedCostSource wire 객체 dedup** (reuse R#4) — 2026-05-26 [PR #74](https://github.com/Delta-KR/kontaxt/pull/74). `lib/engine/wire.ts buildDeemedCostWire()` helper 추출. calculate.ts + /api/report dedup.
 
 ### 2026-05-26 prod hotfix (P1 prod 실측 중 발견)
@@ -148,18 +152,20 @@
 - [x] **`@react-pdf/renderer` 틸드 pin** — [PR #97](https://github.com/Delta-KR/kontaxt/pull/97). `^4.5.1` → `~4.5.1`. fontkit/pdfkit transitive 라 같은 incident 벡터 (Wave 1 codex finding)
 - [ ] **(선택) woff2 + brotli polyfill 로 bundle size 회복** — ttf 6.74MB → woff2 2.06MB (-4.7MB). Node 24 + fontkit 호환 stabilize 시점 재검토
 
+> ~~Naver `auth.identities` row 직접 insert / Postgres trigger~~ — PR #83 (`user_metadata.provider` 검증) + [PR #101](https://github.com/Delta-KR/kontaxt/pull/101) (`oauth_tokens` token revoke 자동화) 으로 사용자 깨짐 시나리오 해결 → **할 일에서 제거** (2026-05-27).
+
 ### 2026-05-27 P1 검증 중 신규 발견
 
 - [x] **모바일 햄버거 메뉴 UI 깨짐** — [PR #96](https://github.com/Delta-KR/kontaxt/pull/96). nav 의 `backdrop-blur-[20px]` 가 CSS spec 상 fixed positioning containing block 만드는 문제. 자식 MobileNav 의 `fixed inset-0 z-[60]` dialog 가 viewport 가 아닌 nav 영역 안에 한정 → panel 이 본문 위로 안 올라감. `createPortal` 로 `document.body` 에 mount 우회. 메모리 [[feedback_backdrop_blur_containing_block]]
-- [ ] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident — best-effort layer 완료, 자동 revoke 보류** ([[project_naver_auto_relogin_followup]]):
-  - [x] **외부 link 안내 layer** — [PR #99](https://github.com/Delta-KR/kontaxt/pull/99). 회원탈퇴 모달에 OAuth 사용자 (Naver/Google) 한정 안내 박스 + 권한 해제 link. 사용자가 직접 해제하면 다음 로그인 시 동의 화면 X (자동 재로그인 방지)
-  - [ ] **(보류 — 사용자 결정 필요) Naver token revoke 자동화** — 2026-05-27 Supabase MCP 진단: `auth.identities` schema 에 `provider_token` 컬럼 없음 (Supabase 정책 OAuth token 미보관). 자동화 정공법 = 별도 `oauth_tokens` 테이블 + RLS + callback 수정 + refresh_token 보관 + 탈퇴 시 Naver delete API. 큰 작업 + access_token 1시간 만료 케이스 효과 부분적
+- [x] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident — 3-layer 자동화 완료** ([[project_naver_auto_relogin_followup]]):
+  - [x] **외부 link 안내 layer** — [PR #99](https://github.com/Delta-KR/kontaxt/pull/99). 회원탈퇴 모달에 OAuth 사용자 (Naver/Google) 한정 안내 박스 + 권한 해제 link
+  - [x] **Naver token revoke 자동화** — [PR #101](https://github.com/Delta-KR/kontaxt/pull/101). Supabase `oauth_tokens` 테이블 (migration prod apply) + callback 에서 token upsert + deleteAccount 에서 revoke API best-effort 호출. 모달 카피 "자동 시도" 명시
   - [ ] **(영원히 불가능) Naver NID_AUT cookie 자체 무효화** — 사용자 다른 Naver 서비스 세션과 묶여서 우리 제어 밖
-- [ ] **모바일 UI/UX 추가 깨짐** — 사용자 보고: "모바일 환경에서 UI UX 깨짐이 약간있어". 2026-05-27 코드 grep audit: `min-w-` / `overflow-x-auto` / `w-screen` / `h-screen` 패턴 큰 violation 없음 (Table overflow-x-auto 정상, Sidebar 모바일 hidden OK). 구체 위치는 사용자 viewport 확인 필요 — 어느 페이지·어느 viewport·어느 element 인지
+- [x] **모바일 UI/UX 추가 깨짐 — Hero dashboard strikethrough 효과 fix** — [PR #102](https://github.com/Delta-KR/kontaxt/pull/102). 사용자 모바일 (iPhone) prod 검증에서 stat value (₩411만 등) strikethrough 처럼 보이는 시각 효과 발견. 근본 원인: `tracking-tightish` letter-spacing 압축이 모바일 작은 viewport 에서 글자 stroke 가로로 합쳐 보임. fix: `tracking-normal sm:tracking-tightish` + 모바일 padding/text-size 축소
 
 ### P3 — code quality 폴리시
 
-- [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
+- [x] **`tax/page.tsx` 1056 → 582 LOC 분할** (code-quality P2) — [PR #103](https://github.com/Delta-KR/kontaxt/pull/103). 7 helper component 분리 (`_components/CalcRow + Divider + PremiumBanner + HoldingsAfterTable + ExchangeCoinMatrix + RealizedGainList + BlurOverlay` + `_lib/format.ts`). main TaxPage 만 page.tsx 에 유지. -45% LOC 축소
 - [x] **README 갱신 — marketing-only → SaaS 전체** (code-quality P1) — [PR #94](https://github.com/Delta-KR/kontaxt/pull/94). +230/-238, Quick Start·Tech Stack·Architecture·Domain·거래소 파서·PDF/Email/DB 섹션 신설
 - [x] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용). 4 파일 + 13 import + `@vitest/coverage-v8` 설치 묶음 PR
 - [x] ~~`@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합~~ — **2026-05-27 verify: 통합할 게 없음** ([PR #92](https://github.com/Delta-KR/kontaxt/pull/92)). 직접 의존 = `@react-email/components` + `@react-email/render` 둘뿐. 빌드 로그의 18개 deprecation warning 은 상류 (Resend) 가 1.x 라인 전체 deprecated 처리한 transitive — 우리 레포 차원 fix 불가
