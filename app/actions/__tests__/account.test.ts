@@ -11,6 +11,8 @@ const updateUserMock = vi.fn();
 const signOutMock = vi.fn();
 const adminDeleteUserMock = vi.fn();
 const profilesDeleteEqMock = vi.fn();
+const oauthTokensSelectMock = vi.fn(); // PR #101 신규 흐름 — Naver token revoke
+const revokeNaverTokenMock = vi.fn();
 const redirectMock = vi.fn();
 const checkRateLimitMock = vi.fn();
 
@@ -59,14 +61,32 @@ vi.mock('@/lib/supabase/server', () => ({
     },
   }),
   createSupabaseAdminClient: () => ({
-    from: () => ({
-      delete: () => ({
-        eq: (...args: unknown[]) => {
-          callOrder.push('profiles.delete');
-          return Promise.resolve(profilesDeleteEqMock(...args));
-        },
-      }),
-    }),
+    from: (table: string) => {
+      if (table === 'oauth_tokens') {
+        // .from('oauth_tokens').select(...).eq(...).eq(...).maybeSingle()
+        return {
+          select: () => ({
+            eq: () => ({
+              eq: () => ({
+                maybeSingle: () => {
+                  callOrder.push('oauth_tokens.select');
+                  return Promise.resolve(oauthTokensSelectMock());
+                },
+              }),
+            }),
+          }),
+        };
+      }
+      // default = profiles delete
+      return {
+        delete: () => ({
+          eq: (...args: unknown[]) => {
+            callOrder.push('profiles.delete');
+            return Promise.resolve(profilesDeleteEqMock(...args));
+          },
+        }),
+      };
+    },
     auth: {
       admin: {
         deleteUser: (...args: unknown[]) => {
@@ -76,6 +96,13 @@ vi.mock('@/lib/supabase/server', () => ({
       },
     },
   }),
+}));
+
+vi.mock('@/lib/auth/oauth-revoke', () => ({
+  revokeNaverToken: (...args: unknown[]) => {
+    callOrder.push('revokeNaverToken');
+    return Promise.resolve(revokeNaverTokenMock(...args));
+  },
 }));
 
 import {
@@ -92,6 +119,11 @@ beforeEach(() => {
   signOutMock.mockReset();
   adminDeleteUserMock.mockReset();
   profilesDeleteEqMock.mockReset();
+  oauthTokensSelectMock.mockReset();
+  revokeNaverTokenMock.mockReset();
+  // default: oauth_tokens row 없음 → revoke skip (PR #101)
+  oauthTokensSelectMock.mockReturnValue({ data: null, error: null });
+  revokeNaverTokenMock.mockReturnValue({ ok: true });
   redirectMock.mockReset();
   checkRateLimitMock.mockReset();
   // 기본값: rate limit 통과. 개별 test 에서 throttled 시나리오 override.
@@ -311,6 +343,7 @@ describe('deleteAccount', () => {
     }
     expect(callOrder).toEqual([
       'profiles.delete',
+      'oauth_tokens.select', // PR #101 — Naver revoke layer
       'signOut',
       'admin.deleteUser',
       'redirect',
@@ -326,5 +359,90 @@ describe('deleteAccount', () => {
     const r = await deleteAccount();
     expect(r.ok).toBe(false);
     expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  // PR #101 신규 흐름 — Naver token revoke before admin.deleteUser.
+  it('calls revokeNaverToken with stored token before admin.deleteUser', async () => {
+    getUserMock.mockReturnValue({ data: { user: { id: 'u' } } });
+    profilesDeleteEqMock.mockReturnValue({ error: null });
+    adminDeleteUserMock.mockReturnValue({ error: null });
+    const expiresAt = new Date(Date.now() + 60_000).toISOString();
+    oauthTokensSelectMock.mockReturnValue({
+      data: {
+        access_token: 'naver-access',
+        refresh_token: 'naver-refresh',
+        expires_at: expiresAt,
+        provider: 'naver',
+      },
+      error: null,
+    });
+
+    try {
+      await deleteAccount();
+    } catch {
+      // NEXT_REDIRECT
+    }
+
+    // 순서: profiles.delete → oauth_tokens.select → revokeNaverToken →
+    //       signOut → admin.deleteUser (CASCADE 로 oauth_tokens 자동 삭제)
+    expect(callOrder).toEqual([
+      'profiles.delete',
+      'oauth_tokens.select',
+      'revokeNaverToken',
+      'signOut',
+      'admin.deleteUser',
+      'redirect',
+    ]);
+    expect(revokeNaverTokenMock).toHaveBeenCalledWith(
+      'naver-access',
+      'naver-refresh',
+      expect.any(Date),
+    );
+  });
+
+  it('skips revokeNaverToken when no oauth_tokens row (email-only user)', async () => {
+    getUserMock.mockReturnValue({ data: { user: { id: 'u' } } });
+    profilesDeleteEqMock.mockReturnValue({ error: null });
+    adminDeleteUserMock.mockReturnValue({ error: null });
+    // default mockReturnValue 가 data: null
+
+    try {
+      await deleteAccount();
+    } catch {
+      // NEXT_REDIRECT
+    }
+
+    expect(revokeNaverTokenMock).not.toHaveBeenCalled();
+    // signOut + admin.deleteUser 는 그대로 실행
+    expect(callOrder).toContain('admin.deleteUser');
+  });
+
+  it('proceeds even if revokeNaverToken fails (best-effort)', async () => {
+    getUserMock.mockReturnValue({ data: { user: { id: 'u' } } });
+    profilesDeleteEqMock.mockReturnValue({ error: null });
+    adminDeleteUserMock.mockReturnValue({ error: null });
+    oauthTokensSelectMock.mockReturnValue({
+      data: {
+        access_token: 'naver-access',
+        refresh_token: null,
+        expires_at: null,
+        provider: 'naver',
+      },
+      error: null,
+    });
+    revokeNaverTokenMock.mockReturnValue({
+      ok: false,
+      reason: 'naver_api_error',
+    });
+
+    try {
+      await deleteAccount();
+    } catch {
+      // NEXT_REDIRECT
+    }
+
+    // revoke 실패해도 admin.deleteUser 진행
+    expect(callOrder).toContain('revokeNaverToken');
+    expect(callOrder).toContain('admin.deleteUser');
   });
 });
