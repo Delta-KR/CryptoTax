@@ -151,11 +151,11 @@
 ### 2026-05-27 P1 검증 중 신규 발견
 
 - [x] **모바일 햄버거 메뉴 UI 깨짐** — [PR #96](https://github.com/Delta-KR/kontaxt/pull/96). nav 의 `backdrop-blur-[20px]` 가 CSS spec 상 fixed positioning containing block 만드는 문제. 자식 MobileNav 의 `fixed inset-0 z-[60]` dialog 가 viewport 가 아닌 nav 영역 안에 한정 → panel 이 본문 위로 안 올라감. `createPortal` 로 `document.body` 에 mount 우회. 메모리 [[feedback_backdrop_blur_containing_block]]
-- [ ] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident** — 2026-05-27 사용자 발견. deleteAccount 성공 (auth.users row 정상 삭제 검증) 후 Naver 로그인 버튼 클릭 시 Naver NID_AUT cookie 가 살아있어 consent skip → callback → `findUserByEmail` null → `admin.generateLink` 가 새 user 자동 생성 → 자동 로그인. **보안 사고 아님** (사용자 본인 Naver 인증), UX 측면 어색. follow-up plan ([[project_naver_auto_relogin_followup]]):
-  - (1) Naver token revoke API 호출 — `auth.identities.provider_token` 컬럼 검증 (Naver magic link 패턴이라 비어있을 가능성) → callback 수정해서 token 보관 + 탈퇴 시 Naver delete API 호출
-  - (2) 회원탈퇴 모달에 외부 link 추가 — `https://nid.naver.com/user2/api/oauth/oauthMyInfo.naver` (사용자 직접 권한 해제)
-  - (3) Naver NID_AUT cookie 자체는 우리가 제어 불가 (사용자 다른 Naver 서비스 사용 영향)
-- [ ] **모바일 UI/UX 추가 깨짐** — 사용자 보고: "모바일 환경에서 UI UX 깨짐이 약간있어". 햄버거 메뉴 외 다른 페이지 모바일 viewport 시각 audit 필요
+- [ ] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident — best-effort layer 완료, 자동 revoke 보류** ([[project_naver_auto_relogin_followup]]):
+  - [x] **외부 link 안내 layer** — [PR #99](https://github.com/Delta-KR/kontaxt/pull/99). 회원탈퇴 모달에 OAuth 사용자 (Naver/Google) 한정 안내 박스 + 권한 해제 link. 사용자가 직접 해제하면 다음 로그인 시 동의 화면 X (자동 재로그인 방지)
+  - [ ] **(보류 — 사용자 결정 필요) Naver token revoke 자동화** — 2026-05-27 Supabase MCP 진단: `auth.identities` schema 에 `provider_token` 컬럼 없음 (Supabase 정책 OAuth token 미보관). 자동화 정공법 = 별도 `oauth_tokens` 테이블 + RLS + callback 수정 + refresh_token 보관 + 탈퇴 시 Naver delete API. 큰 작업 + access_token 1시간 만료 케이스 효과 부분적
+  - [ ] **(영원히 불가능) Naver NID_AUT cookie 자체 무효화** — 사용자 다른 Naver 서비스 세션과 묶여서 우리 제어 밖
+- [ ] **모바일 UI/UX 추가 깨짐** — 사용자 보고: "모바일 환경에서 UI UX 깨짐이 약간있어". 2026-05-27 코드 grep audit: `min-w-` / `overflow-x-auto` / `w-screen` / `h-screen` 패턴 큰 violation 없음 (Table overflow-x-auto 정상, Sidebar 모바일 hidden OK). 구체 위치는 사용자 viewport 확인 필요 — 어느 페이지·어느 viewport·어느 element 인지
 
 ### P3 — code quality 폴리시
 
