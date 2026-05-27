@@ -57,7 +57,7 @@ const nextConfig = {
   serverExternalPackages: ['pdf-parse', 'pdfjs-dist'],
   outputFileTracingIncludes: {
     '/api/report': [
-      './node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
+      './node_modules/pretendard/dist/public/variable/PretendardVariable.ttf',
     ],
   },
   async headers() {
