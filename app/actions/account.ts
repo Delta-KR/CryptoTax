@@ -1,15 +1,20 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
 } from '@/lib/supabase/server';
+import { findUserByEmail } from '@/lib/supabase/admin-lookup';
 import { isPasswordValid } from '@/lib/auth/password-rules';
 import { hasEmailIdentity } from '@/lib/auth/oauth-providers';
 import { revokeNaverToken } from '@/lib/auth/oauth-revoke';
-import { checkRateLimit, getAuthReauthRateLimit } from '@/lib/rate-limit';
+import {
+  checkRateLimit,
+  getAuthReauthRateLimit,
+  getOAuthStartRateLimit,
+} from '@/lib/rate-limit';
 
 export type ChangePasswordCode =
   | 'oauth_only'
@@ -244,4 +249,70 @@ export async function deleteAccount(): Promise<{
   }
 
   redirect('/');
+}
+
+/**
+ * 비밀번호 재설정 메일 발송 — server-side OAuth-only 가드.
+ *
+ * 이전 client-side `resetPasswordForEmail` 은 누구나 호출 가능 →
+ * OAuth-only 사용자 (Naver/Google) 도 reset link 받아 비번 설정해 email
+ * 인증 추가 가능 (OAuth-only → email+OAuth 전환). 본인은 본인 account
+ * 만 영향이라 immediate exploit 위험 낮지만 defense-in-depth 측면 차단.
+ *
+ * **Email enumeration 방지**: 결과 (user 미존재 / OAuth-only / 발송 성공)
+ * 무관 항상 `{ ok: true }` 반환. 실제 발송은 hasEmailIdentity 만.
+ *
+ * Wave 1 사후 codex P2 finding (PR #85 review 흐름) follow-up.
+ */
+export async function requestPasswordReset(
+  email: string,
+  captchaToken?: string,
+): Promise<{ ok: true }> {
+  const trimmed = email.trim();
+  if (!trimmed) return { ok: true };
+
+  // Rate limit by IP — silent reject (enumeration 방지)
+  try {
+    const h = await headers();
+    const xff = h.get('x-forwarded-for');
+    const ip = (xff ? xff.split(',')[0]?.trim() : null) ?? 'unknown';
+    const { ok: rlOk } = await checkRateLimit(
+      `pwd-reset:${ip}`,
+      getOAuthStartRateLimit(),
+    );
+    if (!rlOk) return { ok: true };
+  } catch (e) {
+    console.error('[requestPasswordReset] rate limit error', e);
+    // fail-open for rate limit infra error (otherwise prod down) — silent
+  }
+
+  // user 조회 — 결과 무관 silent
+  const lookup = await findUserByEmail(trimmed);
+  if (lookup.error || !lookup.user) {
+    return { ok: true };
+  }
+
+  // OAuth-only 사용자 차단 — silent reject (enumeration 방지)
+  if (!hasEmailIdentity(lookup.user)) {
+    console.warn(
+      '[requestPasswordReset] OAuth-only user blocked — userId=%s',
+      lookup.user.id,
+    );
+    return { ok: true };
+  }
+
+  // email 인증 사용자만 실제 발송
+  const h = await headers();
+  const origin =
+    h.get('origin') ?? `https://${h.get('host') ?? 'kontaxt.kr'}`;
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+    redirectTo: `${origin}/reset-password`,
+    captchaToken,
+  });
+  if (error) {
+    console.error('[requestPasswordReset] supabase error', error.message);
+    // silent — enumeration 방지
+  }
+  return { ok: true };
 }

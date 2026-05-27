@@ -8,7 +8,7 @@ import {
   TurnstileWidget,
   TURNSTILE_ENABLED,
 } from '@/components/auth/TurnstileWidget';
-import { resetPasswordForEmail } from '@/lib/auth';
+import { requestPasswordReset } from '@/app/actions/account';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -38,7 +38,11 @@ export default function ForgotPasswordPage() {
     }
     setSubmitting(true);
     try {
-      await resetPasswordForEmail(email.trim(), captchaToken || undefined);
+      // server action — OAuth-only 가드 + email enumeration 방지 silent 패턴.
+      // 결과 항상 ok:true (실제 발송 여부는 server-side hasEmailIdentity 검증).
+      // 사용자 UX: email 인증 사용자만 실제로 이메일 받음. 다른 케이스는
+      // 받은편지함에 없어도 "발송됨" 안내 그대로 표시.
+      await requestPasswordReset(email.trim(), captchaToken || undefined);
       setSubmitted(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : '이메일 발송 실패');
