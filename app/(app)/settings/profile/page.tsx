@@ -327,13 +327,12 @@ export default function ProfilePage() {
         {oauthProvider && (
           <div className="rounded-md border border-line-2 bg-bg-soft px-4 py-3 text-[13px] leading-[1.55] text-ink-2">
             <p className="font-medium text-ink">
-              {oauthProvider === 'naver' ? '네이버' : '구글'} 권한 해제도 같이 해 주세요.
+              {oauthProvider === 'naver' ? '네이버' : '구글'} 권한 해제 안내
             </p>
             <p className="mt-1.5">
-              Kontaxt 데이터는 바로 삭제돼요. 다만{' '}
-              {oauthProvider === 'naver' ? '네이버' : '구글'} 측 권한이
-              그대로 남아 있어, 다음에 같은 계정으로 로그인하면 동의 화면 없이
-              바로 새 계정이 만들어져요.
+              {oauthProvider === 'naver'
+                ? 'Kontaxt 가 네이버 권한 해제도 자동으로 시도해요. 다만 토큰이 만료된 경우엔 실패할 수 있으니, 다음 링크에서 직접 확인해 주세요.'
+                : 'Kontaxt 데이터는 바로 삭제돼요. 다만 구글 측 권한이 그대로 남아 있어, 다음 링크에서 직접 해제해 주세요.'}
             </p>
             <a
               href={
@@ -345,7 +344,7 @@ export default function ProfilePage() {
               rel="noopener noreferrer"
               className="mt-2.5 inline-flex items-center gap-1 text-brand transition-colors hover:text-brand-2"
             >
-              {oauthProvider === 'naver' ? '네이버' : '구글'}에서 권한 해제하기 →
+              {oauthProvider === 'naver' ? '네이버' : '구글'}에서 권한 해제 확인하기 →
             </a>
           </div>
         )}
