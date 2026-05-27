@@ -180,20 +180,10 @@ export async function signUpWithPassword(
   };
 }
 
-export async function resetPasswordForEmail(
-  email: string,
-  captchaToken?: string,
-): Promise<void> {
-  const supabase = createSupabaseBrowserClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo:
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/reset-password`
-        : undefined,
-    captchaToken: captchaToken || undefined,
-  });
-  if (error) throw new Error(translateSupabaseError(error.message));
-}
+// resetPasswordForEmail: PR #107 으로 app/actions/account.ts 의
+// `requestPasswordReset` server action 으로 대체됨 (OAuth-only 가드 +
+// email enumeration 방지). 이 client-side helper 는 caller 0 으로
+// 제거. 향후 비번 재설정 메일 발송은 server action 만 사용.
 
 // 비번 재설정 메일 링크 클릭 후 reset-password 페이지에서 새 비밀번호 저장.
 // 호출 시점에 Supabase recovery 세션이 활성화돼 있어야 함.
