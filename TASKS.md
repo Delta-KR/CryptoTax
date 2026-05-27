@@ -151,15 +151,15 @@
 ### 2026-05-27 P1 검증 중 신규 발견
 
 - [x] **모바일 햄버거 메뉴 UI 깨짐** — [PR #96](https://github.com/Delta-KR/kontaxt/pull/96). nav 의 `backdrop-blur-[20px]` 가 CSS spec 상 fixed positioning containing block 만드는 문제. 자식 MobileNav 의 `fixed inset-0 z-[60]` dialog 가 viewport 가 아닌 nav 영역 안에 한정 → panel 이 본문 위로 안 올라감. `createPortal` 로 `document.body` 에 mount 우회. 메모리 [[feedback_backdrop_blur_containing_block]]
-- [ ] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident — best-effort layer 완료, 자동 revoke 보류** ([[project_naver_auto_relogin_followup]]):
-  - [x] **외부 link 안내 layer** — [PR #99](https://github.com/Delta-KR/kontaxt/pull/99). 회원탈퇴 모달에 OAuth 사용자 (Naver/Google) 한정 안내 박스 + 권한 해제 link. 사용자가 직접 해제하면 다음 로그인 시 동의 화면 X (자동 재로그인 방지)
-  - [ ] **(보류 — 사용자 결정 필요) Naver token revoke 자동화** — 2026-05-27 Supabase MCP 진단: `auth.identities` schema 에 `provider_token` 컬럼 없음 (Supabase 정책 OAuth token 미보관). 자동화 정공법 = 별도 `oauth_tokens` 테이블 + RLS + callback 수정 + refresh_token 보관 + 탈퇴 시 Naver delete API. 큰 작업 + access_token 1시간 만료 케이스 효과 부분적
+- [x] **🚨 Naver 회원탈퇴 후 자동 재로그인 incident — 3-layer 자동화 완료** ([[project_naver_auto_relogin_followup]]):
+  - [x] **외부 link 안내 layer** — [PR #99](https://github.com/Delta-KR/kontaxt/pull/99). 회원탈퇴 모달에 OAuth 사용자 (Naver/Google) 한정 안내 박스 + 권한 해제 link
+  - [x] **Naver token revoke 자동화** — [PR #101](https://github.com/Delta-KR/kontaxt/pull/101). Supabase `oauth_tokens` 테이블 (migration prod apply) + callback 에서 token upsert + deleteAccount 에서 revoke API best-effort 호출. 모달 카피 "자동 시도" 명시
   - [ ] **(영원히 불가능) Naver NID_AUT cookie 자체 무효화** — 사용자 다른 Naver 서비스 세션과 묶여서 우리 제어 밖
-- [ ] **모바일 UI/UX 추가 깨짐** — 사용자 보고: "모바일 환경에서 UI UX 깨짐이 약간있어". 2026-05-27 코드 grep audit: `min-w-` / `overflow-x-auto` / `w-screen` / `h-screen` 패턴 큰 violation 없음 (Table overflow-x-auto 정상, Sidebar 모바일 hidden OK). 구체 위치는 사용자 viewport 확인 필요 — 어느 페이지·어느 viewport·어느 element 인지
+- [x] **모바일 UI/UX 추가 깨짐 — Hero dashboard strikethrough 효과 fix** — [PR #102](https://github.com/Delta-KR/kontaxt/pull/102). 사용자 모바일 (iPhone) prod 검증에서 stat value (₩411만 등) strikethrough 처럼 보이는 시각 효과 발견. 근본 원인: `tracking-tightish` letter-spacing 압축이 모바일 작은 viewport 에서 글자 stroke 가로로 합쳐 보임. fix: `tracking-normal sm:tracking-tightish` + 모바일 padding/text-size 축소
 
 ### P3 — code quality 폴리시
 
-- [ ] `tax/page.tsx` 1039 LOC 분할 (code-quality P2)
+- [x] **`tax/page.tsx` 1056 → 582 LOC 분할** (code-quality P2) — [PR #103](https://github.com/Delta-KR/kontaxt/pull/103). 7 helper component 분리 (`_components/CalcRow + Divider + PremiumBanner + HoldingsAfterTable + ExchangeCoinMatrix + RealizedGainList + BlurOverlay` + `_lib/format.ts`). main TaxPage 만 page.tsx 에 유지. -45% LOC 축소
 - [x] **README 갱신 — marketing-only → SaaS 전체** (code-quality P1) — [PR #94](https://github.com/Delta-KR/kontaxt/pull/94). +230/-238, Quick Start·Tech Stack·Architecture·Domain·거래소 파서·PDF/Email/DB 섹션 신설
 - [x] `lib/mock/*` → `lib/client/*` rename — naming misleading (prod 경로에서 사용). 4 파일 + 13 import + `@vitest/coverage-v8` 설치 묶음 PR
 - [x] ~~`@react-email/*` deprecated subpackage 18개 → `@react-email/components` 통합~~ — **2026-05-27 verify: 통합할 게 없음** ([PR #92](https://github.com/Delta-KR/kontaxt/pull/92)). 직접 의존 = `@react-email/components` + `@react-email/render` 둘뿐. 빌드 로그의 18개 deprecation warning 은 상류 (Resend) 가 1.x 라인 전체 deprecated 처리한 transitive — 우리 레포 차원 fix 불가
