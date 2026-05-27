@@ -35,6 +35,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 빈 필드별 aria-invalid + aria-describedby 신호용. 폼-레벨 에러는 FormErrorBanner 가 별도.
+  const [emailFieldError, setEmailFieldError] = useState<string | undefined>();
+  const [passwordFieldError, setPasswordFieldError] = useState<string | undefined>();
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleToken = useCallback((t: string) => setCaptchaToken(t), []);
@@ -48,7 +51,11 @@ export default function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!email.trim() || !password) {
+    const emailEmpty = !email.trim();
+    const passwordEmpty = !password;
+    setEmailFieldError(emailEmpty ? '이메일을 입력해주세요.' : undefined);
+    setPasswordFieldError(passwordEmpty ? '비밀번호를 입력해주세요.' : undefined);
+    if (emailEmpty || passwordEmpty) {
       setError('이메일과 비밀번호를 모두 입력해주세요.');
       return;
     }
@@ -92,8 +99,12 @@ export default function LoginPage() {
           autoComplete="email"
           placeholder="you@example.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (emailFieldError) setEmailFieldError(undefined);
+          }}
           disabled={submitting}
+          error={emailFieldError}
         />
         <Input
           label="비밀번호"
@@ -101,8 +112,12 @@ export default function LoginPage() {
           autoComplete="current-password"
           placeholder="••••••••"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (passwordFieldError) setPasswordFieldError(undefined);
+          }}
           disabled={submitting}
+          error={passwordFieldError}
         />
         <div className="-mt-1 flex justify-end">
           <Link
