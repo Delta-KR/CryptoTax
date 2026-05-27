@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
-> 마지막 갱신: 2026-05-26 (D-220 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 — 추가 P2-rem 4건 (postcss/turbopack · snapshotHydratedRef · nonce maxAge · ref-as-prop) + prod hotfix 4건 (PR #79~#81). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
+> 마지막 갱신: 2026-05-27 (D-219 to 2027.1.1 신고 시행)
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -120,7 +120,7 @@
 - [ ] **Naver 재로그인 lockout 해소** (PR #35) — Naver signup → logout → Naver 재로그인 시 `?error=already_registered_other_provider` 발생 안 함
 - [ ] **changePassword brute-force RL** (PR #35) — 잘못된 oldPassword 6회 연속 → 6번째에 "15분 후 다시 시도" + `code: 'rate_limited'`
 - [x] **/tax 재계산 race** (PR #36) — 2026-05-26 /qa 검증. `if (recalcing) return` ([app/(app)/tax/page.tsx:545](app/(app)/tax/page.tsx:545)) + `disabled={recalcing}` (L611) 2중 방어. 더블클릭 → "재계산 중…" + button disabled 즉시 노출
-- [ ] **/report year 동기** (PR #36) — 검증 차단 — 🚨 **prod incident** ([[project_api_report_incident_2026_05_26]]): `/api/report` 500 `RangeError: Offset is outside the bounds of the DataView`. fontkit woff2 decompressor 가 next 16 default Node 24 환경에서 깨짐. PR #86 진단 + #87 (vercel.json runtime invalid format → build fail) + #88 (engines.node 20.x) 머지 후도 여전히 500. 다음: Vercel Project Settings → Node Version 20.x 수동 변경 (engines.node 가 function runtime 까지 영향 안 줄 가능성) 또는 ttf fallback PR
+- [x] **/report year 동기** (PR #36) — 2026-05-27 검증 완료. incident ([[project_api_report_incident_2026_05_26]]) 종결 — [PR #89](https://github.com/Delta-KR/kontaxt/pull/89) (`480eab0`) ttf path swap 으로 해결. fontkit woff2 decompressor + Node 24 → ttf raw parser 사용. 사용자 PDF 다운로드 prod 검증 PASS. Wave 1 사후 routine (5 sub-agent) 머지 차단 finding 0건
 - [ ] **모바일 가로 스크롤** (PR #37) — 375px에서 /transactions 8 컬럼 가로 스크롤 접근 가능 (2026-05-26 /qa 자동화 한계로 deferred — Chrome ext MCP `resize_window` 가 viewport emulation 안 함. DevTools 디바이스 모드 5초 필요)
 - [x] **theme toggle 깜빡임** (PR #37) — 2026-05-26 /qa 검증. bootScript ([app/layout.tsx:70](app/layout.tsx:70)) + getInitialTheme + visibility:hidden 3중 방어 정상 동작 확인. data-theme=dark reload 후 persist, head 6.4KB 안에 inline blocking script 2개
 - [x] **404 페이지** — 2026-05-26 /qa 검증. `/nonexistent-page-qa-test` → "404 페이지를 찾을 수 없습니다 / 메인으로" 링크 (href="/") 정상
@@ -140,6 +140,12 @@
 - [x] **Naver OAuth state cookie sameSite strict → lax** — [PR #80](https://github.com/Delta-KR/kontaxt/pull/80) (`b75ce61`). 5/23 PR #35 의 strict 도입 → 5/23~5/26 prod Naver 로그인 항상 broken (cross-site cookie 차단). investigate skill 으로 root cause 발견. [[reference_naver_oauth_state_cookie]]
 - [x] **Kakao OAuth 일시 비활성** — [PR #81](https://github.com/Delta-KR/kontaxt/pull/81) (`ce990c9`). KOE205 (account_email scope 가 비즈 앱 전용) → enabled:false. 6월 중순 사업자등록 후 비즈앱 전환·복구. [[reference_kakao_oauth_disabled]]
 - [x] **revert nonce binding (#72 + rem-C)** — [PR #79](https://github.com/Delta-KR/kontaxt/pull/79) (`30614d2`). nonce cookie 가 Supabase cross-site verify chain 에서 끊김 가설로 revert. (실제 root cause 는 Naver sameSite — PR #80 적용 후 nonce binding 재시도 가능)
+
+### 2026-05-27 incident 종결 후속
+
+- [x] **PDF Bold weight 시각 검증** — 2026-05-27 사용자 PDF (`Kontaxt_2027.pdf`) 시각 확인 PASS. variable ttf 의 `wght` axis 가 fontkit + @react-pdf/renderer 조합에서 정확히 작동 — H1·헤더·금액 강조·납부세액·섹션 라벨 모두 진짜 weight 700 글리프 렌더. synthetic bold fallback 아님. codex + regression 의심 = false alarm (의심은 정당, 시각 검증으로 확정)
+- [ ] **(선택) pretendard 패키지 version pin 틸드** — `dist/public/variable/` path 가 major bump 시 깨질 위험. 캐럿 → 틸드 (1.3.x) 또는 fallback resolver
+- [ ] **(선택) woff2 + brotli polyfill 로 bundle size 회복** — ttf 6.74MB → woff2 2.06MB (-4.7MB). Node 24 + fontkit 호환 stabilize 시점 재검토
 
 ### P3 — code quality 폴리시
 
