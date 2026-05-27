@@ -15,6 +15,8 @@ Claude Code가 이 워크트리에서 작업할 때 먼저 읽는 파일. 프로
 - `VOICE.md` — 언어 시스템·종결어 표준·금지어 사전·컨텍스트별 톤 매트릭스 (모든 사용자-노출 텍스트). 미러: `.claude/brand-voice-guidelines.md` (brand-voice 스킬 자동 발견)
 - `TASKS.md` — 현재 작업 목록·로드맵
 - `docs/audit/` — 감사 보고서 (security·ux·logic·quality·perf)
+- `.claude/claude-security-guidance.md` — security-guidance 플러그인이 모델 검토 시 로드하는 Kontaxt 보안 위협 모델 (RLS·OAuth·파일 파서·PII)
+- `.claude/security-patterns.json` — 편집 직후 결정론적 매칭 패턴 22개 (NEXT_PUBLIC_ 시크릿·service role 오남용·localStorage 격리·sameSite=strict 등)
 
 ## 스택
 
@@ -226,6 +228,13 @@ npm run email:dev         # http://localhost:3001 — 실시간 미리보기
 
 ## 변경 이력
 
+- **2026-05-27 (security-guidance 플러그인 셋업)** — Anthropic 공식 마켓플레이스의 `security-guidance@claude-plugins-official` 활성화 + Kontaxt 맞춤 보안 가이드·패턴 작성
+  - 발단: Claude dev 가 X 에서 출시 발표. 코드 작성 중 자동 보안 검토 (편집당 패턴 매칭 무료 + 턴 끝 모델 diff 검토 + Claude 의 git commit/push 시 agent 검토)
+  - 셋업: `.claude/settings.json` 에 `enabledPlugins` 등록 (저장소 clone 모든 협업자 + Claude Code on the web 세션에도 적용). 사용자 슬래시 명령 `/plugin install security-guidance@claude-plugins-official` + `/reload-plugins` 로 활성
+  - 맞춤 규칙: `.claude/claude-security-guidance.md` (6.9KB / 8KB 상한) — RLS·멀티테넌트, client storage 격리, OAuth state cookie, Supabase captcha, 파일 파서, PII, fontkit 등 Kontaxt 도메인 14개 위협 클래스. CLAUDE.md 알려진 함정·과거 사고 PR 그대로 인용
+  - `.claude/security-patterns.json` (8KB / 50개 상한 22개 사용) — `NEXT_PUBLIC_*SECRET`, `createServiceClient` 무필터, `sameSite=strict`, `localStorage.setItem('단일키'...)`, `dangerouslySetInnerHTML`, RRN 정규식 등. **JSON 사용 이유**: 시스템 python3 (3.9.6) 에 PyYAML 부재. JSON 은 의존성 0
+  - 비용: 패턴 매칭 무료, 모델 검토는 기본 Opus 4.7 사용량 청구 (시간당 commit 검토 20개 제한). `SECURITY_REVIEW_MODEL` / `SG_AGENTIC_MODEL` env 로 모델 교체 가능
+  - 제한: 어떤 계층도 쓰기·커밋을 차단하지 않음. 심층 방어의 한 계층. PR 시점 `/security-review` + `engineering:code-review` 와 계층화
 - **2026-05-26 (gbrain + graphify 통합 활용)** — gbrain CLI 설치 + PGLite engine + Claude MCP 등록 + markdown 29개 인덱싱 + 탐색 섹션 재작성
   - 발단: graphify 1주 체크포인트 (D-4) 평가 — 5/23~5/26 실제 사용 1회만, [[feedback_tooling_preference]] 패턴 적중. gbrain 미설치 상태로 "중복" 우려한 전제도 잘못 — 둘 다 안 쓰던 상황
   - 사용자 결정: 두 도구 모두 적극 활용 세팅. `brew install bun` 대신 공식 install script → `gstack-gbrain-install` (v0.18.2) → `gbrain init --pglite` → `claude mcp add --scope user gbrain` 등록 → markdown 29개 인덱싱 (469 chunks)

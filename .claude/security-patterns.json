@@ -1,0 +1,125 @@
+{
+  "_comment": "Kontaxt 결정론적 보안 패턴 — 편집 직후 파일 매칭, 모델 호출 없음. JSON 사용 이유: 시스템 python3 (3.9.6) 에 PyYAML 부재. yaml 대신 json 이 의존성 0. Spec: https://code.claude.com/docs/ko/security-guidance#사용자-정의-편집당-패턴-추가",
+  "patterns": [
+    {
+      "rule_name": "public_env_secret_leak",
+      "regex": "NEXT_PUBLIC_[A-Z_]*(?:SECRET|SERVICE_ROLE|PRIVATE|PASSWORD|API_KEY|TOKEN)",
+      "reminder": "NEXT_PUBLIC_ 접두는 클라이언트 번들에 그대로 박힌다. service role · API secret · password 는 절대 NEXT_PUBLIC_ 로 두지 말 것. server-only env (process.env.SUPABASE_SERVICE_ROLE_KEY 등) 로 옮기고 server action / route handler 에서만 참조."
+    },
+    {
+      "rule_name": "hardcoded_credential_prefix",
+      "substrings": ["sk_live_", "sk_test_", "re_", "AKIA", "AIza", "ghp_", "gho_", "xoxb-", "eyJhbGciOi"],
+      "reminder": "하드코딩된 자격증명으로 보이는 접두사. .env.local / Supabase 시크릿 / Vault 에서 로드하고 코드에서는 process.env 만 참조."
+    },
+    {
+      "rule_name": "service_role_in_client_path",
+      "regex": "SUPABASE_SERVICE_ROLE_KEY",
+      "paths": ["**/app/**", "**/components/**", "**/lib/client/**", "**/lib/**/client.ts"],
+      "exclude_paths": ["**/app/api/**", "**/app/actions/**", "**/app/**/route.ts", "**/app/**/route.tsx"],
+      "reminder": "service role key 가 클라이언트 경로에서 참조됨. service role 은 server action / API route / edge function 안에서만. 노출 시 RLS 전면 우회 가능."
+    },
+    {
+      "rule_name": "service_client_without_user_filter",
+      "regex": "createServiceClient\\(",
+      "reminder": "createServiceClient() 호출 — 이 client 는 RLS 를 우회한다. 직전·직후에 인증된 user id 검증과 명시적 .eq('user_id', userId) 필터가 있는지 확인. user 데이터 테이블이면 admin 게이트 (profile.role === 'admin' 등) 동반 필수."
+    },
+    {
+      "rule_name": "storage_without_user_scope",
+      "regex": "(?:localStorage|sessionStorage)\\.(?:setItem|getItem|removeItem)\\(['\"`](?!.*\\$\\{|.*user|.*\\+)",
+      "paths": ["**/app/**", "**/components/**", "**/lib/client/**", "**/lib/storage/**"],
+      "reminder": "localStorage / sessionStorage 키에 user_id 가 포함돼 있지 않은 듯하다. 같은 브라우저 A → B 계정 전환 시 누출 위험. 키 패턴을 `kontaxt:${userId}:...` 같이 user 단위로 분리하고, 로그아웃 핸들러가 해당 user 의 모든 키를 지우는지 확인."
+    },
+    {
+      "rule_name": "indexeddb_without_user_scope",
+      "regex": "indexedDB\\.open\\(",
+      "paths": ["**/app/**", "**/components/**", "**/lib/**"],
+      "reminder": "IndexedDB 데이터베이스 이름에 user_id 가 포함돼야 함. 단일 DB 이름은 멀티 계정 누출. 로그아웃 시 deleteDatabase 호출도 확인."
+    },
+    {
+      "rule_name": "oauth_state_cookie_strict",
+      "regex": "sameSite\\s*[:=]\\s*['\"]strict['\"]",
+      "paths": ["**/lib/auth/**", "**/app/api/auth/**", "**/app/(auth)/**", "**/app/auth/**"],
+      "reminder": "OAuth state cookie 에 sameSite=strict 는 Naver / Kakao callback (cross-site POST/redirect) 에서 cookie 가 끊긴다. 'lax' 가 정답. PR #80 fix 참조."
+    },
+    {
+      "rule_name": "oauth_state_cookie_missing_httponly",
+      "regex": "cookies\\(\\)\\.set\\([^)]*oauth.*state[^)]*\\)",
+      "reminder": "OAuth state cookie 가 설정되는 듯. httpOnly: true + secure: process.env.NODE_ENV === 'production' + maxAge ≤ 600 (10분) + sameSite: 'lax' 모두 포함됐는지 확인."
+    },
+    {
+      "rule_name": "dynamic_eval",
+      "regex": "\\b(?:eval|Function)\\s*\\(",
+      "reminder": "동적 코드 실행은 사용자 입력이 흘러들면 RCE. 가능하면 JSON.parse / 정적 lookup 으로 대체."
+    },
+    {
+      "rule_name": "pickle_or_yaml_load",
+      "substrings": ["pickle.loads", "pickle.load(", "yaml.load("],
+      "reminder": "안전하지 않은 역직렬화. yaml.safe_load / 신뢰된 입력만 받는 별도 형식 사용."
+    },
+    {
+      "rule_name": "dom_injection_react",
+      "regex": "dangerouslySetInnerHTML",
+      "reminder": "dangerouslySetInnerHTML 사용. 콘텐츠가 사용자 입력에서 파생되면 XSS. DOMPurify 등 sanitizer 통과 확인 또는 텍스트 노드로 변경."
+    },
+    {
+      "rule_name": "dom_innerhtml_assign",
+      "regex": "\\.innerHTML\\s*=",
+      "paths": ["**/app/**", "**/components/**", "**/lib/**"],
+      "reminder": ".innerHTML 직접 대입은 XSS 위험. textContent 사용 또는 sanitize."
+    },
+    {
+      "rule_name": "fetch_with_user_input",
+      "regex": "fetch\\(\\s*(?:req|request|params|searchParams|body|input)",
+      "paths": ["**/app/api/**", "**/app/actions/**", "**/lib/**"],
+      "reminder": "fetch URL 가 사용자 입력에서 파생되는 듯. SSRF 위험 — allowlist 적용, redirect follow 시 169.254.169.254 / localhost / private IP 차단, timeout 과 max body size 설정."
+    },
+    {
+      "rule_name": "path_join_with_user_input",
+      "regex": "(?:path\\.join|path\\.resolve|fs\\.(?:read|write|append)[A-Za-z]*)\\([^)]*(?:filename|file\\.name|originalname|userInput)",
+      "reminder": "파일 시스템 경로 조립에 사용자 입력이 직접 들어감. path traversal (../../etc/passwd) 위험. 파일명은 UUID 로 재명명, 확장자는 allowlist 매칭."
+    },
+    {
+      "rule_name": "trusted_xff_naive",
+      "regex": "headers\\.get\\(['\"]x-forwarded-for['\"]\\)\\s*(?:\\.split|\\?\\?|\\|\\||;)",
+      "reminder": "X-Forwarded-For 의 첫 번째 IP 를 그대로 신뢰하면 spoof 가능. Vercel / Cloudflare 라면 `request.ip` 또는 신뢰 경계의 마지막 hop IP 사용."
+    },
+    {
+      "rule_name": "log_with_request_body",
+      "regex": "console\\.(?:log|info|warn|error)\\([^)]*(?:req\\.body|request\\.body|formData)",
+      "reminder": "request body 통째로 로깅. 거래 내역 · 이메일 · 거래소 API key 같은 PII 가 흐를 수 있다. 필요한 필드만 골라 마스킹 후 로그."
+    },
+    {
+      "rule_name": "korean_rrn_pattern",
+      "regex": "\\d{6}[-\\s]?[1-4]\\d{6}",
+      "reminder": "주민등록번호 패턴. Kontaxt 는 주민번호를 받지·저장·로그 모두 금지. 정규식으로 거부하거나 입력 단계에서 차단."
+    },
+    {
+      "rule_name": "server_action_directive",
+      "regex": "['\"]use server['\"]",
+      "paths": ["**/app/actions/**", "**/app/**/actions.ts"],
+      "reminder": "server action 파일. 모든 export 함수 첫 줄에 인증 확인 (예: const user = await getCurrentUser(); if (!user) throw …) 이 있는지, public 의도면 주석에 명시했는지 확인. 입력은 zod 스키마 검증."
+    },
+    {
+      "rule_name": "github_workflow_edit",
+      "regex": ".",
+      "paths": ["**/.github/workflows/**"],
+      "reminder": ".github/workflows 변경은 저장소 수준 권한 확대 가능. pull_request_target 사용 여부, secrets 노출, third-party action 의 pinned SHA 사용 확인."
+    },
+    {
+      "rule_name": "weak_hash_md5_sha1",
+      "regex": "createHash\\(['\"](?:md5|sha1)['\"]\\)",
+      "reminder": "MD5 / SHA-1 은 충돌 공격에 약함. 무결성 / 패스워드 / 토큰 용도면 SHA-256 이상 + 토큰 비교는 crypto.timingSafeEqual."
+    },
+    {
+      "rule_name": "insecure_random",
+      "regex": "Math\\.random\\(\\)",
+      "paths": ["**/lib/auth/**", "**/app/api/auth/**", "**/lib/email/**"],
+      "reminder": "Math.random() 은 cryptographically insecure. 토큰 · OTP · CSRF state · 비밀번호 재설정 토큰에는 crypto.randomUUID() 또는 crypto.randomBytes(32).toString('hex')."
+    },
+    {
+      "rule_name": "raw_sql_template_literal",
+      "regex": "supabase\\.rpc\\([^)]*\\$\\{|\\.from\\([^)]*\\$\\{",
+      "reminder": "Supabase 호출에 템플릿 리터럴로 사용자 입력이 들어가는 듯. .eq() / .in() / parametrized RPC 인자 사용으로 SQL injection 차단."
+    }
+  ]
+}
