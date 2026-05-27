@@ -40,6 +40,13 @@ export default function ProfilePage() {
   const [deleting, setDeleting] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [oauthOnly, setOauthOnly] = useState(false);
+  // 회원탈퇴 모달 안 외부 권한 해제 안내용. Naver/Google 별 link 분기.
+  // [[project_naver_auto_relogin_followup]] — 우리 측 user 삭제 후도 Naver 권한
+  // 연결은 살아있어 NID_AUT cookie 가 있으면 자동 재로그인됨. 사용자 직접
+  // 외부 권한 해제 권장.
+  const [oauthProvider, setOauthProvider] = useState<'naver' | 'google' | null>(
+    null,
+  );
   // Turnstile: token은 1회용. 제출 후 widget을 재마운트해서 새 token을 받기 위한 key.
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
@@ -62,6 +69,13 @@ export default function ProfilePage() {
     supabase.auth.getUser().then(({ data }) => {
       if (cancelled || !data.user) return;
       setOauthOnly(!hasEmailIdentity(data.user));
+      // provider 식별 — user_metadata.provider 와 app_metadata.provider 둘 다
+      // 확인. 우리 callback (admin.generateLink) 이 user_metadata 에 박는데
+      // Supabase verify 가 app_metadata 를 reset 하는 케이스 [[reference_naver_oauth_state_cookie]].
+      const userMeta = data.user.user_metadata ?? {};
+      const appMeta = data.user.app_metadata ?? {};
+      const p = userMeta.provider ?? appMeta.provider;
+      if (p === 'naver' || p === 'google') setOauthProvider(p);
     });
     return () => {
       cancelled = true;
@@ -309,7 +323,33 @@ export default function ProfilePage() {
             </Button>
           </>
         }
-      />
+      >
+        {oauthProvider && (
+          <div className="rounded-md border border-line-2 bg-bg-soft px-4 py-3 text-[13px] leading-[1.55] text-ink-2">
+            <p className="font-medium text-ink">
+              {oauthProvider === 'naver' ? '네이버' : '구글'} 권한 해제도 같이 해 주세요.
+            </p>
+            <p className="mt-1.5">
+              Kontaxt 데이터는 바로 삭제돼요. 다만{' '}
+              {oauthProvider === 'naver' ? '네이버' : '구글'} 측 권한이
+              그대로 남아 있어, 다음에 같은 계정으로 로그인하면 동의 화면 없이
+              바로 새 계정이 만들어져요.
+            </p>
+            <a
+              href={
+                oauthProvider === 'naver'
+                  ? 'https://nid.naver.com/user2/help/myInfoV2?lang=ko_KR'
+                  : 'https://myaccount.google.com/permissions'
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2.5 inline-flex items-center gap-1 text-brand transition-colors hover:text-brand-2"
+            >
+              {oauthProvider === 'naver' ? '네이버' : '구글'}에서 권한 해제하기 →
+            </a>
+          </div>
+        )}
+      </Modal>
     </>
   );
 }
