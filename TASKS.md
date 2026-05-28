@@ -38,9 +38,9 @@
 
 ### Quick Wins 후속 (별도 PR 후보 — Wave 1 sub-agent findings)
 
-- [ ] **`OAuthProvider` 동명 타입 cleanup** — [lib/auth/index.ts:215](lib/auth/index.ts:215) (`'google'|'kakao'`) + [lib/auth/oauth-providers.ts:11](lib/auth/oauth-providers.ts:11) (`'naver'|'google'|'kakao'`) 동시 존재. 즉시 충돌 안 함 (re-export 안 됨) 지만 향후 `lib/auth` barrel import 한 사람이 `naver` 빠진 union 받을 위험. `SupabaseNativeOAuthProvider` 로 rename 또는 inline literal 풀기
-- [ ] **PR #118 prod 검증** — 머지 후 `curl -s https://kontaxt.kr | grep -E '<link rel="(icon|apple-touch-icon|shortcut icon)"'` 으로 3 link emit 확인. SVG primary + PNG fallback + shortcut + apple-touch 모두 살아있는지
-- [ ] **PR #117 prod Naver 로그인 사이클 1회 실측** — `account-takeover blocked` false positive 부재 확인. Vercel Functions Logs → `app/api/auth/naver/callback` 필터
+- [x] **`OAuthProvider` 동명 타입 cleanup** — [PR #121](https://github.com/Delta-KR/kontaxt/pull/121) (`902a383`). `lib/auth/index.ts` 의 `OAuthProvider` → `SupabaseNativeOAuthProvider` rename. `components/auth/SocialButtons.tsx` 의 import + ProviderConfig.id + cast 3곳 sync. `lib/auth/oauth-providers.ts` 주석 sync. typecheck PASS + 160 tests PASS. 3 파일 +16/-11
+- [x] **PR #118 prod 검증** — 4 link emit 확인 ✅. `<link rel="icon" type="image/svg+xml">` + `<link rel="icon" type="image/png" sizes="180x180">` (PNG fallback) + `<link rel="shortcut icon">` + `<link rel="apple-touch-icon">` 모두 정상 (2026-05-28 curl)
+- [x] **PR #117 prod Naver 로그인 사이클 1회 실측** — 2026-05-28 사용자 검증 PASS. Naver OAuth 정상 동작, `account-takeover blocked` false positive 부재 확인
 - [ ] **user_metadata.provider race 영구 fix (정공법)** — Supabase admin REST `POST /auth/v1/admin/users/{id}/identities` 로 `identities` row 직접 insert. 성공 시 `isProviderLinked` 의 user_metadata source 제거 가능 → attacker-controlled source 무력화. 큰 작업 — 별도 의사결정. 단기 deferred (Naver lockout 깨짐 시나리오 이미 PR #83 + #101 으로 해결)
 
 ---
