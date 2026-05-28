@@ -62,13 +62,16 @@
 ### P1 머지 후 prod 검증 fix (PR #5~#8, 2026-05-20)
 - [x] Binance Order History 친절 안내 / 에러 토스트 영구 / 중복 거래 dedupe / 무관 PDF 거절
 
-### P2 — 검증 절차 (P0/P1 후, 진행 중)
-- [ ] **국세청 공식 케이스 회귀 테스트** — NTS 가상자산 양도소득세 가이드라인의 예시 케이스 5-10개를 vitest에 추가.
-- [ ] **세무사 검증** — 한국 가상자산 전문 세무사 1-2명한테 시나리오 5-10개 결과 검증 의뢰. 비용 30-50만원 예상.
-- [ ] **엣지 케이스 테스트 추가**:
-  - Dust 매도 (1e-9), 동일 timestamp 대량 거래, 부분 의제+실가 mix, 환율 fallback 한계, 시간대 경계 BUY/SELL
-  - Property-based: `sum(consumedLots.costKRW) === costBasisKRW`, `totalGain+totalLoss === netPnL`
-- [ ] **베타 사용자 dry run** — 실제 거래내역으로 엔진 결과 → 엑셀 손계산 대조.
+### P2 — 검증 절차 (2026-05-28 (c) P2 검증 Phase A·B·C·D 완료)
+
+> 4 phase 완료 — 엔진 신뢰도 A− → **A** 진입. 잔여 2건 (세무사·베타) = 사용자 영역.
+
+- [x] **시행령 §88 2025-02-28 개정 sync** ([PR #124](https://github.com/Delta-KR/kontaxt/pull/124) Phase A) — CLAUDE.md 첫 줄 + SimulatorForm hint + penalty.ts 주석 drift fix. 엔진 자체는 5/22 PR #12 이미 sync 완료 확인
+- [x] **엔진 robust 검증 vitest 13 신규** ([PR #125](https://github.com/Delta-KR/kontaxt/pull/125) Phase B) — `total-average.test.ts` +530 LOC. 엣지 6 (Dust / 동일 timestamp / 의제+실가 mix / KST 경계 BUY/SELL / orphan 다거래소) + Property-based 2 (`totalGain - totalLoss === netPnL`, `holdingsAfter === Σ(BUY) − Σ(SELL)`) + 시나리오 5 (의제 50% 단일/혼합 / 다년 carry / 손실만 / 50건 perf)
+- [x] **vault sources/ 법령 인덱싱** (Phase C) — 5 신규 source (소득세법-시행령-88조-가상자산 / 92조-평가법 / 183조-비거주자 / vaupl-summary / law-index-kontaxt). gbrain 29 → 35 pages, 469 → 480 chunks. wiki index.md 갱신
+- [x] **법령 evidence 회귀 테스트 13 신규** ([PR #126](https://github.com/Delta-KR/kontaxt/pull/126) Phase D) — `legal-evidence.test.ts` +535 LOC. 8 법령 조항별 시나리오 (§37⑤ 의제 / §37⑥+§88⑤ 의제율 50% / §88①+§92②4호 거주자별 / §64의3② 산출세액+250만 / 지방세§93 2% / 시행일 부칙 / 손익 통산 / 다년 carry-over). 각 case 에 법령 조항 + 가이드 LOC 인용
+- [ ] **세무사 검증** (Phase E) — 한국 가상자산 전문 세무사 1-2명한테 시나리오 5-10개 결과 검증 의뢰. 비용 30-50만원 예상. **사용자 영역**, 6월 중순 사업자등록 후 진행
+- [ ] **베타 사용자 dry run** (Phase F) — 실제 거래내역으로 엔진 결과 → 엑셀 손계산 대조. **Phase 7 자체** (베타 모집 후)
 
 ---
 
