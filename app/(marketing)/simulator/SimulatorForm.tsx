@@ -110,7 +110,7 @@ export function SimulatorForm() {
             <Row
               label="산출세액"
               value={formatKRW(result.taxAmount)}
-              hint="(양도차익 − 250만원) × 22%"
+              hint="(양도차익 − 250만원) × 22% (소득세 20% + 지방세 2%)"
               emphasis
             />
 
