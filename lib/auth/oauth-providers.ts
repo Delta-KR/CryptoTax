@@ -3,9 +3,9 @@
 // Wave 1 사후 review (PR #80~#84) 후속 — server changePassword (account.ts) 와
 // client hasEmailIdentity check 가 sync 안 됐던 drift 해소. 단일 source 로 분리.
 
-// 신뢰 source for OAuth-only 사용자 판별. signInWithOAuth 의 OAuthProvider 타입
-// ('google'|'kakao') 와는 비대칭 — Naver 는 자체 flow (Supabase native X) 라 type
-// 에 없지만 가입 후 user 의 metadata 에는 'naver' 박힘. 따라서 이 list 가 진짜
+// 신뢰 source for OAuth-only 사용자 판별. signInWithOAuth 의 SupabaseNativeOAuthProvider
+// 타입 ('google'|'kakao') 와는 비대칭 — Naver 는 자체 flow (Supabase native X) 라 native
+// list 에 없지만 가입 후 user 의 metadata 에는 'naver' 박힘. 따라서 이 list 가 진짜
 // OAuth-only signal source. 신규 provider 추가 시 이 list 도 갱신 필요.
 export const OAUTH_PROVIDERS = ['naver', 'google', 'kakao'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];

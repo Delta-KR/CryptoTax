@@ -1,9 +1,9 @@
 'use client';
 import { useState } from 'react';
-import { signInWithOAuth, type OAuthProvider } from '@/lib/auth';
+import { signInWithOAuth, type SupabaseNativeOAuthProvider } from '@/lib/auth';
 
 interface ProviderConfig {
-  id: OAuthProvider | 'naver';
+  id: SupabaseNativeOAuthProvider | 'naver';
   name: string;
   bg: string;
   text: string;
@@ -82,7 +82,7 @@ export function SocialButtons({ nextUrl }: SocialButtonsProps = {}) {
         window.location.href = p.customHref;
         return;
       }
-      await signInWithOAuth(p.id as OAuthProvider, { nextUrl });
+      await signInWithOAuth(p.id as SupabaseNativeOAuthProvider, { nextUrl });
       // browser navigates away to OAuth provider — no need to clear pending here
     } catch (e) {
       setError(e instanceof Error ? e.message : 'OAuth 로그인 실패');

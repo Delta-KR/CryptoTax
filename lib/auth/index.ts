@@ -206,16 +206,21 @@ export async function signOut(): Promise<void> {
 // 분리 (lib/auth/oauth-providers.ts) — Wave 1 사후 review 후속, server changePassword
 // 와 client check sync 통합. 여기서는 backward-compat re-export.
 //
-// 주의: signInWithOAuth 의 OAuthProvider 타입과 OAUTH_PROVIDERS 는 비대칭:
-// - OAuthProvider = 'google' | 'kakao' (Supabase native OAuth — 이 함수가 직접 호출)
+// 주의: signInWithOAuth 의 provider 타입과 OAUTH_PROVIDERS 는 비대칭:
+// - SupabaseNativeOAuthProvider = 'google' | 'kakao' (Supabase native OAuth —
+//   이 함수가 supabase.auth.signInWithOAuth 직접 호출. native 지원 provider 만)
 // - OAUTH_PROVIDERS = ['naver', 'google', 'kakao'] (가입 후 user metadata 의
-//   provider source — Naver 는 자체 flow 라 OAuthProvider 에 없지만 user 식별엔 포함)
+//   provider source — Naver 는 자체 flow 라 native list 에 없지만 user 식별엔 포함)
+//
+// 2026-05-28: 이전엔 둘 다 `OAuthProvider` 동명이라 lib/auth barrel 통해
+// 양쪽 import 시 silent type drift 위험 ([[feedback_routine_enforcement]]
+// Wave 1 사후 cleanup PR #117 finding). `SupabaseNativeOAuthProvider` 로 rename.
 export { hasEmailIdentity, OAUTH_PROVIDERS } from './oauth-providers';
 
-export type OAuthProvider = 'google' | 'kakao';
+export type SupabaseNativeOAuthProvider = 'google' | 'kakao';
 
 export async function signInWithOAuth(
-  provider: OAuthProvider,
+  provider: SupabaseNativeOAuthProvider,
   options?: { nextUrl?: string },
 ): Promise<void> {
   const supabase = createSupabaseBrowserClient();
