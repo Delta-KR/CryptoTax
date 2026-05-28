@@ -32,9 +32,16 @@
 
 ## 🔧 Quick Wins — 다음 작업 사이클 전 처리
 
-- [ ] **Naver OAuth 통합 패턴 추출** — fragment 세션 처리 + provider 메타데이터(`app_metadata.provider`)를 공통 OAuth 모듈로. 카카오/구글에 동일 패턴 적용 가능한지 확인.
-- [ ] **favicon SVG-only fallback 검토** — 구형 안드로이드/IE에서 PNG fallback 필요한지 GA/Search Console 데이터로 판단.
-- [ ] **Dashboard 한 사이클 검증** — 로컬에서 파일 업로드 → 결과 화면 → PDF 다운로드 풀 플로우 실제로 돌려보기. 5/12 이후 직접 안 돌려본 상태일 가능성 있음.
+- [x] **Naver OAuth 통합 패턴 추출** — [PR #117](https://github.com/Delta-KR/kontaxt/pull/117) (`a053851`). `lib/auth/oauth-providers.ts` 에 `isProviderLinked(user, provider)` helper 신설 (4 source OR — identities + app_metadata.providers + app_metadata.provider + user_metadata.provider). Naver callback 의 inline 5줄 OR 체인 → 1줄 helper 호출. `hasEmailIdentity` 도 helper 위임으로 단순화. 카카오/구글 비즈앱 전환 후 custom callback 시 동일 helper 재사용. 11 신규 tests (23 → 34 PASS). Wave 1 routine: BLOCKING 0, MEDIUM 0, NIT 6
+- [x] **favicon SVG-only fallback 검토** — [PR #118](https://github.com/Delta-KR/kontaxt/pull/118) (`32ddb98`). 현 prod head = `app/icon.svg` (SVG) + `app/apple-icon.png` (Apple) 만. PNG fallback rel="icon" 부재 → 구형 안드로이드 Chrome 49 이하 / IE / 일부 RSS reader / 메신저 link preview 빈 사각형. metadata.icons 명시 — apple-icon (PNG 180x180) alternate icon + shortcut 으로 재활용. 0 신규 binary asset. GA/Search Console 데이터 무관 0 코스트 fallback
+- [x] **Dashboard 한 사이클 검증** — [PR #119](https://github.com/Delta-KR/kontaxt/pull/119) (`72aabf9`). `docs/qa/dashboard-flow-checklist.md` 신설 (+185 LOC). 풀 플로우 7 단계 (로그인 → 업로드 → 대시보드 → 거래 내역 → 세금 → PDF → 회원관리) + 각 단계 sub-component 명세 + 회귀 체크 (PR 인용 14건) + 자동 회귀 검증 5 명령 + 자주 발견되는 회귀 패턴 5 + 사용자 체크포인트 요약 7 step (5분 사이클). 다음 페이지 분할·major bump PR 머지 직후 한 번 돌려 정착
+
+### Quick Wins 후속 (별도 PR 후보 — Wave 1 sub-agent findings)
+
+- [ ] **`OAuthProvider` 동명 타입 cleanup** — [lib/auth/index.ts:215](lib/auth/index.ts:215) (`'google'|'kakao'`) + [lib/auth/oauth-providers.ts:11](lib/auth/oauth-providers.ts:11) (`'naver'|'google'|'kakao'`) 동시 존재. 즉시 충돌 안 함 (re-export 안 됨) 지만 향후 `lib/auth` barrel import 한 사람이 `naver` 빠진 union 받을 위험. `SupabaseNativeOAuthProvider` 로 rename 또는 inline literal 풀기
+- [ ] **PR #118 prod 검증** — 머지 후 `curl -s https://kontaxt.kr | grep -E '<link rel="(icon|apple-touch-icon|shortcut icon)"'` 으로 3 link emit 확인. SVG primary + PNG fallback + shortcut + apple-touch 모두 살아있는지
+- [ ] **PR #117 prod Naver 로그인 사이클 1회 실측** — `account-takeover blocked` false positive 부재 확인. Vercel Functions Logs → `app/api/auth/naver/callback` 필터
+- [ ] **user_metadata.provider race 영구 fix (정공법)** — Supabase admin REST `POST /auth/v1/admin/users/{id}/identities` 로 `identities` row 직접 insert. 성공 시 `isProviderLinked` 의 user_metadata source 제거 가능 → attacker-controlled source 무력화. 큰 작업 — 별도 의사결정. 단기 deferred (Naver lockout 깨짐 시나리오 이미 PR #83 + #101 으로 해결)
 
 ---
 
