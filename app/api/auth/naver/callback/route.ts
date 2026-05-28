@@ -4,6 +4,7 @@ import { findUserByEmail } from '@/lib/supabase/admin-lookup';
 import { checkRateLimit, getOAuthStartRateLimit } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/auth/client-ip';
 import { NAVER_STATE_COOKIE } from '@/lib/auth/naver';
+import { isProviderLinked } from '@/lib/auth/oauth-providers';
 
 // Naver OAuth 콜백:
 // 1. state 검증 (CSRF)
@@ -116,15 +117,12 @@ export async function GET(request: NextRequest) {
       // 수정 후 Naver 로그인) 가 있지만 일반 사용자 API 로 본인 metadata 만
       // 수정 가능 + attacker 가 victim 의 account 접근 못 함 → 시나리오 어려움.
       // 정공법 (identities 'naver' row 직접 insert) 는 별도 의사결정.
-      const identities = lookup.user.identities ?? [];
-      const appMeta = lookup.user.app_metadata ?? {};
-      const userMeta = lookup.user.user_metadata ?? {};
-      const naverLinked =
-        identities.some((i) => i.provider === 'naver') ||
-        (Array.isArray(appMeta.providers) && appMeta.providers.includes('naver')) ||
-        appMeta.provider === 'naver' ||
-        userMeta.provider === 'naver';
-      if (!naverLinked) {
+      //
+      // 2026-05-28: 4 source OR 검증 (identities + app_metadata.providers +
+      // app_metadata.provider + user_metadata.provider) 를 `isProviderLinked`
+      // helper 로 통합. Google/Kakao 비즈앱 전환 후 custom callback 추가 시
+      // 동일 패턴 재사용.
+      if (!isProviderLinked(lookup.user, 'naver')) {
         // 로그에는 user.id 만 — email/provider 목록은 로그 분석자에게 가입 사실을 노출하므로 제외.
         console.error(
           '[naver/callback] account-takeover blocked — userId=%s',
