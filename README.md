@@ -36,7 +36,12 @@ npm run dev               # http://localhost:3000
 
 # typecheck / tests
 npm run typecheck
-npm test
+npm test                  # vitest (엔진·파서·검증 273 케이스)
+
+# Playwright smoke (마케팅·인증 페이지 8건)
+npm run e2e:install       # 최초 1회 chromium 다운로드 (~92MB)
+npm run e2e               # 자동으로 dev 서버 띄우고 실행
+npm run e2e:ui            # UI mode (디버깅용)
 
 # 이메일 미리보기
 npm run email:dev         # http://localhost:3001
@@ -59,7 +64,7 @@ Node 20.x 필요(`package.json#engines`, fontkit + @react-pdf/renderer 호환).
 | PDF | `@react-pdf/renderer` + Pretendard variable ttf |
 | Validation | Zod |
 | Rate limit | Upstash Redis (sliding window) |
-| Test | Vitest (50+ 케이스, FIFO·MA·총평균·환율·penalty) |
+| Test | Vitest (273 케이스 · 엔진·파서·검증) · Playwright smoke (마케팅·인증) |
 | Host | Vercel (Node 20.x runtime) |
 | Domain | kontaxt.kr (Cloudflare DNS · 도메인 등록 가비아) |
 

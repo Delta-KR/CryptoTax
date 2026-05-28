@@ -22,7 +22,20 @@ graphify-out/
 .mcp.json
 skills-lock.json
 
+# Claude Code agent skills — vendor만 추적 (humanizer 등), 우연한 설치는 무시
+.claude/skills/*
+!.claude/skills/humanizer/
+
 # Source assets (logo design files, legal reference PDFs) — local archive,
 # committed assets live under `public/` and `docs/`.
 logo-file/
 law/
+
+# 로컬 테스트 CSV·사업자등록 자료
+testcsv/
+모두의 창업 제출서류/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
