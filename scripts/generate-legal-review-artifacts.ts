@@ -20,8 +20,6 @@ import { renderToBuffer } from '@react-pdf/renderer';
 import { writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import React from 'react';
-
 import { calculateTax } from '../lib/engine/tax-calculator';
 import { resultToWire } from '../lib/engine/wire';
 import { ensureFontRegistered } from '../lib/report/font-config';
@@ -30,7 +28,7 @@ import {
   UpbitStatement,
   type UpbitTransactionRow,
 } from '../lib/report/upbit-statement';
-import type { UnifiedTransaction } from '../lib/engine/types';
+import type { TxType, UnifiedTransaction } from '../lib/engine/types';
 import type { UnifiedTransactionWire } from '../app/actions/calculate.types';
 
 // ─────────────────────────────────────────────────────────────
@@ -236,8 +234,15 @@ function toKstStr(d: Date): string {
   return iso.slice(0, 16).replace('T', ' '); // YYYY-MM-DD HH:MM
 }
 
-function txTypeKr(t: 'BUY' | 'SELL'): string {
-  return t === 'BUY' ? '매수' : '매도';
+function txTypeKr(t: TxType): string {
+  switch (t) {
+    case 'BUY':
+      return '매수';
+    case 'SELL':
+      return '매도';
+    case 'SWAP':
+      return '스왑';
+  }
 }
 
 function generateCsv(scenario: Scenario): string {
@@ -320,7 +325,7 @@ async function generatePdf(scenario: Scenario): Promise<Buffer> {
   const txsWire = scenario.transactions.map(unifiedToWire);
 
   const buffer = await renderToBuffer(
-    React.createElement(TaxReport, {
+    TaxReport({
       userName: `검증용 가상 사용자 (${scenario.id})`,
       year: scenario.year,
       result: wire,
@@ -365,6 +370,11 @@ function formatBinanceTime(d: Date): string {
 }
 
 function unifiedToBinanceRow(t: UnifiedTransaction): BinanceTradeRow {
+  if (t.type === 'SWAP') {
+    throw new Error(
+      `[binance-csv] SWAP 거래는 Binance 다운로드 형식에 없음 — 시나리오 데이터에 SWAP 끼면 안 됨`,
+    );
+  }
   const kstDateKey = new Date(t.date.getTime() + 9 * 3600 * 1000)
     .toISOString()
     .slice(0, 10);
@@ -446,7 +456,7 @@ async function generateUpbitPdf(scenario: Scenario): Promise<Buffer | null> {
   const printedAt = new Date(lastTxTime + 7 * 24 * 3600 * 1000);
 
   const buffer = await renderToBuffer(
-    React.createElement(UpbitStatement, {
+    UpbitStatement({
       rows,
       printedAt,
     }),
