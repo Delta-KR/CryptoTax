@@ -62,6 +62,19 @@ export const metadata: Metadata = {
       'naver-site-verification': 'd81b5e07ea5596e0e3e16d48727cc98d152cc232',
     },
   },
+  // favicon — Next.js 가 `app/icon.svg` + `app/apple-icon.png` 를 자동 detect 해서
+  // SVG primary + Apple touch icon 으로 처리하지만, **PNG fallback 은 자동 생성 안 됨**.
+  // 구형 안드로이드 (Chrome 49 이하) / IE / 일부 RSS reader / 메신저 link preview 등
+  // SVG favicon 미지원 환경은 favicon 빈 사각형으로 보임. apple-icon (PNG 180x180) 을
+  // alternate icon 으로 명시해 fallback 보장. legacy shortcut 도 같은 PNG 로.
+  icons: {
+    icon: [
+      { url: '/icon', type: 'image/svg+xml' },
+      { url: '/apple-icon', type: 'image/png', sizes: '180x180' },
+    ],
+    shortcut: '/apple-icon',
+    apple: '/apple-icon',
+  },
 };
 
 // Inline before-paint script: one-time migration of legacy `crypto-tax-*` storage
