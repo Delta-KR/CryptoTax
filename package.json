@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "email:dev": "email dev --dir emails --port 3001",
-    "email:build": "tsx scripts/build-emails.ts"
+    "email:build": "tsx scripts/build-emails.ts",
+    "legal-review:generate": "tsx scripts/generate-legal-review-artifacts.ts"
   },
   "engines": {
     "node": "20.x"
