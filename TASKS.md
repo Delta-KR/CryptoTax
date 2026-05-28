@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
 > 마지막 갱신: 2026-05-28 (D-218 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **2026-05-28**: P2 검증 Phase A·B·C·D 완료 (엔진 A− → A) + 세무사 외부 검증 패키지 v0.1 (PR #128). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지·세무사 검증 발송 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **2026-05-28**: P2 검증 Phase A·B·C·D 완료 (엔진 A− → A) + 세무사 외부 검증 패키지 v0.1 (PR #128) + **Vercel 빌드 fail incident P0 hotfix (PR #130 TS errors 4건)**. **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지·세무사 검증 발송 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -42,6 +42,12 @@
 - [x] ~~**PR #118 prod 검증** — 4 link emit 확인 ✅~~ → **검증 부족 — emit 확인만 하고 URL resolve 미검증**. emit 된 link 4개 모두 prod `curl -I` 결과 404 (Brave 탭/북마크 default 아이콘 노출). 후속 [PR #123](https://github.com/Delta-KR/kontaxt/pull/123) revert. Wave 1 codex HIGH Q4 경고 ("/apple-icon path resolve 검증 필요") 정확히 적중했으나 머지 결정에 미반영. **다음 검증 routine 부터 head emit + `curl -I` 둘 다 필수**
 - [x] **PR #117 prod Naver 로그인 사이클 1회 실측** — 2026-05-28 사용자 검증 PASS. Naver OAuth 정상 동작, `account-takeover blocked` false positive 부재 확인
 - [ ] **user_metadata.provider race 영구 fix (정공법)** — Supabase admin REST `POST /auth/v1/admin/users/{id}/identities` 로 `identities` row 직접 insert. 성공 시 `isProviderLinked` 의 user_metadata source 제거 가능 → attacker-controlled source 무력화. 큰 작업 — 별도 의사결정. 단기 deferred (Naver lockout 깨짐 시나리오 이미 PR #83 + #101 으로 해결)
+
+### Day 18 incident 후속 (PR #130 hotfix 학습)
+
+- [x] **Vercel 빌드 fail incident P0 hotfix** — [PR #130](https://github.com/Delta-KR/kontaxt/pull/130) (`cd5aa30`, 2026-05-28). PR #128 머지 후 Vercel build 4 사이클 연속 fail (이메일 알람 4건 14:09·14:15·14:30·14:32 KST). 사용자 facing prod 는 Vercel 직전 success `05f79d9` (#127) 유지로 영향 0. root cause = `scripts/generate-legal-review-artifacts.ts` TS 에러 4건 (L262 `txTypeKr` 시그니처 / L330·L456 `React.createElement` → 함수 직접 호출 / L391 `unifiedToBinanceRow` SWAP 가드). fix 후 production deploy READY 14:42:41 KST (머지 후 2분). 메모리 [[feedback_typecheck_before_merge]] 신설
+- [ ] **CI/husky pre-push 에 `npm run typecheck` gate 추가** — PR #130 사고의 근본 원인은 머지 전 typecheck routine skip (vitest 만 PASS 했다고 머지). 로컬에서 push 차단하거나 PR open 시 GitHub Actions check 로 머지 차단. 옵션 A husky `.husky/pre-push` 1줄 / 옵션 B GitHub Actions workflow / 옵션 C Vercel build 결과를 required check 로 설정. 별도 의사결정
+- [ ] **sub-agent verify 강제 패턴** — PR #130 진단 시 첫 sub-agent 보고 1건만 발견 → 직접 typecheck 돌리니 4건. sub-agent 결과 받은 후 직접 `npm run typecheck` / `grep` 으로 verify 하는 패턴 ([[feedback_grep_before_claiming_missing]] 와 같은 맥락). 메모리 강화 또는 routine 명문화
 
 ---
 
