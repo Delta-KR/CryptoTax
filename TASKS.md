@@ -1,7 +1,7 @@
 # Kontaxt Task Backlog
 
-> 마지막 갱신: 2026-05-27 (D-219 to 2027.1.1 신고 시행)
-> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
+> 마지막 갱신: 2026-05-28 (D-218 to 2027.1.1 신고 시행)
+> 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **2026-05-28**: P2 검증 Phase A·B·C·D 완료 (엔진 A− → A) + 세무사 외부 검증 패키지 v0.1 (PR #128). **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지·세무사 검증 발송 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
 ---
@@ -33,13 +33,13 @@
 ## 🔧 Quick Wins — 다음 작업 사이클 전 처리
 
 - [x] **Naver OAuth 통합 패턴 추출** — [PR #117](https://github.com/Delta-KR/kontaxt/pull/117) (`a053851`). `lib/auth/oauth-providers.ts` 에 `isProviderLinked(user, provider)` helper 신설 (4 source OR — identities + app_metadata.providers + app_metadata.provider + user_metadata.provider). Naver callback 의 inline 5줄 OR 체인 → 1줄 helper 호출. `hasEmailIdentity` 도 helper 위임으로 단순화. 카카오/구글 비즈앱 전환 후 custom callback 시 동일 helper 재사용. 11 신규 tests (23 → 34 PASS). Wave 1 routine: BLOCKING 0, MEDIUM 0, NIT 6
-- [x] **favicon SVG-only fallback 검토** — [PR #118](https://github.com/Delta-KR/kontaxt/pull/118) (`32ddb98`). 현 prod head = `app/icon.svg` (SVG) + `app/apple-icon.png` (Apple) 만. PNG fallback rel="icon" 부재 → 구형 안드로이드 Chrome 49 이하 / IE / 일부 RSS reader / 메신저 link preview 빈 사각형. metadata.icons 명시 — apple-icon (PNG 180x180) alternate icon + shortcut 으로 재활용. 0 신규 binary asset. GA/Search Console 데이터 무관 0 코스트 fallback
+- [x] ~~**favicon SVG-only fallback 검토** — [PR #118](https://github.com/Delta-KR/kontaxt/pull/118) (`32ddb98`)~~ → **revert** ([PR #123](https://github.com/Delta-KR/kontaxt/pull/123) `9526152`, 2026-05-28). metadata.icons 가 명시한 `/icon` + `/apple-icon` URL 이 prod 에서 404 — Next.js file convention 의 실제 URL 은 `/icon.svg?<hash>` + `/apple-icon.png?<hash>` (확장자 + content hash) 라 확장자 없는 명시 URL resolve 실패. Brave 탭/북마크 default 지구 아이콘 노출. **학습**: head emit 확인 (link 4개 emit) ≠ URL resolve (curl 200) — 다음 시도 시 각 link URL `curl -I` 검증 필수. PNG fallback (구형 안드로이드/IE/RSS) 정공법 재시도 옵션: `public/favicon.ico` 추가 또는 명시 URL 에 hash 포함. 단기 deferred
 - [x] **Dashboard 한 사이클 검증** — [PR #119](https://github.com/Delta-KR/kontaxt/pull/119) (`72aabf9`). `docs/qa/dashboard-flow-checklist.md` 신설 (+185 LOC). 풀 플로우 7 단계 (로그인 → 업로드 → 대시보드 → 거래 내역 → 세금 → PDF → 회원관리) + 각 단계 sub-component 명세 + 회귀 체크 (PR 인용 14건) + 자동 회귀 검증 5 명령 + 자주 발견되는 회귀 패턴 5 + 사용자 체크포인트 요약 7 step (5분 사이클). 다음 페이지 분할·major bump PR 머지 직후 한 번 돌려 정착
 
 ### Quick Wins 후속 (별도 PR 후보 — Wave 1 sub-agent findings)
 
 - [x] **`OAuthProvider` 동명 타입 cleanup** — [PR #121](https://github.com/Delta-KR/kontaxt/pull/121) (`902a383`). `lib/auth/index.ts` 의 `OAuthProvider` → `SupabaseNativeOAuthProvider` rename. `components/auth/SocialButtons.tsx` 의 import + ProviderConfig.id + cast 3곳 sync. `lib/auth/oauth-providers.ts` 주석 sync. typecheck PASS + 160 tests PASS. 3 파일 +16/-11
-- [x] **PR #118 prod 검증** — 4 link emit 확인 ✅. `<link rel="icon" type="image/svg+xml">` + `<link rel="icon" type="image/png" sizes="180x180">` (PNG fallback) + `<link rel="shortcut icon">` + `<link rel="apple-touch-icon">` 모두 정상 (2026-05-28 curl)
+- [x] ~~**PR #118 prod 검증** — 4 link emit 확인 ✅~~ → **검증 부족 — emit 확인만 하고 URL resolve 미검증**. emit 된 link 4개 모두 prod `curl -I` 결과 404 (Brave 탭/북마크 default 아이콘 노출). 후속 [PR #123](https://github.com/Delta-KR/kontaxt/pull/123) revert. Wave 1 codex HIGH Q4 경고 ("/apple-icon path resolve 검증 필요") 정확히 적중했으나 머지 결정에 미반영. **다음 검증 routine 부터 head emit + `curl -I` 둘 다 필수**
 - [x] **PR #117 prod Naver 로그인 사이클 1회 실측** — 2026-05-28 사용자 검증 PASS. Naver OAuth 정상 동작, `account-takeover blocked` false positive 부재 확인
 - [ ] **user_metadata.provider race 영구 fix (정공법)** — Supabase admin REST `POST /auth/v1/admin/users/{id}/identities` 로 `identities` row 직접 insert. 성공 시 `isProviderLinked` 의 user_metadata source 제거 가능 → attacker-controlled source 무력화. 큰 작업 — 별도 의사결정. 단기 deferred (Naver lockout 깨짐 시나리오 이미 PR #83 + #101 으로 해결)
 
@@ -70,7 +70,8 @@
 - [x] **엔진 robust 검증 vitest 13 신규** ([PR #125](https://github.com/Delta-KR/kontaxt/pull/125) Phase B) — `total-average.test.ts` +530 LOC. 엣지 6 (Dust / 동일 timestamp / 의제+실가 mix / KST 경계 BUY/SELL / orphan 다거래소) + Property-based 2 (`totalGain - totalLoss === netPnL`, `holdingsAfter === Σ(BUY) − Σ(SELL)`) + 시나리오 5 (의제 50% 단일/혼합 / 다년 carry / 손실만 / 50건 perf)
 - [x] **vault sources/ 법령 인덱싱** (Phase C) — 5 신규 source (소득세법-시행령-88조-가상자산 / 92조-평가법 / 183조-비거주자 / vaupl-summary / law-index-kontaxt). gbrain 29 → 35 pages, 469 → 480 chunks. wiki index.md 갱신
 - [x] **법령 evidence 회귀 테스트 13 신규** ([PR #126](https://github.com/Delta-KR/kontaxt/pull/126) Phase D) — `legal-evidence.test.ts` +535 LOC. 8 법령 조항별 시나리오 (§37⑤ 의제 / §37⑥+§88⑤ 의제율 50% / §88①+§92②4호 거주자별 / §64의3② 산출세액+250만 / 지방세§93 2% / 시행일 부칙 / 손익 통산 / 다년 carry-over). 각 case 에 법령 조항 + 가이드 LOC 인용
-- [ ] **세무사 검증** (Phase E) — 한국 가상자산 전문 세무사 1-2명한테 시나리오 5-10개 결과 검증 의뢰. 비용 30-50만원 예상. **사용자 영역**, 6월 중순 사업자등록 후 진행
+- [x] **세무사 검증 패키지 v0.1 완성** (Phase E 준비) — [PR #128](https://github.com/Delta-KR/kontaxt/pull/128) (`a9d827f`, 2026-05-28). 시나리오 10건 (의제 50% / 다년 carry / 손익 통산 / 거주자·비거주자 / KST 경계 / 지방세 / 가산세 / 다거래소 / 부분 의제 / orphan SELL) + 부속 문서 5종 (법령 references, 거주자 판정 가이드, 의제취득가액 가이드, 검증 시나리오 인덱스, README) + vitest 12 self-check + zip 발송 준비 (`~/Desktop/Kontaxt 세무사 검증 패키지 v0.1.zip` 4.2MB). 사업자등록 후 갑 정보 기재 → 세무사 컨택 → 발송 절차 ([[project_legal_review_package_v01]])
+- [ ] **세무사 검증** (Phase E) — 한국 가상자산 전문 세무사 1-2명한테 시나리오 5-10개 결과 검증 의뢰. 비용 30-50만원 예상. **사용자 영역**, 6월 중순 사업자등록 후 진행. 패키지 v0.1 발송 → 피드백 → v0.2 반영 사이클
 - [ ] **베타 사용자 dry run** (Phase F) — 실제 거래내역으로 엔진 결과 → 엑셀 손계산 대조. **Phase 7 자체** (베타 모집 후)
 
 ---
