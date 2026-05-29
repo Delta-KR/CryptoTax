@@ -232,17 +232,39 @@
 
 ---
 
-## 📈 Phase 9 — 마케팅 콘텐츠 + SEO
+## 📈 Phase 9 — 마케팅 콘텐츠 + SEO/GEO
 
-- [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크, 인덱싱 안 되는 페이지 원인 파악
-- [ ] **블로그/가이드 콘텐츠 첫 5개** (long-tail 키워드 타깃):
+### ✅ 완료 — SEO/GEO 인프라 (2026-05-29)
+
+2026-05-29 SEO 감사 (기본 8/10) + GEO 도입 검토 → Quick Wins 9건 5 PR 머지. 자세한 일자별 기록은 vault `Daily/2026-05-29.md`.
+
+- [x] **`/guide` FAQPage + HowTo×2 + BreadcrumbList JSON-LD** ([PR #136](https://github.com/Delta-KR/kontaxt/pull/136) `78fa3a7`) — FAQ 8건 + 업비트 6단계 + 바이낸스 7단계 schema.org structured data. ExchangeGuideCard alt 보강 (G1·G6a·G8 일부)
+- [x] **`/sample` 자체 metadata + BreadcrumbList** ([PR #135](https://github.com/Delta-KR/kontaxt/pull/135) `73dc1aa`) — root title 상속 → 자체 title+desc+OG (G3·G6b)
+- [x] **BreadcrumbList 컴포넌트 + simulator/legal 적용** ([PR #137](https://github.com/Delta-KR/kontaxt/pull/137) `1c31c2b`) — `components/seo/Breadcrumb.tsx` 재사용 컴포넌트 + 3 페이지 적용 (G6c·d·e)
+- [x] **Root @graph schema (Organization+WebSite+SoftwareApplication) + AI 크롤러 정책** ([PR #138](https://github.com/Delta-KR/kontaxt/pull/138) `86fc968`) — 단일 SoftwareApplication → @graph 3 entity (`@id` cross-reference) + description 119→142자 + 학습 봇 9 disallow + 검색·RAG 봇 6 allow (G2·G5·G7·G10)
+- [x] **이미지 alt 보강 + llms.txt 신규** ([PR #139](https://github.com/Delta-KR/kontaxt/pull/139) `0351cbc`) — hero/exchanges/problem alt "업비트" → "업비트 로고" + Jeremy Howard 표준 llms.txt 2.5KB (핵심 페이지·세법 기준·거래소·FAQ·운영) (G9·llms.txt)
+
+### 🎯 다음 (GEO Strategic Investments)
+
+> 사업자등록 (2026-06 중순) 전후 분리 결정. 블로그 운영 부담 + 법률 책임 동반.
+
+- [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크. 새 schema/AI 정책/llms.txt 노출 확인. 인덱싱 안 되는 페이지 원인 파악
+- [ ] **S1 `/glossary/[term]` 동적 라우트** — 의제취득가액·총평균법·과세표준·필요경비·기본공제·기타소득·분리과세 15-20 term. GEO 인용 토대
+- [ ] **S2 거래소·기능별 독립 가이드 페이지 4** — `/guides/upbit-pdf-download`, `/guides/binance-csv-export`, `/guides/swap-tax-handling`, `/guides/usdt-fx-conversion`
+- [ ] **S3 `/blog/[slug]` + 분기당 6글** (long-tail 키워드 타깃):
   1. "업비트 PDF로 양도소득세 신고하는 법"
   2. "한국 거주자 가상자산 세금은 왜 총평균법인가 — 시행령 §88① 해설 (FIFO·이동평균이 적용되지 않는 이유)"
   3. "의제취득가액이란? 2027 가상자산 세금 계산법"
   4. "바이낸스 CSV로 한국 양도소득세 신고하기"
   5. "거래소 통합 데이터로 신고하는 이유 (수동 vs 자동)"
+  6. "2028년 5월 가상자산 양도소득세 첫 확정신고 일정"
+- [ ] **S4 `/exchanges/upbit`, `/exchanges/binance` 독립 페이지** — 거래소별 키워드 흡수
+- [ ] **S5 `/pricing` 독립 페이지 + Product schema** — 현재 홈 #pricing anchor → 자체 페이지
+- [ ] **S6 publishedDate / dateModified + Article schema** (S2-S3 의존) — GEO 14일 freshness decay 대응
+- [ ] **S7 콘텐츠 갱신 7-14일 사이클 routine** — GEO citation decay 대응
 - [ ] **랜딩 A/B 테스트** — Hero copy or 가격 카드 variant
 - [ ] **사용자 후기 섹션** (베타 첫 5명 후기 모이면 랜딩에 추가)
+- [ ] **GA4 / Plausible / Vercel Analytics 도입 결정** — GEO 효과 측정 prereq (Mention Rate · Citation Rate · UTM `utm_source=chatgpt|perplexity` 트래픽)
 
 ---
 
