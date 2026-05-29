@@ -51,7 +51,7 @@ function LiveCard({ exchange }: { exchange: Exchange }) {
       >
         <Image
           src={exchange.logo}
-          alt={exchange.name}
+          alt={`${exchange.name} 로고`}
           width={28}
           height={28}
           className="object-contain"
@@ -87,7 +87,7 @@ function ComingSoonCard({ exchange }: { exchange: Exchange }) {
       >
         <Image
           src={exchange.logo}
-          alt={exchange.name}
+          alt={`${exchange.name} 로고`}
           width={22}
           height={22}
           className="object-contain"
