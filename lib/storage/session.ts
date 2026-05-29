@@ -27,6 +27,14 @@ export function setSessionUser(userId: string | null): void {
   currentUserId = userId;
 }
 
+/**
+ * 현재 로그인 user id (없으면 null). billing 등 다른 client 저장 모듈이 동일한
+ * user 스코핑(`...-${userId}`)을 쓰도록 공유. SSR 에선 항상 null.
+ */
+export function getSessionUserId(): string | null {
+  return currentUserId;
+}
+
 function getKey(): string {
   return currentUserId ? `${KEY_PREFIX}-${currentUserId}` : ANON_KEY;
 }
@@ -138,10 +146,17 @@ export function clearSession(): void {
   localStorage.removeItem(getKey());
 }
 
+// 로그아웃 시 보존할 비-사용자 키 (UI 환경설정·마이그레이션 플래그). 그 외 모든
+// `kontaxt-` 키는 사용자 데이터로 간주해 정리한다.
+const NON_USER_KEYS = new Set(['kontaxt-theme', 'kontaxt-migration-v1']);
+const KONTAXT_KEY_PREFIX = 'kontaxt-';
+
 /**
- * 로그아웃 시 호출 — 현재 user 키와 anon 키 모두 정리.
- * 다음 사용자 (또는 본인 재로그인 전 anonymous 상태) 가 이전 데이터를 보지
- * 않도록.
+ * 로그아웃 시 호출 — 모든 사용자 데이터 키 정리 (거래 세션 + billing/taxpro/notifications
+ * 등). 공용 PC 등에서 다음 사용자가 이전 사용자의 데이터(특히 세무사 매칭 PII)를 보지
+ * 않도록. `kontaxt-` 접두 키 전체를 지우되 theme·migration 플래그만 보존 — 단일 키
+ * (`KEY_PREFIX`)만 지우던 기존 구현은 taxpro/billing 키를 놓쳐 계정 전환 시 PII 가
+ * 잔존했다 (CSO 감사 2026-05-29).
  */
 export function clearAllSessions(): void {
   if (typeof window === 'undefined') return;
@@ -150,7 +165,9 @@ export function clearAllSessions(): void {
     const keys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(KEY_PREFIX)) keys.push(k);
+      if (k && k.startsWith(KONTAXT_KEY_PREFIX) && !NON_USER_KEYS.has(k)) {
+        keys.push(k);
+      }
     }
     keys.forEach((k) => localStorage.removeItem(k));
   } catch {
