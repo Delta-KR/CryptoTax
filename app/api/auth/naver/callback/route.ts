@@ -5,6 +5,7 @@ import { checkRateLimit, getOAuthStartRateLimit } from '@/lib/rate-limit';
 import { getClientIp } from '@/lib/auth/client-ip';
 import { NAVER_STATE_COOKIE } from '@/lib/auth/naver';
 import { isProviderLinked } from '@/lib/auth/oauth-providers';
+import { generateFinishToken } from '@/lib/auth/finish-nonce';
 
 // Naver OAuth 콜백:
 // 1. state 검증 (CSRF)
@@ -144,7 +145,12 @@ export async function GET(request: NextRequest) {
       type: 'magiclink',
       email: naverUser.email,
       options: {
-        redirectTo: `${url.origin}/auth/finish`,
+        // /auth/finish 에 HMAC 서명 nonce(fn) 를 query 로 동봉 — server 가 검증해
+        // phishing fragment 차단 (P1-6). generateLink 가 redirect_to query 를
+        // 그대로 인코딩함은 실증 확인 (2026-05-29). 단 Supabase verify 단계의 query
+        // 보존 + redirect URL allowlist 매칭은 preview 배포 실제 Naver 로그인으로
+        // 검증해야 함 — 깨지면 PR #72(cookie) 처럼 전체 Naver 로그인 실패.
+        redirectTo: `${url.origin}/auth/finish?fn=${encodeURIComponent(generateFinishToken())}`,
         // 신규 가입자에게만 user_metadata로 박힘. 기존 사용자는 그대로.
         data: {
           name: naverUser.name || naverUser.nickname,
