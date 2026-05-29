@@ -1,66 +1,27 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { redirect } from 'next/navigation';
+import { verifyFinishToken } from '@/lib/auth/finish-nonce';
+import { FinishClient } from './FinishClient';
 
-// Naver OAuth 등 자체 flow의 magic link verify가 끝난 직후 도착하는 페이지.
-// Supabase admin generateLink로 발급된 link는 redirect_to URL fragment에
-// access_token/refresh_token을 박아 보냄 (implicit flow). 이 fragment는
-// server로 전송되지 않아 middleware가 인증을 확인하지 못함 → 곧장 /dashboard로
-// 보내면 /login으로 튕김.
+// audit security P1-6: /auth/finish 는 fragment 의 access_token 만으로 setSession
+// 하므로, legitimate flow 인지 검증 없이는 공격자가 victim 한테
+// kontaxt.kr/auth/finish#access_token=ATTACKER_TOKEN phishing link 를 보내
+// session fixation 이 가능하다.
 //
-// 여기서 setSession을 명시 호출해 supabase/ssr이 cookies까지 동기화하도록 한 뒤
-// /dashboard로 이동시킴.
-export default function AuthFinishPage() {
-  const router = useRouter();
-  const [status, setStatus] = useState<'pending' | 'error'>('pending');
-
-  useEffect(() => {
-    async function finish() {
-      const supabase = createSupabaseBrowserClient();
-      const hash = window.location.hash.startsWith('#')
-        ? window.location.hash.slice(1)
-        : window.location.hash;
-      const params = new URLSearchParams(hash);
-      const accessToken = params.get('access_token');
-      const refreshToken = params.get('refresh_token');
-
-      if (!accessToken || !refreshToken) {
-        setStatus('error');
-        router.replace('/login?error=invalid_request');
-        return;
-      }
-
-      const { error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (error) {
-        console.error('[auth/finish] setSession error:', error);
-        setStatus('error');
-        router.replace('/login?error=server_error');
-        return;
-      }
-
-      // 세션 cookies 동기화 완료 → 대시보드로
-      router.replace('/dashboard');
-    }
-    finish();
-  }, [router]);
-
-  return (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="text-center">
-        <div className="mb-3 text-[15px] font-medium text-ink">
-          {status === 'pending' ? '로그인 처리 중…' : '로그인에 문제가 있어요'}
-        </div>
-        <div className="text-[13px] text-muted">
-          {status === 'pending'
-            ? '잠시만 기다려주세요.'
-            : '잠시 후 로그인 페이지로 이동해요.'}
-        </div>
-      </div>
-    </div>
-  );
+// 방어: Naver callback 이 발급한 HMAC 서명 nonce(`?fn=...`)를 server 에서 검증.
+// 공격자는 AUTH_FINISH_NONCE_SECRET 을 몰라 유효 fn 을 위조할 수 없다. cookie 가
+// 아니라 query 라서 Naver→supabase.co→kontaxt.kr cross-site chain 에서도 유실되지
+// 않는다 (PR #72 cookie 방식이 깨진 원인 회피).
+//
+// fragment(access_token)는 server 에 전송되지 않으므로 검증 통과 후 client
+// 컴포넌트(FinishClient)가 setSession 을 수행한다.
+export default async function AuthFinishPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ fn?: string }>;
+}) {
+  const { fn } = await searchParams;
+  if (!verifyFinishToken(fn ?? null)) {
+    redirect('/login?error=invalid_request');
+  }
+  return <FinishClient />;
 }
