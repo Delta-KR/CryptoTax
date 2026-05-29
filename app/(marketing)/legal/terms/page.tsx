@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { BreadcrumbJsonLd } from '@/components/seo/Breadcrumb';
 
 export const metadata: Metadata = {
   title: '이용약관 — Kontaxt',
@@ -45,6 +46,13 @@ function Clause({ num, children }: { num: number; children: React.ReactNode }) {
 export default function TermsPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Kontaxt', path: '' },
+          { name: '약관·법적 안내', path: '/legal/terms' },
+          { name: '이용약관', path: '/legal/terms' },
+        ]}
+      />
       <section className="section-pad pb-6">
         <div className="mx-auto max-w-content">
           <SectionEyebrow>LEGAL</SectionEyebrow>
