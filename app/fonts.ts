@@ -1,5 +1,4 @@
 import { JetBrains_Mono } from 'next/font/google';
-import localFont from 'next/font/local';
 
 // JetBrains Mono — next/font/google auto self-hosts at build time.
 export const jetbrainsMono = JetBrains_Mono({
@@ -9,13 +8,11 @@ export const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// Pretendard — variable font from the `pretendard` npm package.
-// Path is relative to this file (app/fonts.ts → ../node_modules/...).
-// If next/font/local rejects the node_modules path in a future Next.js version,
-// copy PretendardVariable.woff2 into app/fonts/pretendard/ and update the path.
-export const pretendard = localFont({
-  src: '../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2',
-  variable: '--font-pretendard',
-  display: 'swap',
-  weight: '45 920',
-});
+// Pretendard — loaded via globals.css `@import 'pretendard/dist/web/variable/
+// pretendardvariable-dynamic-subset.css'`. unicode-range 로 한글 빈도순 92 chunk
+// 분할 → Hero "내 가상자산 양도세, 한 번에 정리해요." 같은 첫 paint 텍스트는
+// chunk 1-2개만 다운로드 (~50-100KB). Variable 단일 woff2 (2MB) 대신 dynamic
+// subset 으로 모바일 LCP 11.9s → ~3-4s 개선. 2026-05-30.
+//
+// font-family 명: 'Pretendard Variable' (CSS @font-face 가 등록).
+// tailwind.config.ts 의 sans stack 에 직접 명시.

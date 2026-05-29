@@ -1,3 +1,8 @@
+/* Pretendard Variable — dynamic subset (unicode-range 별 92 chunk 분할).
+   Hero 같은 첫 paint 한글 텍스트는 chunk 1-2개 (~50-100KB) 만 다운로드.
+   단일 Variable woff2 (2MB) 대신 모바일 4G LCP 큰 폭 개선. 2026-05-30. */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
