@@ -73,6 +73,16 @@ describe('세무사 매칭 PII — 계정 간 격리 (CSO Finding 2)', () => {
     expect(store.has('kontaxt-taxpro-user-A')).toBe(true);
   });
 
+  it('미인증(세션 user 없음) 시 PII 를 anon 공유 키에 쓰지 않는다', () => {
+    setSessionUser(null);
+    submitTaxProRequest(PII);
+    // anon 공유 키는 모든 브라우저 사용자가 공유 → PII 저장 금지.
+    expect(store.has('kontaxt-taxpro-anon')).toBe(false);
+    // 미인증 조회는 어떤 PII 도 반환하지 않는다.
+    expect(getTaxProRequest()).toBeNull();
+    expect(getPaymentHistory()).toEqual([]);
+  });
+
   it('구버전 단일 키(kontaxt-taxpro)는 접근 시 제거된다 (잔존 PII 정리)', () => {
     store.set('kontaxt-taxpro', JSON.stringify({ ...PII, id: 'x', status: '매칭 대기', submittedAt: '2026-01-01' }));
     setSessionUser('user-B');

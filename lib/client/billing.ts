@@ -32,9 +32,12 @@ export interface PaymentRecord {
   receiptUrl?: string;
 }
 
-// user 별 스코핑 키 — 미로그인(SSR/anon) 시 '-anon'. session.ts getKey() 패턴 미러.
-function historyKey(): string {
-  return `kontaxt-billing-history-${getSessionUserId() ?? 'anon'}`;
+// user 별 스코핑 키. 미인증(세션 user 없음)이면 null — taxpro/history 는 (app) 로그인
+// 전용 기능이라 anon 공유 키를 쓰면 안 된다. PII 를 공유 키('-anon')에 쓰면 auth
+// 하이드레이션 전 race 시 다음 계정에 노출되므로, 미인증 시엔 저장·조회를 건너뛴다.
+function historyKey(): string | null {
+  const uid = getSessionUserId();
+  return uid ? `kontaxt-billing-history-${uid}` : null;
 }
 
 // Plan 상태는 Supabase profiles 테이블 + useCurrentUser 가 처리 — 더 이상 localStorage
@@ -44,7 +47,9 @@ export function getPaymentHistory(): PaymentRecord[] {
   if (typeof window === 'undefined') return [];
   try {
     purgeLegacyBillingKeys();
-    const raw = localStorage.getItem(historyKey());
+    const key = historyKey();
+    if (!key) return []; // 미인증 — anon 공유 키 읽지 않음
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     return JSON.parse(raw) as PaymentRecord[];
   } catch {
@@ -53,8 +58,9 @@ export function getPaymentHistory(): PaymentRecord[] {
 }
 
 // 세무사 매칭 신청
-function taxProKey(): string {
-  return `kontaxt-taxpro-${getSessionUserId() ?? 'anon'}`;
+function taxProKey(): string | null {
+  const uid = getSessionUserId();
+  return uid ? `kontaxt-taxpro-${uid}` : null;
 }
 export interface TaxProRequest {
   id: string;
@@ -70,7 +76,9 @@ export function getTaxProRequest(): TaxProRequest | null {
   if (typeof window === 'undefined') return null;
   try {
     purgeLegacyBillingKeys();
-    const raw = localStorage.getItem(taxProKey());
+    const key = taxProKey();
+    if (!key) return null; // 미인증 — anon 공유 키 읽지 않음
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     return JSON.parse(raw) as TaxProRequest;
   } catch {
@@ -87,6 +95,13 @@ export function submitTaxProRequest(
     submittedAt: new Date().toISOString(),
     ...data,
   };
-  localStorage.setItem(taxProKey(), JSON.stringify(req));
+  const key = taxProKey();
+  // 미인증 상태에서는 PII 를 anon 공유 키에 쓰지 않는다 (계정 간 누출 방지). (app)
+  // 로그인 전용 페이지라 정상 흐름에선 도달하지 않지만, race 방어로 persistence 만 skip.
+  if (typeof window !== 'undefined' && key) {
+    localStorage.setItem(key, JSON.stringify(req));
+  } else if (typeof window !== 'undefined') {
+    console.warn('[billing] taxpro 저장 skip — 세션 user 미설정 (미인증)');
+  }
   return req;
 }
