@@ -143,7 +143,7 @@ function FloatingCardUpbit() {
       <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-sm bg-brand-soft">
         <Image
           src="/logos/upbit.png"
-          alt="업비트"
+          alt="업비트 로고"
           width={20}
           height={20}
           className="object-contain"

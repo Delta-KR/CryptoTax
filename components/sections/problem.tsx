@@ -57,7 +57,7 @@ function CSVCard({
           <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center overflow-hidden rounded-[6px] bg-white">
             <Image
               src={logo}
-              alt={exchange}
+              alt={`${exchange} 로고`}
               width={16}
               height={16}
               className="object-contain"
