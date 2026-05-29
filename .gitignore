@@ -21,6 +21,7 @@ graphify-out/
 .agents/
 .mcp.json
 skills-lock.json
+.gstack/
 
 # Claude Code agent skills — vendor만 추적 (humanizer 등), 우연한 설치는 무시
 .claude/skills/*
