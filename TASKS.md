@@ -46,8 +46,8 @@
 ### Day 18 incident 후속 (PR #130 hotfix 학습)
 
 - [x] **Vercel 빌드 fail incident P0 hotfix** — [PR #130](https://github.com/Delta-KR/kontaxt/pull/130) (`cd5aa30`, 2026-05-28). PR #128 머지 후 Vercel build 4 사이클 연속 fail (이메일 알람 4건 14:09·14:15·14:30·14:32 KST). 사용자 facing prod 는 Vercel 직전 success `05f79d9` (#127) 유지로 영향 0. root cause = `scripts/generate-legal-review-artifacts.ts` TS 에러 4건 (L262 `txTypeKr` 시그니처 / L330·L456 `React.createElement` → 함수 직접 호출 / L391 `unifiedToBinanceRow` SWAP 가드). fix 후 production deploy READY 14:42:41 KST (머지 후 2분). 메모리 [[feedback_typecheck_before_merge]] 신설
-- [ ] **CI/husky pre-push 에 `npm run typecheck` gate 추가** — PR #130 사고의 근본 원인은 머지 전 typecheck routine skip (vitest 만 PASS 했다고 머지). 로컬에서 push 차단하거나 PR open 시 GitHub Actions check 로 머지 차단. 옵션 A husky `.husky/pre-push` 1줄 / 옵션 B GitHub Actions workflow / 옵션 C Vercel build 결과를 required check 로 설정. 별도 의사결정
-- [ ] **sub-agent verify 강제 패턴** — PR #130 진단 시 첫 sub-agent 보고 1건만 발견 → 직접 typecheck 돌리니 4건. sub-agent 결과 받은 후 직접 `npm run typecheck` / `grep` 으로 verify 하는 패턴 ([[feedback_grep_before_claiming_missing]] 와 같은 맥락). 메모리 강화 또는 routine 명문화
+- [x] **CI/husky pre-push 에 `npm run typecheck` gate 추가** — [PR #143](https://github.com/Delta-KR/kontaxt/pull/143) (`dce6752`, 2026-05-30). 옵션 C 채택 (husky + GHA + branch protection 3중 차단). `.husky/pre-push` 가 `npm run typecheck && npm test` 강제 (~15초, 로컬 fail 시 push 차단) + `.github/workflows/typecheck.yml` 2 잡 (TypeScript + Vitest) 병렬 (원격 머지 차단) + `main` branch protection rule 에 `TypeScript` + `Vitest` required status checks 추가 (사용자 직접 설정 완료, 2026-05-30). 워크트리 `config.worktree` 가 `core.hooksPath` 를 절대 경로로 박은 충돌 발견·해결. graphify post-checkout/post-commit 도 `.husky/` 로 통합. 다음 PR 부터 두 job PASS 안 하면 머지 버튼 비활성화
+- [x] **sub-agent verify 강제 패턴** — [PR #143](https://github.com/Delta-KR/kontaxt/pull/143) (`dce6752`, 2026-05-30). `memory/feedback_subagent_verify.md` 신설 + CLAUDE.md 작업 패턴 6) 추가. sub-agent "X건 발견 / 없음 / PASS" 보고는 받자마자 직접 같은 명령으로 cross-check 루틴 명문화
 
 ---
 
