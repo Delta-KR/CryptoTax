@@ -198,7 +198,7 @@ function ExchangeGuideCard({
         >
           <Image
             src={logo}
-            alt={name}
+            alt={`${name} 로고`}
             width={26}
             height={26}
             className="object-contain"
@@ -236,8 +236,85 @@ function ExchangeGuideCard({
 }
 
 export default function GuidePage() {
+  const FAQ_SCHEMA = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQ.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
+  };
+
+  const UPBIT_HOWTO = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: '업비트 거래내역 PDF 받는 법',
+    description:
+      '업비트 웹사이트에서 양도소득 PDF를 받아서 Kontaxt에 업로드하는 단계별 안내',
+    step: UPBIT_STEPS.map((s) => ({
+      '@type': 'HowToStep',
+      position: s.n,
+      name: s.title,
+      text: s.desc,
+    })),
+  };
+
+  const BINANCE_HOWTO = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: '바이낸스 거래내역 CSV 받는 법',
+    description:
+      'Binance에서 Spot 거래내역 CSV를 받아서 Kontaxt에 업로드하는 단계별 안내',
+    step: BINANCE_STEPS.map((s) => ({
+      '@type': 'HowToStep',
+      position: s.n,
+      name: s.title,
+      text: s.desc,
+    })),
+  };
+
+  const BREADCRUMB = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Kontaxt',
+        item: 'https://kontaxt.kr',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: '사용 가이드',
+        item: 'https://kontaxt.kr/guide',
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_SCHEMA) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(UPBIT_HOWTO) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BINANCE_HOWTO) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(BREADCRUMB) }}
+      />
+
       {/* Hero */}
       <section className="section-pad pb-6">
         <div className="mx-auto max-w-content text-center">
