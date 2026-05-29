@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { BreadcrumbJsonLd } from '@/components/seo/Breadcrumb';
 
 export const metadata: Metadata = {
   title: '개인정보처리방침 — Kontaxt',
@@ -35,6 +36,13 @@ function Article({
 export default function PrivacyPage() {
   return (
     <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Kontaxt', path: '' },
+          { name: '약관·법적 안내', path: '/legal/privacy' },
+          { name: '개인정보처리방침', path: '/legal/privacy' },
+        ]}
+      />
       <section className="section-pad pb-6">
         <div className="mx-auto max-w-content">
           <SectionEyebrow>LEGAL</SectionEyebrow>

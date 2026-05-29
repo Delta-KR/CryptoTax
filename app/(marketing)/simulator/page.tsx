@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { BreadcrumbJsonLd } from '@/components/seo/Breadcrumb';
 import { SimulatorForm } from './SimulatorForm';
 
 export const metadata: Metadata = {
@@ -30,6 +31,13 @@ export const revalidate = 86400;
 export default function SimulatorPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-16 lg:py-24">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Kontaxt', path: '' },
+          { name: '양도소득세 시뮬레이터', path: '/simulator' },
+        ]}
+      />
+
       {/* Hero */}
       <SectionEyebrow>양도소득세 시뮬레이터</SectionEyebrow>
       <h1 className="mt-3 text-[36px] font-extrabold leading-[1.12] tracking-tighter3 text-ink lg:text-[52px]">
