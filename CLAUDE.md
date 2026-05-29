@@ -139,6 +139,28 @@ PR 머지·기능 완료·검증 완료 직후 같은 turn 안에 **자동으로
 
 **drift fix 완료**: [PR #57](https://github.com/Delta-KR/kontaxt/pull/57) (`f93e456`) — SectionTitle 마침표 12건 · 해요체 4건 · 이모지 1건 · Tax-Loss Harvesting 병기 · README 통계 sync.
 
+### 6) sub-agent 보고는 직접 검증으로 cross-check ([[feedback_subagent_verify]])
+
+sub-agent 가 "X건 발견" / "없음" / "PASS" 보고하면 받자마자 직접 같은 명령으로 재확인. 단일 보고 신뢰 금지.
+
+루틴:
+1. sub-agent 결과 받은 직후 — 같은 명령을 직접 실행 (`npm run typecheck`, `grep`, `ls`, `read` 등)
+2. 결과 일치 확인 후에만 다음 단계 진행
+3. typecheck·test 같은 전수 검사는 sub-agent 가 부분 sampling 한 가능성 — 직접 한 번 돌려 카운트·세부 사항 cross-check
+4. "0건" / "없음" 보고는 특히 의심 — [[feedback_grep_before_claiming_missing]] 패턴
+
+사례: 2026-05-28 PR #130 Vercel build fail 진단 시 sub-agent 가 타입 에러 1건만 보고 → 직접 `npm run typecheck` 돌리니 4건 (L262 / L330 / L391 / L456). 1건만 fix 했으면 다음 Vercel build 가 또 fail → hotfix 사이클 추가 발생. 머지 전 [[feedback_typecheck_before_merge]] + 본 routine 둘 다 적용.
+
+### 7) typecheck + test gate — push·머지 모두 자동 차단
+
+머지 전 `npm run typecheck` + `npm test` 둘 다 PASS 자동 강제 (사용자 routine 의존 끝).
+
+**2중 차단**:
+1. **husky pre-push** (로컬) — `.husky/pre-push` 가 `npm run typecheck && npm test` 실행 → fail 시 `git push` 차단. 빠른 피드백 (~15-20초). 단 `--no-verify` 로 우회 가능
+2. **GitHub Actions** (원격) — `.github/workflows/typecheck.yml` 가 push·PR 시 typecheck + test 병렬 실행 → 머지 차단 (main branch protection rule 설정 후)
+
+새 dev/CI 도입 시 본 패턴 깨면 안 됨 — typecheck/test 제외 시 PR #128 → #130 사고 (Vercel build 4 사이클 fail) 재발 가능.
+
 ---
 
 ## 알려진 함정 (반복 금지)

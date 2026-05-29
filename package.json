@@ -15,7 +15,8 @@
     "e2e:install": "playwright install chromium",
     "email:dev": "email dev --dir emails --port 3001",
     "email:build": "tsx scripts/build-emails.ts",
-    "legal-review:generate": "tsx scripts/generate-legal-review-artifacts.ts"
+    "legal-review:generate": "tsx scripts/generate-legal-review-artifacts.ts",
+    "prepare": "husky"
   },
   "engines": {
     "node": "20.x"
@@ -51,6 +52,7 @@
     "@vitest/coverage-v8": "^4.1.7",
     "@vitest/ui": "^4.1.6",
     "autoprefixer": "^10.4.20",
+    "husky": "^9.1.7",
     "postcss": "^8.5.10",
     "react-email": "^6.1.5",
     "tailwindcss": "^3.4.15",
