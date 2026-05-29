@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card } from '@/components/ui/Card';
@@ -15,6 +16,18 @@ import {
 
 // 샘플 미리보기 — 하드코딩된 가상 데이터로 Tax + Report 합본 데모.
 // 로그인 없이 확인 가능. (marketing)/sample 경로.
+
+export const metadata: Metadata = {
+  title: '샘플 리포트 미리보기 — Kontaxt',
+  description:
+    '업비트·바이낸스 거래 247건을 한국 세법(총평균법) 기준으로 정리한 샘플 리포트예요. 총 양도차익·과세표준·납부세액·코인별 손익까지 가입 전 미리 봐요.',
+  openGraph: {
+    title: '샘플 리포트 미리보기 — Kontaxt',
+    description:
+      '업비트·바이낸스 거래 247건을 한국 세법 기준으로 정리한 결과. 양도차익·과세표준·납부세액 미리보기.',
+    type: 'website',
+  },
+};
 
 export const revalidate = 86400;
 
@@ -43,6 +56,19 @@ function formatKrw(n: number): string {
 export default function SamplePage() {
   return (
     <section className="section-pad">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Kontaxt', item: 'https://kontaxt.kr' },
+              { '@type': 'ListItem', position: 2, name: '샘플 리포트', item: 'https://kontaxt.kr/sample' },
+            ],
+          }),
+        }}
+      />
       <div className="mx-auto max-w-content">
         <div className="mb-8 flex flex-col gap-3">
           <Pill tone="brand" dot className="self-start">
