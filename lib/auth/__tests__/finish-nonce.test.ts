@@ -1,5 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { generateFinishToken, verifyFinishToken } from '@/lib/auth/finish-nonce';
+import {
+  extractNonce,
+  generateFinishToken,
+  verifyFinishToken,
+} from '@/lib/auth/finish-nonce';
 
 const SECRET = 'test-secret-0123456789abcdef0123456789abcdef';
 const MAX_OVER = 5 * 60_000 + 1_000; // 5분 + 1초 (만료 경계 초과)
@@ -80,6 +84,29 @@ describe('verifyFinishToken — reject 케이스', () => {
     delete process.env.AUTH_FINISH_NONCE_SECRET;
     expect(verifyFinishToken(token, now)).toBe(false);
     process.env.AUTH_FINISH_NONCE_SECRET = SECRET;
+  });
+});
+
+describe('extractNonce — single-use 키 추출', () => {
+  const now = 1_800_000_000_000;
+
+  it('발급된 토큰에서 nonce(n) 를 추출한다', () => {
+    const token = generateFinishToken(now);
+    const n = extractNonce(token);
+    expect(typeof n).toBe('string');
+    expect((n as string).length).toBeGreaterThan(0);
+  });
+
+  it('토큰마다 nonce 가 달라 single-use 키가 분리된다', () => {
+    expect(extractNonce(generateFinishToken())).not.toBe(
+      extractNonce(generateFinishToken()),
+    );
+  });
+
+  it('null / 점 없는 토큰 → null', () => {
+    expect(extractNonce(null)).toBeNull();
+    expect(extractNonce(undefined)).toBeNull();
+    expect(extractNonce('nodot')).toBeNull();
   });
 });
 

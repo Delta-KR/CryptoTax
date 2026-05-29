@@ -1,5 +1,9 @@
 import { redirect } from 'next/navigation';
-import { verifyFinishToken } from '@/lib/auth/finish-nonce';
+import {
+  consumeFinishNonce,
+  extractNonce,
+  verifyFinishToken,
+} from '@/lib/auth/finish-nonce';
 import { FinishClient } from './FinishClient';
 
 // audit security P1-6: /auth/finish 는 fragment 의 access_token 만으로 setSession
@@ -21,6 +25,13 @@ export default async function AuthFinishPage({
 }) {
   const { fn } = await searchParams;
   if (!verifyFinishToken(fn ?? null)) {
+    redirect('/login?error=invalid_request');
+  }
+  // single-use: 유효한 fn 이라도 1회만 통과시킨다. 이미 소비된 fn(=relay/replay)은 거부 —
+  // login-CSRF / session fixation 차단 (CSO 감사 2026-05-29). 'store_unavailable'(Redis
+  // 미설정·오류)은 fail-open: HMAC 서명+만료 검증으로만 통과 (login 가용성 우선).
+  const nonce = extractNonce(fn ?? null);
+  if (nonce && (await consumeFinishNonce(nonce)) === 'replayed') {
     redirect('/login?error=invalid_request');
   }
   return <FinishClient />;
