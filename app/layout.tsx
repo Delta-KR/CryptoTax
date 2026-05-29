@@ -5,7 +5,7 @@ import './globals.css';
 
 const title = 'Kontaxt — 2027년 가상자산 양도소득세 완벽 대비';
 const description =
-  '업비트, 빗썸, 바이낸스 등 모든 거래소의 거래내역을 자동으로 통합해 한국 세법 기준으로 양도소득세를 계산합니다. 2027년 1월 1일 시행.';
+  '업비트·빗썸·바이낸스 거래내역을 한국 세법(총평균법) 기준으로 자동 통합·계산해요. 2027.01.01 시행, 2028년 5월 첫 신고. 의제취득가액·필요경비 50% 자동 적용.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -106,38 +106,66 @@ const bootScript = `
 })();
 `;
 
-// JSON-LD structured data — SoftwareApplication with 3 pricing offers.
-// Surfaces price/category to search engines beyond plain metadata.
+// JSON-LD structured data — @graph 안에 Organization + WebSite + SoftwareApplication 3개 entity.
+// @id 로 cross-reference 해서 검색엔진이 단일 entity graph 로 인식.
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: SITE_NAME,
-  applicationCategory: 'FinanceApplication',
-  operatingSystem: 'Web',
-  description,
-  url: SITE_URL,
-  inLanguage: 'ko-KR',
-  offers: [
+  '@graph': [
     {
-      '@type': 'Offer',
-      name: '무료',
-      price: '0',
-      priceCurrency: 'KRW',
-      description: '결제 전 결과 미리보기 및 검증',
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/kontaxt-logo-brand.png`,
+      },
+      email: 'support@kontaxt.kr',
+      description: '한국 가상자산 양도소득세 정산 플랫폼',
+      areaServed: 'KR',
     },
     {
-      '@type': 'Offer',
-      name: '단일 과세연도',
-      price: '49900',
-      priceCurrency: 'KRW',
-      description: '선택한 1개 과세연도 결과 열람 + PDF 리포트 무제한',
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description,
+      inLanguage: 'ko-KR',
+      publisher: { '@id': `${SITE_URL}/#organization` },
     },
     {
-      '@type': 'Offer',
-      name: '구독 (연간)',
-      price: '89000',
-      priceCurrency: 'KRW',
-      description: '모든 과세연도 무제한 + 연중 절세 도구 (상시 대시보드 · TLH 알림 · 거래소 API 자동 연동)',
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE_URL}/#software`,
+      name: SITE_NAME,
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Web',
+      description,
+      url: SITE_URL,
+      inLanguage: 'ko-KR',
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      offers: [
+        {
+          '@type': 'Offer',
+          name: '무료',
+          price: '0',
+          priceCurrency: 'KRW',
+          description: '결제 전 결과 미리보기 및 검증',
+        },
+        {
+          '@type': 'Offer',
+          name: '단일 과세연도',
+          price: '49900',
+          priceCurrency: 'KRW',
+          description: '선택한 1개 과세연도 결과 열람 + PDF 리포트 무제한',
+        },
+        {
+          '@type': 'Offer',
+          name: '구독 (연간)',
+          price: '89000',
+          priceCurrency: 'KRW',
+          description: '모든 과세연도 무제한 + 연중 절세 도구 (상시 대시보드 · TLH 알림 · 거래소 API 자동 연동)',
+        },
+      ],
     },
   ],
 };
