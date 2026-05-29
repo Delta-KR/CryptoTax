@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
-import { pretendard, jetbrainsMono } from './fonts';
+import { jetbrainsMono } from './fonts';
 import { SITE_NAME, SITE_URL } from '@/lib/site';
 import './globals.css';
 
@@ -174,7 +174,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" className={`${pretendard.variable} ${jetbrainsMono.variable}`}>
+    <html lang="ko" className={jetbrainsMono.variable}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
         <script
