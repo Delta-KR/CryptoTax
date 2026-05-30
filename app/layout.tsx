@@ -105,6 +105,15 @@ const bootScript = `
       document.documentElement.setAttribute('data-theme', t);
     }
   } catch (e) {}
+  // Pretendard dynamic subset 비동기 로드 — render-blocking 회피로 FCP 보호.
+  // head 파싱 즉시 동적 link 삽입 (hydration 무관). font-display:swap 으로
+  // fallback 먼저 그린 뒤 Pretendard 로 swap. JS off 환경은 <noscript> fallback.
+  try {
+    var fl = document.createElement('link');
+    fl.rel = 'stylesheet';
+    fl.href = '/fonts/pretendard/pretendardvariable-dynamic-subset.css';
+    document.head.appendChild(fl);
+  } catch (e) {}
 })();
 `;
 
@@ -181,6 +190,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* JS off 환경 — bootScript 의 비동기 폰트 로드가 안 돌므로 render-blocking link 로 fallback */}
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-css-tags */}
+          <link rel="stylesheet" href="/fonts/pretendard/pretendardvariable-dynamic-subset.css" />
+        </noscript>
       </head>
       <body className="font-sans">
         <a href="#main" className="skip-link">본문으로 건너뛰기</a>
