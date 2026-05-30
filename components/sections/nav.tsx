@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MobileNav } from '@/components/sections/mobile-nav';
 import { Mark } from '@/components/ui/Mark';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const navLinks = [
   { href: '/#how', label: '작동 방식' },
@@ -21,26 +20,38 @@ const navLinks = [
  * marketing layout 전체를 static 으로 유지 (audit perf P1-2 Best 옵션).
  * 로그인 사용자에게 한 frame "로그인" → "대시보드" 깜빡임이 발생하지만
  * marketing 페이지 로그인 사용자 비중이 작아 수용 가능 (audit 권장).
+ *
+ * Supabase browser client (@supabase/ssr → supabase-js, ~100KB+ raw) 는
+ * useEffect 내부 dynamic import 로 분리 — 전 마케팅 페이지(layout 의 Nav)
+ * 초기 critical 번들에서 빠져 모바일 First Load JS 감소. auth 체크는 어차피
+ * mount 후라 동작 동일. 2026-05-30 PageSpeed "사용하지 않는 JS 77KiB" 대응.
  */
 export function Nav() {
   const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
     let cancelled = false;
-    supabase.auth.getSession().then(({ data }) => {
+    let unsubscribe: (() => void) | undefined;
+
+    import('@/lib/supabase/client').then(({ createSupabaseBrowserClient }) => {
       if (cancelled) return;
-      setIsAuthed(!!data.session);
+      const supabase = createSupabaseBrowserClient();
+      supabase.auth.getSession().then(({ data }) => {
+        if (cancelled) return;
+        setIsAuthed(!!data.session);
+      });
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (cancelled) return;
+        setIsAuthed(!!session);
+      });
+      unsubscribe = () => subscription.unsubscribe();
     });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (cancelled) return;
-      setIsAuthed(!!session);
-    });
+
     return () => {
       cancelled = true;
-      subscription.unsubscribe();
+      unsubscribe?.();
     };
   }, []);
 
