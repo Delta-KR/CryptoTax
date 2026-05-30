@@ -36,7 +36,7 @@ const config: Config = {
         'warn-soft': 'rgb(var(--warn-soft) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['"Pretendard Variable"', '"Pretendard Variable Fallback"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['"Pretendard Variable"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['var(--font-jetbrains-mono)', 'ui-monospace', 'monospace'],
       },
       borderRadius: {

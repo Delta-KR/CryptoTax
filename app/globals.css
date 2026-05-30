@@ -3,20 +3,6 @@
    비대해져 모바일 FCP 악화 (2026-05-30 1.1→3.5s). 비동기 로드로 render-blocking
    회피, font-display:swap 으로 fallback 먼저. tailwind sans = "Pretendard Variable". */
 
-/* Size-adjust fallback — 비동기 폰트 swap 시 fallback↔Pretendard metric 차이로
-   Hero dashboard 카드가 reflow → CLS 0.141 (2026-05-30 측정). next/font 가
-   capsize 로 계산한 Pretendard 정확값(ascent 93.76 / descent 23.75 / size-adjust
-   101.55%)을 fallback 에 강제 → 줄높이 일치 → swap reflow 0 → CLS 0. critical CSS
-   에 두어 first paint 부터 적용. */
-@font-face {
-  font-family: 'Pretendard Variable Fallback';
-  src: local('Apple SD Gothic Neo'), local('Malgun Gothic'), local('Arial');
-  ascent-override: 93.76%;
-  descent-override: 23.75%;
-  line-gap-override: 0%;
-  size-adjust: 101.55%;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
