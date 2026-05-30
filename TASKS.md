@@ -244,6 +244,16 @@
 - [x] **Root @graph schema (Organization+WebSite+SoftwareApplication) + AI 크롤러 정책** ([PR #138](https://github.com/Delta-KR/kontaxt/pull/138) `86fc968`) — 단일 SoftwareApplication → @graph 3 entity (`@id` cross-reference) + description 119→142자 + 학습 봇 9 disallow + 검색·RAG 봇 6 allow (G2·G5·G7·G10)
 - [x] **이미지 alt 보강 + llms.txt 신규** ([PR #139](https://github.com/Delta-KR/kontaxt/pull/139) `0351cbc`) — hero/exchanges/problem alt "업비트" → "업비트 로고" + Jeremy Howard 표준 llms.txt 2.5KB (핵심 페이지·세법 기준·거래소·FAQ·운영) (G9·llms.txt)
 
+### ✅ 완료 — 측정 인프라 + 성능 (2026-05-30)
+
+2026-05-30 사용자 SEO 점검 후속. GSC·Naver 재크롤 (사용자 직접) + 분석 도입 + PageSpeed 진단 → LCP 최적화. 자세한 기록은 vault `Daily/2026-05-30.md`.
+
+- [x] **Vercel Analytics + Speed Insights** ([PR #144](https://github.com/Delta-KR/kontaxt/pull/144) `fa3ccc9`) — GEO 효과 측정 prereq. Cookie 없음 → PIPA 동의 배너 불필요. Page views + UTM + Core Web Vitals 자동 측정. GA4 는 Phase 3 시점 재검토
+- [x] **sitemap.ts /login·/signup 제거 + /simulator 추가** ([PR #145](https://github.com/Delta-KR/kontaxt/pull/145) `0c9391d`) — GSC URL 검사 진단. 인증 페이지는 SEO 가치 X (사이트맵 제거), /simulator 누락 보강. 7 URL → 6 URL
+- [x] **P0 모바일 LCP — Pretendard dynamic subset** ([PR #146](https://github.com/Delta-KR/kontaxt/pull/146) `6de1d40`) — PageSpeed 모바일 LCP **11.9s** (데스크톱 100, 모바일 75) 진단. 원인 = PretendardVariable.woff2 단일 **2.0 MB**. globals.css `@import` dynamic subset (unicode-range 92 chunk) 으로 전환. 예상 LCP 11.9s → ~3-4s, 성능 75 → 88+
+- [x] **P1 Nav Supabase dynamic import** ([PR #147](https://github.com/Delta-KR/kontaxt/pull/147) `259b353`) — nav.tsx (전 마케팅 페이지) 가 @supabase/ssr (~100KB+) top-level 동기 import → useEffect 내 dynamic import 로 분리. **Next 16 Turbopack 은 bundle-analyzer 미지원 + app-build-manifest 미생성** 으로 로컬 First Load 확증 불가 — prod PageSpeed 재측정으로 확인. 레거시 14KiB 는 browserslist Turbopack 존중 불확실로 skip
+- [x] **GSC + Naver 재크롤** (사용자 직접, 2026-05-30) — 6 URL 색인 요청 + sitemap.xml 재제출 (GSC) + 사이트맵 + 6 URL 웹페이지 수집 (Naver). `/simulator` 내부 링크·BreadcrumbList 신호로 이미 색인 확인
+
 ### 🎯 다음 (GEO Strategic Investments)
 
 > 사업자등록 (2026-06 중순) 전후 분리 결정. 블로그 운영 부담 + 법률 책임 동반.
