@@ -255,7 +255,8 @@
 - [x] **GSC + Naver 재크롤** (사용자 직접, 2026-05-30) — 6 URL 색인 요청 + sitemap.xml 재제출 (GSC) + 사이트맵 + 6 URL 웹페이지 수집 (Naver). `/simulator` 내부 링크·BreadcrumbList 신호로 이미 색인 확인
 - [x] **모바일 LCP P0 — Pretendard self-host 비동기** ([PR #148](https://github.com/Delta-KR/kontaxt/pull/148) `b9fe5cb`) — PageSpeed 모바일 LCP 11.9s 진단 (PretendardVariable 단일 2MB). dynamic subset @import → critical CSS 97.8KB 비대 → FCP 악화. self-host(`public/fonts/`, `npm run fonts:copy`) + bootScript 비동기 로드로 critical CSS 97.8→50.2KB. **재측정: 성능 78→85, FCP 3.5→2.1s, LCP 4.3→3.1s**
 - [x] **CLS 회귀 P1 — size-adjust fallback** ([PR #149](https://github.com/Delta-KR/kontaxt/pull/149) `728c18e`) — PR #148 비동기 폰트 후 CLS 0→0.141 회귀 (Hero dashboard 카드 swap reflow). 로컬 Lighthouse 로 폰트 원인 확정 + 3가지 대안 측정(swap/optional/size-adjust). optional 은 성능 85→69 폭락으로 폐기. next/font capsize 값(ascent 93.76/size-adjust 101.55%)을 fallback @font-face 강제. **다운사이드 0** (override 는 fallback 에만). headless 측정 무효 → **prod 재측정 대기** (size-adjust 실기기 작동 여부)
-- [ ] **(검증 대기) PR #148+#149 prod 모바일 PageSpeed 재측정** — 사용자 영역. FCP/LCP/CLS 최종 확인. CLS 0.1+ 면 Hero 카드 line-height 명시 후속 PR. 목표 성능 90+
+- [x] **CLS 완전 해결 — line-height 명시** ([PR #150](https://github.com/Delta-KR/kontaxt/pull/150) `7c84912`) — PR #149 size-adjust 가 prod 모바일도 무효(CLS 0.141→0.153) 확정 → 폰트 metric **우회**. Hero 카드(.glass)에 `leading-[1.175]`(=Pretendard normal: ascent 93.76+descent 23.75) 명시 → swap 무관 줄높이 고정. localhost Lighthouse **CLS 0.153→0, 성능 85→94**. 무효 size-adjust 제거. 학습 [[reference_font_swap_cls]]: text-[Npx] 임의값=line-height:normal(폰트 의존) swap 취약, line-height 명시가 size-adjust보다 확실
+- [ ] **(검증 대기) PR #150 prod 모바일 PageSpeed 재측정** — 사용자 영역. CLS 0 + 성능 90+ 최종 확인 (폰트 우회라 prod 확실 작동 기대). prod 측정 추세: 성능 92(#149) → 94 기대, LCP 11.9→1.6s, CLS 0.153→0
 
 ### 🎯 다음 (GEO Strategic Investments)
 
