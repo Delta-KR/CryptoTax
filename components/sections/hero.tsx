@@ -196,8 +196,14 @@ function DashboardMock() {
       <FloatingCardUpbit />
       <FloatingCardPDF />
 
-      {/* Main dashboard window — .glass adds dark-mode glass treatment */}
-      <div className="glass relative z-20 overflow-hidden rounded-lg border border-line-2 bg-card shadow-lg">
+      {/* Main dashboard window — .glass adds dark-mode glass treatment.
+          leading-[1.175] = Pretendard normal line-height (ascent 93.76% +
+          descent 23.75%, next/font capsize). 카드 텍스트가 전부 text-[Npx]
+          임의값 → line-height:normal(폰트 의존)이라, 비동기 폰트 swap 시
+          fallback↔Pretendard 줄높이 차이로 카드 reflow → CLS 0.153 (2026-05-30
+          모바일). 명시값으로 박아 swap 무관 줄높이 고정 → CLS 0. 시각은
+          Pretendard normal 과 동일. */}
+      <div className="glass relative z-20 overflow-hidden rounded-lg border border-line-2 bg-card shadow-lg leading-[1.175]">
         {/* macOS chrome — skeuomorphic OS dots (DESIGN.md §3 exception:
             depicting native OS controls, not brand color). Keep hex literal. */}
         <div className="flex items-center justify-between border-b border-line-2 bg-bg-soft px-4 py-3">
