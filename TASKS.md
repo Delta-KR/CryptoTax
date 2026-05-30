@@ -253,6 +253,9 @@
 - [x] **P0 모바일 LCP — Pretendard dynamic subset** ([PR #146](https://github.com/Delta-KR/kontaxt/pull/146) `6de1d40`) — PageSpeed 모바일 LCP **11.9s** (데스크톱 100, 모바일 75) 진단. 원인 = PretendardVariable.woff2 단일 **2.0 MB**. globals.css `@import` dynamic subset (unicode-range 92 chunk) 으로 전환. 예상 LCP 11.9s → ~3-4s, 성능 75 → 88+
 - [x] **P1 Nav Supabase dynamic import** ([PR #147](https://github.com/Delta-KR/kontaxt/pull/147) `259b353`) — nav.tsx (전 마케팅 페이지) 가 @supabase/ssr (~100KB+) top-level 동기 import → useEffect 내 dynamic import 로 분리. **Next 16 Turbopack 은 bundle-analyzer 미지원 + app-build-manifest 미생성** 으로 로컬 First Load 확증 불가 — prod PageSpeed 재측정으로 확인. 레거시 14KiB 는 browserslist Turbopack 존중 불확실로 skip
 - [x] **GSC + Naver 재크롤** (사용자 직접, 2026-05-30) — 6 URL 색인 요청 + sitemap.xml 재제출 (GSC) + 사이트맵 + 6 URL 웹페이지 수집 (Naver). `/simulator` 내부 링크·BreadcrumbList 신호로 이미 색인 확인
+- [x] **모바일 LCP P0 — Pretendard self-host 비동기** ([PR #148](https://github.com/Delta-KR/kontaxt/pull/148) `b9fe5cb`) — PageSpeed 모바일 LCP 11.9s 진단 (PretendardVariable 단일 2MB). dynamic subset @import → critical CSS 97.8KB 비대 → FCP 악화. self-host(`public/fonts/`, `npm run fonts:copy`) + bootScript 비동기 로드로 critical CSS 97.8→50.2KB. **재측정: 성능 78→85, FCP 3.5→2.1s, LCP 4.3→3.1s**
+- [x] **CLS 회귀 P1 — size-adjust fallback** ([PR #149](https://github.com/Delta-KR/kontaxt/pull/149) `728c18e`) — PR #148 비동기 폰트 후 CLS 0→0.141 회귀 (Hero dashboard 카드 swap reflow). 로컬 Lighthouse 로 폰트 원인 확정 + 3가지 대안 측정(swap/optional/size-adjust). optional 은 성능 85→69 폭락으로 폐기. next/font capsize 값(ascent 93.76/size-adjust 101.55%)을 fallback @font-face 강제. **다운사이드 0** (override 는 fallback 에만). headless 측정 무효 → **prod 재측정 대기** (size-adjust 실기기 작동 여부)
+- [ ] **(검증 대기) PR #148+#149 prod 모바일 PageSpeed 재측정** — 사용자 영역. FCP/LCP/CLS 최종 확인. CLS 0.1+ 면 Hero 카드 line-height 명시 후속 PR. 목표 성능 90+
 
 ### 🎯 다음 (GEO Strategic Investments)
 
