@@ -33,7 +33,7 @@
 ## 🔧 Quick Wins — 다음 작업 사이클 전 처리
 
 - [x] **Naver OAuth 통합 패턴 추출** — [PR #117](https://github.com/Delta-KR/kontaxt/pull/117) (`a053851`). `lib/auth/oauth-providers.ts` 에 `isProviderLinked(user, provider)` helper 신설 (4 source OR — identities + app_metadata.providers + app_metadata.provider + user_metadata.provider). Naver callback 의 inline 5줄 OR 체인 → 1줄 helper 호출. `hasEmailIdentity` 도 helper 위임으로 단순화. 카카오/구글 비즈앱 전환 후 custom callback 시 동일 helper 재사용. 11 신규 tests (23 → 34 PASS). Wave 1 routine: BLOCKING 0, MEDIUM 0, NIT 6
-- [x] ~~**favicon SVG-only fallback 검토** — [PR #118](https://github.com/Delta-KR/kontaxt/pull/118) (`32ddb98`)~~ → **revert** ([PR #123](https://github.com/Delta-KR/kontaxt/pull/123) `9526152`, 2026-05-28). metadata.icons 가 명시한 `/icon` + `/apple-icon` URL 이 prod 에서 404 — Next.js file convention 의 실제 URL 은 `/icon.svg?<hash>` + `/apple-icon.png?<hash>` (확장자 + content hash) 라 확장자 없는 명시 URL resolve 실패. Brave 탭/북마크 default 지구 아이콘 노출. **학습**: head emit 확인 (link 4개 emit) ≠ URL resolve (curl 200) — 다음 시도 시 각 link URL `curl -I` 검증 필수. PNG fallback (구형 안드로이드/IE/RSS) 정공법 재시도 옵션: `public/favicon.ico` 추가 또는 명시 URL 에 hash 포함. 단기 deferred
+- [x] ~~**favicon SVG-only fallback 검토** — [PR #118](https://github.com/Delta-KR/kontaxt/pull/118) (`32ddb98`)~~ → **revert** ([PR #123](https://github.com/Delta-KR/kontaxt/pull/123) `9526152`, 2026-05-28). metadata.icons 가 명시한 `/icon` + `/apple-icon` URL 이 prod 에서 404 — Next.js file convention 의 실제 URL 은 `/icon.svg?<hash>` + `/apple-icon.png?<hash>` (확장자 + content hash) 라 확장자 없는 명시 URL resolve 실패. Brave 탭/북마크 default 지구 아이콘 노출. **학습**: head emit 확인 (link 4개 emit) ≠ URL resolve (curl 200) — 다음 시도 시 각 link URL `curl -I` 검증 필수. PNG fallback (구형 안드로이드/IE/RSS) 정공법 재시도 옵션: `public/favicon.ico` 추가 또는 명시 URL 에 hash 포함. ~~단기 deferred~~ → **2026-05-31 [PR #152](https://github.com/Delta-KR/kontaxt/pull/152) (`dcdb0ec`) `app/favicon.ico` 추가로 해소** — `app/icon.svg` 를 source 로 sharp 가 16/32/48px PNG 렌더 → ICO 컨테이너(Vista+ PNG-in-ICO) 임베드 (`npm run favicon:build` 재생성). Next file convention 라 #118 의 명시 URL hash mismatch 위험 없음. prod `/favicon.ico` 404→**200** (`image/vnd.microsoft.icon`) 검증
 - [x] **Dashboard 한 사이클 검증** — [PR #119](https://github.com/Delta-KR/kontaxt/pull/119) (`72aabf9`). `docs/qa/dashboard-flow-checklist.md` 신설 (+185 LOC). 풀 플로우 7 단계 (로그인 → 업로드 → 대시보드 → 거래 내역 → 세금 → PDF → 회원관리) + 각 단계 sub-component 명세 + 회귀 체크 (PR 인용 14건) + 자동 회귀 검증 5 명령 + 자주 발견되는 회귀 패턴 5 + 사용자 체크포인트 요약 7 step (5분 사이클). 다음 페이지 분할·major bump PR 머지 직후 한 번 돌려 정착
 
 ### Quick Wins 후속 (별도 PR 후보 — Wave 1 sub-agent findings)
@@ -258,11 +258,20 @@
 - [x] **CLS 완전 해결 — line-height 명시** ([PR #150](https://github.com/Delta-KR/kontaxt/pull/150) `7c84912`) — PR #149 size-adjust 가 prod 모바일도 무효(CLS 0.141→0.153) 확정 → 폰트 metric **우회**. Hero 카드(.glass)에 `leading-[1.175]`(=Pretendard normal: ascent 93.76+descent 23.75) 명시 → swap 무관 줄높이 고정. localhost Lighthouse **CLS 0.153→0, 성능 85→94**. 무효 size-adjust 제거. 학습 [[reference_font_swap_cls]]: text-[Npx] 임의값=line-height:normal(폰트 의존) swap 취약, line-height 명시가 size-adjust보다 확실
 - [ ] **(검증 대기) PR #150 prod 모바일 PageSpeed 재측정** — 사용자 영역. CLS 0 + 성능 90+ 최종 확인 (폰트 우회라 prod 확실 작동 기대). prod 측정 추세: 성능 92(#149) → 94 기대, LCP 11.9→1.6s, CLS 0.153→0
 
+### ✅ 완료 — 인덱싱 모니터링 1차 + 검색엔진 청결 (2026-05-31)
+
+2026-05-31 GEO 인덱싱 모니터링 1차 사이클. 어제 GSC·Naver 재크롤 결과 확인 + Analytics 첫 데이터 점검. 코드/prod 사전 점검 0건 → 발견 2건 fix → prod resolve 검증. 자세한 기록은 vault `Daily/2026-05-31.md`.
+
+- [x] **인증 (auth) 그룹 noindex** ([PR #151](https://github.com/Delta-KR/kontaxt/pull/151) `a3982d3`) — login·signup·forgot·reset 4 client 라우트가 루트 `index:true` 상속 → GSC "발견됨-색인 안 됨" 큐 점유 (검색 가치 0). `(auth)/layout.tsx` 에 `robots:{index:false,follow:true}`. crawl 허용 유지(noindex 태그 노출) + 내부 링크 follow. **prod 검증**: `/login`·`/signup` → `noindex,follow` / 공개 페이지 `index,follow` 회귀 0
+- [x] **`/favicon.ico` 404 → app/favicon.ico** ([PR #152](https://github.com/Delta-KR/kontaxt/pull/152) `dcdb0ec`) — Naver "접근 불가한 페이지" 1건. 레거시 클라이언트·Naver Yeti 가 `/favicon.ico` 하드코딩 요청 → 404. icon.svg → ICO(16/32/48px) 임베드. L36 deferred 처리. prod 404→200 검증
+- [x] **외부 대시보드 4종 확인** — Vercel Analytics ✅작동(16 PV, 봇 위주·실사용자~0 베타전 정상) / Speed Insights No data(RUM 부족, 패키지 최신 정상) / GSC 5건 중 login·signup fix·나머지 3건 신규 크롤 지연 / Naver 색인 1
+- 📌 **Naver 키워드 실수요 신호** — 노출 2건 `"업비트 매도 선입 선출"`·`"빗썸 엑셀파일 코인별"` → 미작성 콘텐츠 broad 매칭. S1 glossary("선입선출법") + Bithumb 가이드 수요 입증, 다음 우선순위 근거
+
 ### 🎯 다음 (GEO Strategic Investments)
 
 > 사업자등록 (2026-06 중순) 전후 분리 결정. 블로그 운영 부담 + 법률 책임 동반.
 
-- [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크. 새 schema/AI 정책/llms.txt 노출 확인. 인덱싱 안 되는 페이지 원인 파악
+- [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크. 새 schema/AI 정책/llms.txt 노출 확인. 인덱싱 안 되는 페이지 원인 파악. **1차 사이클 2026-05-31 완료 (PR #151·#152 — 위 섹션), 매주 반복**
 - [ ] **S1 `/glossary/[term]` 동적 라우트** — 의제취득가액·총평균법·과세표준·필요경비·기본공제·기타소득·분리과세 15-20 term. GEO 인용 토대
 - [ ] **S2 거래소·기능별 독립 가이드 페이지 4** — `/guides/upbit-pdf-download`, `/guides/binance-csv-export`, `/guides/swap-tax-handling`, `/guides/usdt-fx-conversion`
 - [ ] **S3 `/blog/[slug]` + 분기당 6글** (long-tail 키워드 타깃):
