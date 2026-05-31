@@ -1,6 +1,6 @@
 # Kontaxt Task Backlog
 
-> 마지막 갱신: 2026-05-28 (D-218 to 2027.1.1 신고 시행)
+> 마지막 갱신: 2026-05-31 (D-215 to 2027.1.1 신고 시행)
 > 출시 전 신뢰도 P0/P1 완료. 종합 감사 P2 11/12건 적용 + P2-rem 4건 + prod hotfix 4건. **2026-05-27**: /api/report incident 종결 (PR #89 ttf path swap). **2026-05-28**: P2 검증 Phase A·B·C·D 완료 (엔진 A− → A) + 세무사 외부 검증 패키지 v0.1 (PR #128) + **Vercel 빌드 fail incident P0 hotfix (PR #130 TS errors 4건)**. **사업자등록·법인설립은 2026-06 중순** (모두의 창업 1라운드 진출 후) — Kakao 비즈앱·포트원·LOI 페이지·세무사 검증 발송 모두 그 시점 잠금 ([[project_business_registration_timing]]). Phase 7 진입 전 P1 수동 검증 필요.
 > 작업 패턴·함정 가이드는 `CLAUDE.md`. audit followups 메모리: `[[project-audit-2026-05-23-followups]]`.
 
@@ -287,7 +287,7 @@
   5. "거래소 통합 데이터로 신고하는 이유 (수동 vs 자동)"
   6. "2028년 5월 가상자산 양도소득세 첫 확정신고 일정"
 - [ ] **S4 `/exchanges/upbit`, `/exchanges/binance` 독립 페이지** — 거래소별 키워드 흡수
-- [ ] **S5 `/pricing` 독립 페이지 + Product schema** — 현재 홈 #pricing anchor → 자체 페이지
+- [x] **S5 `/pricing` 독립 페이지 + Product schema** — [PR #161](https://github.com/Delta-KR/kontaxt/pull/161) (`7c472fd`, 2026-05-31). 홈 `#pricing` anchor 섹션을 별도 라우트로 승격(둘 다 유지 + nav anchor 그대로). Hero + `<Pricing />` 재사용 + 환불 정책(약관 §7) + FAQ 5 + JSON-LD 3종(`BreadcrumbList`·`Product` offers 49900/89000·`FAQPage`). sitemap 8→9, robots allow. 가격은 `lib/pricing/plans.ts` 단일 source read. `next build` `○ Static` prerender + JSON-LD emit 검증
 - [ ] **S6 publishedDate / dateModified + Article schema** (S2-S3 의존) — GEO 14일 freshness decay 대응
 - [ ] **S7 콘텐츠 갱신 7-14일 사이클 routine** — GEO citation decay 대응
 - [ ] **랜딩 A/B 테스트** — Hero copy or 가격 카드 variant
