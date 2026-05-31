@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
+import { GLOSSARY_SLUGS } from '@/lib/glossary/terms';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -39,5 +40,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    {
+      url: `${SITE_URL}/glossary`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    ...GLOSSARY_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/glossary/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    })),
   ];
 }

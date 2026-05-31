@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 
-const PUBLIC_PATHS = ['/', '/sample', '/login', '/signup', '/guide', '/simulator', '/legal/terms', '/legal/privacy'];
+const PUBLIC_PATHS = ['/', '/sample', '/login', '/signup', '/guide', '/simulator', '/glossary', '/legal/terms', '/legal/privacy'];
 const AUTH_PATHS = [
   '/dashboard',
   '/transactions',
