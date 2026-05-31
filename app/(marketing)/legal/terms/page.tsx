@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export const revalidate = 86400;
 
-const EFFECTIVE_DATE = '2026년 5월 12일';
+const EFFECTIVE_DATE = '2026년 5월 31일';
 
 function Article({
   num,
@@ -200,23 +200,30 @@ export default function TermsPage() {
             </Clause>
           </Article>
 
-          <Article num={9} title="서비스의 책임 제한">
+          <Article num={9} title="서비스의 성격 및 책임 제한">
             <Clause num={1}>
+              <strong className="font-semibold text-ink">
+                본 서비스는 「세무사법」에서 정한 세무대리·세무기장 또는 세무상담 서비스가 아닙니다.
+              </strong>{' '}
+              본 서비스는 회원이 직접 가상자산 양도소득세를 신고하는 데 활용할 자료를 자동으로
+              계산·작성하도록 보조하는 도구이며, 회원을 대리하여 세무 신고를 수행하지 않습니다.
+            </Clause>
+            <Clause num={2}>
               <strong className="font-semibold text-ink">
                 본 서비스가 제공하는 세액 계산 결과는 참고 자료이며, 실제 세무 신고 책임은 회원 본인에게
                 있습니다. 정확한 신고를 위해 세무 전문가의 검토를 권장합니다.
               </strong>
             </Clause>
-            <Clause num={2}>
+            <Clause num={3}>
               서비스는 회원이 업로드한 거래내역 파일의 내용 자체에 오류·누락·위변조가 있는 경우 그 결과로
               발생한 계산 오류에 대해 책임을 지지 않습니다.
             </Clause>
-            <Clause num={3}>
+            <Clause num={4}>
               서비스는 한국 세법 및 관련 규정의 변경, 거래소의 파일 형식 변경 등으로 인해 계산 결과가
               실제 세법 적용과 차이가 발생할 수 있음을 안내하며, 회원은 신고 전 결과를 반드시 검토해야
               합니다.
             </Clause>
-            <Clause num={4}>
+            <Clause num={5}>
               천재지변, 외부 결제대행사·인증 서비스·호스팅 서비스의 장애 등 서비스의 통제 범위를 벗어난
               사유로 인한 서비스 중단에 대해서는 책임이 제한됩니다.
             </Clause>
