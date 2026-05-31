@@ -1,6 +1,7 @@
 import { Hero } from '@/components/sections/hero';
 import { TrustStrip } from '@/components/sections/trust-strip';
 import { Problem } from '@/components/sections/problem';
+import { ValueAnchor } from '@/components/sections/value-anchor';
 import { HowItWorks } from '@/components/sections/how-it-works';
 import { Example } from '@/components/sections/example';
 import { Exchanges } from '@/components/sections/exchanges';
@@ -20,6 +21,7 @@ export default function Home() {
       <Hero />
       <TrustStrip />
       <Problem />
+      <ValueAnchor />
       <HowItWorks />
       <Example />
       <Exchanges />
