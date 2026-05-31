@@ -100,9 +100,9 @@
 
 ### P1 — 가치 노출 UX (sync 후 후속)
 
-- [ ] **가치 앵커 3층 구조 첫 화면 노출** — 세무사 비용 + 가산세·추징 + 시간·정신 비용. 단일 앵커만으론 WTP가 ₩49,900에 못 미침 (전략 §6.2).
-- [ ] **결제 페이지 동적 가치 표시** — 사용자 거래 데이터 기반 예상 절세액 + 가산세 회피액. 매몰비용 효과 (전략 §6.3).
-- [ ] **paywall 위치 = PDF 다운로드 지점 일치 확인** — 현재 tax 페이지 maskForFree 패턴이 전략(PDF wall)과 정합한지 검증 (전략 §6.4).
+- [x] **가치 앵커 3층 구조 첫 화면 노출** — [PR #154](https://github.com/Delta-KR/kontaxt/pull/154) (`e18ef29`). Problem 다음 신설. ⚠️ 초안 "세무사 비용 20~50만원 아껴요" 앵커가 **세무사법 §20**(무자격 세무대리·광고 금지) 오인 + 기존 "세무사 검토 권장"(footer·약관·PDF) 포지셔닝 충돌 → 세무사 앵커 제거, **기본공제·필요경비(250만원)·가산세(20~40%, §47의2·3)·시간(반나절)** 으로 교체. 약관 §9 "세무대리·세무기장 서비스 아님" 명시 신설([PR #155](https://github.com/Delta-KR/kontaxt/pull/155) `b13c261`). [[feedback_no_tax_agent_framing]]
+- [x] **결제 페이지 동적 가치 표시** — [PR #156](https://github.com/Delta-KR/kontaxt/pull/156) (`c9e07f4`) `ValueTeaser` (B-2). B-3(blur 유지)와 paywall 충돌 회피 — 세액 정확값 대신 거래량 매몰비용("N건·M거래소 계산해 뒀어요") + 가산세 리스크(산출세액 20~40%, 율만). PremiumBanner(tax)+checkout 공통 컴포넌트(tone variant), 빈 거래 시 미렌더. 시각은 prod 거래 계정 확인 carry (인증·거래 의존이라 preview/curl 불가).
+- [x] **paywall 위치 검증 (B-3)** — strategy §6.4 "세금 추정치 무료" vs 코드 "납부세액 BlurOverlay(유료)" **불일치 발견** ([[feedback_strategy_code_alignment]]). 사용자 결정: **현행 blur 유지**(공격적 전환 — "세액 보려면 결제" + B-2 가치노출 보완). 코드 변경 0, strategy §6.4 차이 = 의도된 전환 전략으로 확정.
 - [ ] **구독 features 재정의** — 코드의 구독 features (PDF 무제한, 거래소 무제한 등)은 원타임과 차별 약함. 전략은 "연중 절세 도구" — TLH 알림, 상시 대시보드, 거래소 API 자동 연동. 구독 출시 시점에 재작성.
 
 ### P2 — 사전 예약(LOI) + 연중 hook
