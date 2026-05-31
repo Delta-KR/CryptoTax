@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/app-chrome/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { plans, type PlanId } from '@/lib/pricing/plans';
+import { ValueTeaser } from '@/components/billing/ValueTeaser';
 
 export default function CheckoutPage() {
   const params = useSearchParams();
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
               </li>
             ))}
           </ul>
+          <ValueTeaser tone="default" />
         </Card>
 
         {/* Not-ready notice */}
