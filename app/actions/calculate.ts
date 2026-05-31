@@ -36,6 +36,7 @@ import {
   resolveDeemedCostPrices,
   resolveImputedExpenseCoins,
 } from '@/lib/engine/resolvers';
+import { recordPricingTelemetry } from '@/lib/telemetry/pricing';
 
 // maskForFree, resolveDeemedCostPrices, resolveImputedExpenseCoins:
 //   PR #17에서 lib/engine/wire.ts + lib/engine/resolvers.ts로 추출.
@@ -264,6 +265,27 @@ export async function calculateTaxFromFiles(
       year,
       method,
     };
+
+    // 건수 티어 의사결정 telemetry (💰 가격 전략 P3). authed user 한정 fire-and-forget.
+    // 원값 미저장 — bucket 변환은 recordPricingTelemetry 내부. 실패해도 응답 영향 0.
+    const telemetryUser = await getAuthedUser(); // React.cache — 재호출 무료
+    if (telemetryUser) {
+      void recordPricingTelemetry({
+        userId: telemetryUser.id,
+        txCount: allParsed.length,
+        exchangeCount: new Set(allParsed.map((tx) => tx.exchange)).size,
+        coinCount: new Set(allParsed.map((tx) => tx.coin)).size,
+        netPnLKRW: result.netPnLKRW,
+        taxAmountKRW: result.taxAmountKRW,
+        plan,
+        method,
+        year,
+        deemedApplied: preCoinsSet.size > 0,
+      }).catch((e) => {
+        console.error('[pricing_telemetry] insert failed:', e);
+      });
+    }
+
     return { ok: true, payload };
   } catch (err) {
     console.error('[calculateTaxFromFiles] error:', err);
