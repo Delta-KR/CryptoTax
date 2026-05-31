@@ -213,10 +213,11 @@
 
 ## 🏦 Phase 8 — 거래소 확장
 
-랜딩에서 "Coming Soon" 표시한 거래소 차례로 구현. 사용자 수요 기반 우선순위 조정.
-우선순위: 한국 사용자 비중 → 글로벌 인기도 → 데이터 포맷 난이도.
+랜딩에서 "Coming Soon" 표시한 거래소 차례로 구현.
 
-- [ ] **Bithumb XLS** — 한국 사용자 비중 큰데 Phase 2에서 빠짐. 최우선.
+**2026-05-31 우선순위 전환: 해외 거래소 먼저** (사용자 결정 — 기존 "한국 비중 우선 = Bithumb 최우선"에서 변경). 근거: 해외는 대부분 영문 CSV(Bithumb XLS 보다 포맷 단순·안정) + Binance 파서 자산 재활용 + C-S2/S4(해외 거래소 SEO 페이지)와 시너지. 우선순위: **해외 CSV(Bybit·Coinbase·Gate.io·OKX·Bitget) → 한국(Bithumb·Coinone)**.
+
+- [ ] **Bithumb XLS** — 한국 사용자 비중 크나 XLS 파싱 난이도 + 2026-05-31 방향 전환으로 **후순위** (해외 CSV 다음).
 - [ ] **Coinone** — 한국 거래소
 - [ ] **Bybit** (CSV)
 - [ ] **Coinbase** (CSV) — 글로벌 대표
@@ -272,7 +273,7 @@
 > 사업자등록 (2026-06 중순) 전후 분리 결정. 블로그 운영 부담 + 법률 책임 동반.
 
 - [ ] **인덱싱 모니터링** — Google Search Console + Naver Search Advisor 매주 체크. 새 schema/AI 정책/llms.txt 노출 확인. 인덱싱 안 되는 페이지 원인 파악. **1차 사이클 2026-05-31 완료 (PR #151·#152 — 위 섹션), 매주 반복**
-- [ ] **S1 `/glossary/[term]` 동적 라우트** — 의제취득가액·총평균법·과세표준·필요경비·기본공제·기타소득·분리과세 15-20 term. GEO 인용 토대
+- [x] **S1 `/glossary/[term]` 동적 라우트** — [PR #158](https://github.com/Delta-KR/kontaxt/pull/158) 핵심 8 term(총평균법·선입선출법·의제취득가액·필요경비·기본공제·과세표준·기타소득 분리과세·가산세) + DefinedTerm·BreadcrumbList schema + sitemap 6→15. **세법 PDF(`law/`) 대조로 조항 4건 정정** (의제취득가액 §37⑤·필요경비 §37①3호·기타소득 §21①27호·선입선출 §183⑥ 제거). [[reference_law_folder_verification]]. 15-20 term 중 8 완료, 점진 확장
 - [ ] **S2 거래소·기능별 독립 가이드 페이지 4** — `/guides/upbit-pdf-download`, `/guides/binance-csv-export`, `/guides/swap-tax-handling`, `/guides/usdt-fx-conversion`
 - [ ] **S3 `/blog/[slug]` + 분기당 6글** (long-tail 키워드 타깃):
   1. "업비트 PDF로 양도소득세 신고하는 법"
