@@ -105,6 +105,10 @@
 - [x] **paywall 위치 검증 (B-3)** — strategy §6.4 "세금 추정치 무료" vs 코드 "납부세액 BlurOverlay(유료)" **불일치 발견** ([[feedback_strategy_code_alignment]]). 사용자 결정: **현행 blur 유지**(공격적 전환 — "세액 보려면 결제" + B-2 가치노출 보완). 코드 변경 0, strategy §6.4 차이 = 의도된 전환 전략으로 확정.
 - [ ] **구독 features 재정의** — 코드의 구독 features (PDF 무제한, 거래소 무제한 등)은 원타임과 차별 약함. 전략은 "연중 절세 도구" — TLH 알림, 상시 대시보드, 거래소 API 자동 연동. 구독 출시 시점에 재작성.
 
+### P3 — 건수 티어 의사결정 telemetry
+
+- [x] **파서 telemetry 로깅 — 건수 티어 결정용** — 가격은 **안 건드리고 측정 장치만**. `app/actions/calculate.ts` return 직전 authed user 한정 fire-and-forget insert → `pricing_telemetry` 테이블 (마이그 `20260531091417` prod apply 완료, RLS insert-only). 건수+거래소수+코인수(cost-to-serve proxy) + gain/tax bucket(WTP proxy, **원값 0**). **건수만으론 반쪽 — 세액 구간 같이 남겨야 "고건수 = 고세액인가"(건수 ≠ WTP) 답 가능**. bucket 경계: gain 250만(공제)·5천만(고래 fat tail) / tax 500·2000만(구독 ROI). Privacy: 원값 0·RRN 미수집·익명 제외·RLS SELECT 없음(service_role 만 분석)·CASCADE. spec [docs/superpowers/specs/2026-05-31-pricing-tier-telemetry-design.md](docs/superpowers/specs/2026-05-31-pricing-tier-telemetry-design.md) · plan [docs/superpowers/plans/2026-05-31-pricing-tier-telemetry.md](docs/superpowers/plans/2026-05-31-pricing-tier-telemetry.md). Phase 7 온보딩 funnel(페이지 drop-off, client)과 **중복 X** — 이건 결제 가치 분포(server 비즈니스 이벤트). **가격 결정은 LOI 100명 + 첫 시즌 분포 데이터 후** ("고래 fat tail 존재?"가 첫 질문)
+
 ### P2 — 사전 예약(LOI) + 연중 hook
 
 - [ ] **LOI 페이지** — 2026.07~12 운영, ₩39,900 (20% 얼리), 100명, 30일 환불 보증 (전략 §6.6)
