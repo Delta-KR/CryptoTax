@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ValueTeaser } from '@/components/billing/ValueTeaser';
 
 export function PremiumBanner() {
   return (
@@ -16,6 +17,7 @@ export function PremiumBanner() {
         <p className="mt-1 text-[13px] leading-[1.5] text-white/85">
           단일 과세연도 ₩49,900 — 결제 후 즉시 전체 결과를 확인할 수 있어요.
         </p>
+        <ValueTeaser tone="onBrand" />
       </div>
       <Link href="/billing" className="flex-shrink-0">
         <button
