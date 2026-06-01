@@ -54,7 +54,7 @@ export const GUIDES: readonly GuideMeta[] = [
       'USDT 같은 외화 거래는 거래 시점 환율로 원화로 환산해 손익을 계산해요. 계산 예시로 풀었어요.',
     category: 'feature',
     related: ['total-average-method', 'tax-base'],
-    published: false,
+    published: true,
   },
 ];
 
