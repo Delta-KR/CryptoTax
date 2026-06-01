@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { SITE_URL } from '@/lib/site';
 import { GLOSSARY_SLUGS } from '@/lib/glossary/terms';
+import { GUIDE_SLUGS } from '@/lib/guides';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
@@ -57,6 +58,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.5,
+    })),
+    {
+      url: `${SITE_URL}/guides`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    },
+    ...GUIDE_SLUGS.map((slug) => ({
+      url: `${SITE_URL}/guides/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     })),
   ];
 }
