@@ -722,6 +722,8 @@ import { UPBIT_STEPS, BINANCE_STEPS, type GuideStep } from '@/lib/guides/exchang
 ```
 `StepCard`·`ExchangeGuideCard`의 `s: Step`·`steps: readonly Step[]` 타입을 `GuideStep`으로 변경. HowTo schema 블록은 그대로(같은 배열 참조).
 
+> **(PR 1 code-quality review 노트)** reviewer가 `GuideStep.n`(=index+1) 중복 → reorder drift 위험 지적. **검토 결과 n 유지 결정**: 기존 StepCard `0{s.n}` 라벨 + HowTo `position: s.n`이 1-index에 의존하고, `readonly` 배열이라 실제 drift 가능성 낮음, HowTo position에 명시 1-index가 자연스러움. n 제거 시 2.1·2.2·2.3 전부 `i+1` derive 동반 수정이라 이득 대비 비용 큼. PR 2에서 재고민 불필요 — n 그대로 사용.
+
 - [ ] **Step 2: 거래소 카드에 "자세히 →" 링크 추가**
 
 `ExchangeGuideCard`에 `href` prop 추가, 카드 하단(note 아래)에 링크:
