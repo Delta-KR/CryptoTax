@@ -29,11 +29,11 @@ const FAQ: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: 'USDT 같은 외화 거래는 어떻게 처리되나요?',
-    a: '한국 원화(KRW)가 아닌 통화(USDT, USD 등)로 한 거래는 거래 시점 환율로 자동 환산해요. 바이낸스 BTC/USDT 거래라면 그 시각의 USDT/KRW 환율을 적용해서 KRW 기준 손익을 뽑아요.',
+    a: '원화가 아닌 통화 거래는 거래 시점 환율로 원화로 환산해요. 자세한 계산 예시는 USDT 환산 가이드에서 볼 수 있어요.',
   },
   {
     q: '코인 간 교환(SWAP)은 어떻게 처리되나요?',
-    a: '예를 들어 BTC를 ETH로 교환하면 "BTC 매도 + ETH 매수" 2건의 거래로 자동 나뉘어요. 양쪽 다 총평균 단가 산정에 반영돼요.',
+    a: 'BTC를 ETH로 바꾸면 "매도 + 매수" 2건으로 나뉘어 양쪽 다 총평균 단가에 반영돼요. 자세한 계산 예시는 코인 교환 가이드에서 볼 수 있어요.',
   },
   {
     q: '선물(Futures)은 지원하나요?',
@@ -337,6 +337,45 @@ export default function GuidePage() {
               }}
               href="/guides/binance-csv-export"
             />
+          </div>
+        </div>
+      </section>
+
+      {/* 기능 가이드 */}
+      <section className="section-pad pt-0">
+        <div className="mx-auto max-w-content">
+          <div className="mb-8 text-center">
+            <SectionEyebrow>FEATURE GUIDES</SectionEyebrow>
+            <h2 className="text-[28px] font-extrabold leading-[1.2] tracking-tighter3 text-ink lg:text-[36px]">
+              세금 처리가 헷갈리는 거래.
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              {
+                slug: 'swap-tax-handling',
+                title: '코인 교환(SWAP) 세금',
+                desc: 'BTC를 ETH로 바꾸면 매도+매수 2건으로 과세돼요.',
+              },
+              {
+                slug: 'usdt-fx-conversion',
+                title: 'USDT 원화 환산',
+                desc: '외화 거래는 거래 시점 환율로 원화로 환산해요.',
+              },
+            ].map((c) => (
+              <Link
+                key={c.slug}
+                href={`/guides/${c.slug}`}
+                className="group flex flex-col rounded-[14px] border border-line bg-card p-6 shadow-sm transition-[border-color,box-shadow] hover:border-brand/40 hover:shadow-md"
+              >
+                <span className="text-[16px] font-bold text-ink group-hover:text-brand">
+                  {c.title}
+                </span>
+                <p className="mt-2 text-[13.5px] leading-[1.6] text-muted">
+                  {c.desc}
+                </p>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
