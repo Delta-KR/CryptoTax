@@ -36,7 +36,7 @@ export const GUIDES: readonly GuideMeta[] = [
       '바이낸스에서 현물(Spot) 거래내역 CSV를 내보내 Kontaxt에 올리는 방법을 단계별로 정리했어요.',
     category: 'exchange',
     related: ['total-average-method', 'necessary-expense'],
-    published: false,
+    published: true,
   },
   {
     slug: 'swap-tax-handling',
