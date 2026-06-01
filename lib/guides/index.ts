@@ -27,7 +27,7 @@ export const GUIDES: readonly GuideMeta[] = [
       '업비트에서 양도소득세 신고용 거래내역 PDF를 받아 Kontaxt에 올리는 방법을 단계별로 정리했어요.',
     category: 'exchange',
     related: ['total-average-method', 'deemed-acquisition-cost'],
-    published: false,
+    published: true,
   },
   {
     slug: 'binance-csv-export',
