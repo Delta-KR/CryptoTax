@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Card } from '@/components/ui/Card';
 import { Pill } from '@/components/ui/Pill';
 import { SectionEyebrow } from '@/components/ui/section-heading';
+import { UPBIT_STEPS, BINANCE_STEPS, type GuideStep } from '@/lib/guides/exchange-steps';
 
 export const metadata: Metadata = {
   title: '사용 가이드 — Kontaxt',
@@ -12,8 +13,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 86400;
-
-import { UPBIT_STEPS, BINANCE_STEPS, type GuideStep } from '@/lib/guides/exchange-steps';
 
 const FAQ: ReadonlyArray<{ q: string; a: string }> = [
   {

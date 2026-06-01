@@ -28,6 +28,7 @@ export default function UpbitPdfGuidePage() {
     '@type': 'HowTo',
     name: guide.title,
     description: guide.summary,
+    url: `${SITE_URL}/guides/${guide.slug}`,
     step: UPBIT_STEPS.map((s) => ({
       '@type': 'HowToStep',
       position: s.n,
